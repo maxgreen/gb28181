@@ -4,6 +4,7 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 
 流媒体服务基于@夏楚 ZLMediaKit [https://github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 播放器使用@dexter jessibuca [https://github.com/langhuihui/jessibuca/tree/v3](https://github.com/langhuihui/jessibuca/tree/v3)
+项目框架基于 @ixugo goweb [https://github.com/ixugo/goweb](https://github.com/ixugo/goweb)
 
 # 应用场景：
 支持浏览器无插件播放摄像头视频。
@@ -20,26 +21,26 @@ ZLM使用文档 [https://github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZL
 - [x] 集成 web 界面
 - [x] 兼容性良好
 - [x] 接入设备
-  - [x] 视频预览
+  - [ ] 视频预览
   - [ ] 支持主码流子码流切换
-  - [x] 无限制接入路数，能接入多少设备只取决于你的服务器性能
-  - [x] 云台控制，控制设备转向，拉近，拉远
-  - [x] 预置位查询，使用与设置
+  - [ ] 无限制接入路数，能接入多少设备只取决于你的服务器性能
+  - [ ] 云台控制，控制设备转向，拉近，拉远
+  - [ ] 预置位查询，使用与设置
   - [ ] 查询 NVR/IPC 上的录像与播放，支持指定时间播放与下载
-  - [x] 无人观看自动断流，节省流量
-  - [x] 视频设备信息同步
+  - [ ] 无人观看自动断流，节省流量
+  - [ ] 视频设备信息同步
   - [ ] 离在线监控
-  - [x] 支持直接输出RTSP、RTMP、HTTP-FLV、Websocket-FLV、HLS多种协议流地址
+  - [ ] 支持直接输出RTSP、RTMP、HTTP-FLV、Websocket-FLV、HLS多种协议流地址
   - [ ] 支持通过一个流地址直接观看摄像头，无需登录以及调用任何接口
-  - [x] 支持 UDP 和 TCP 两种国标信令传输模式
-  - [x] 支持 UDP 和 TCP 被动,TCP 主动 三种国标流传输模式
-  - [x] 支持检索,通道筛选
+  - [ ] 支持 UDP 和 TCP 两种国标信令传输模式
+  - [ ] 支持 UDP 和 TCP 被动,TCP 主动 三种国标流传输模式
+  - [ ] 支持检索,通道筛选
   - [ ] 支持通道子目录查询
   - [ ] 支持过滤音频，防止杂音影响观看
   - [ ] 支持国标网络校时
   - [x] 支持播放 H264 和 H265
   - [ ] 报警信息处理，支持向前端推送报警信息
-  - [x] 语音对讲
+  - [ ] 语音对讲
   - [ ] 支持业务分组和行政区划树自定义展示以及级联推送
   - [ ] 支持订阅与通知方法
     - [ ] 移动位置订阅
