@@ -36,6 +36,10 @@ func getBuildRelease() bool {
 
 func main() {
 	flag.Parse()
+	bin, _ := os.Executable()
+	if err := os.Chdir(filepath.Dir(bin)); err != nil {
+		slog.Error("change dir error")
+	}
 	// 初始化配置
 	var bc conf.Bootstrap
 	filedir, _ := abs(*configDir)
@@ -48,7 +52,7 @@ func main() {
 	bc.BuildVersion = buildVersion
 
 	// 初始化日志
-	logDir := filepath.Join(system.GetCWD(), bc.Log.Dir)
+	logDir := filepath.Join(system.Getwd(), bc.Log.Dir)
 	log, clean := logger.SetupSlog(logger.Config{
 		Dir:          logDir,                            // 日志地址
 		Debug:        bc.Debug,                          // 服务级别Debug/Release
@@ -65,11 +69,6 @@ func main() {
 		expvar.Publish("timestamp", expvar.Func(func() any {
 			return time.Now().Format(time.DateTime)
 		}))
-	}
-
-	bin, _ := os.Executable()
-	if err := os.Chdir(filepath.Dir(bin)); err != nil {
-		slog.Error("change dir error")
 	}
 
 	handler, cleanUp, err := wireApp(&bc, log)

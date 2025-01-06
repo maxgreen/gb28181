@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/plugin/stat"
 	"github.com/gowvp/gb28181/plugin/stat/statapi"
@@ -21,7 +22,7 @@ import (
 var startRuntime = time.Now()
 
 func setupRouter(r *gin.Engine, uc *Usecase) {
-	go stat.LoadTop(system.GetCWD(), func(m map[string]any) {
+	go stat.LoadTop(system.Getwd(), func(m map[string]any) {
 		_ = m
 	})
 	r.Use(
@@ -39,21 +40,24 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	)
 	go web.CountGoroutines(10*time.Minute, 20)
 
-	admin := r.Group("/web")
-	admin.StaticFS("/", http.Dir(filepath.Join(system.GetCWD(), "www")))
+	const staticPrefix = "/web"
+	const staticDir = "www"
+	admin := r.Group(staticPrefix, gzip.Gzip(gzip.DefaultCompression))
+	admin.Static("/", filepath.Join(system.Getwd(), staticDir))
 	r.NoRoute(func(c *gin.Context) {
-		if strings.HasPrefix(c.Request.URL.Path, "/api") {
-			c.JSON(404, "来到了无人的荒漠") // 返回 JSON 格式的 404 错误信息
-			return
+		// react-router 路由指向前端资源
+		if strings.HasPrefix(c.Request.URL.Path, staticPrefix) {
+			c.File(filepath.Join(system.Getwd(), staticDir, "index.html"))
 		}
-		// 网页
-		c.File(filepath.Join(system.GetCWD(), "www", "index.html"))
+		c.JSON(404, "来到了无人的荒漠")
 	})
+	// 访问根路径时重定向到前端资源
 	r.GET("/", func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusPermanentRedirect, "/web/index.html")
+		ctx.Redirect(http.StatusPermanentRedirect, filepath.Join(staticPrefix, "index.html"))
 	})
 
 	auth := web.AuthMiddleware(uc.Conf.Server.HTTP.JwtSecret)
+	r.GET("/health", web.WarpH(uc.getHealth))
 	r.GET("/app/metrics/api", web.WarpH(uc.getMetricsAPI))
 
 	registerVersion(r, uc.Version, auth)

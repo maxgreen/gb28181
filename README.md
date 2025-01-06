@@ -94,3 +94,17 @@ ZLM使用文档 [https://github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZL
 
 ## GoWVP, GB/T28181 交流群
 ![](./wechat.jpg)
+
+## QA
+
+> 怎么没有前端资源? 如何加载网页呢?
+
+前端资源打包后放到项目根目录，重命名为 `www` 即可正常加载。
+
+> 有没有代码相关的学习资料?
+
+[GoWVP 全栈开发日记[1]：从 0 到实现 GB/T 28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
+
+[GoWVP 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
+
+开发中...
