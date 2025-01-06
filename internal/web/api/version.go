@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/core/version"
-	"github.com/gowvp/gb28181/pkg/web"
+	"github.com/ixugo/goweb/pkg/web"
 )
 
 type VersionAPI struct {

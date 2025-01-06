@@ -4,6 +4,7 @@ import (
 	"expvar"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"sort"
@@ -11,12 +12,18 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gowvp/gb28181/pkg/web"
+	"github.com/gowvp/gb28181/plugin/stat"
+	"github.com/gowvp/gb28181/plugin/stat/statapi"
+	"github.com/ixugo/goweb/pkg/system"
+	"github.com/ixugo/goweb/pkg/web"
 )
 
 var startRuntime = time.Now()
 
 func setupRouter(r *gin.Engine, uc *Usecase) {
+	go stat.LoadTop(system.GetCWD(), func(m map[string]any) {
+		_ = m
+	})
 	r.Use(
 		// 格式化输出到控制台，然后记录到日志
 		// 此处不做 recover，底层 http.server 也会 recover，但不会输出方便查看的格式
@@ -32,11 +39,25 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	)
 	go web.CountGoroutines(10*time.Minute, 20)
 
+	admin := r.Group("/web")
+	admin.StaticFS("/", http.Dir(filepath.Join(system.GetCWD(), "www")))
+	r.NoRoute(func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, "/api") {
+			c.JSON(404, "来到了无人的荒漠") // 返回 JSON 格式的 404 错误信息
+			return
+		}
+		// 网页
+		c.File(filepath.Join(system.GetCWD(), "www", "index.html"))
+	})
+	r.GET("/", func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusPermanentRedirect, "/web/index.html")
+	})
+
 	auth := web.AuthMiddleware(uc.Conf.Server.HTTP.JwtSecret)
-	r.GET("/health", web.WarpH(uc.getHealth))
 	r.GET("/app/metrics/api", web.WarpH(uc.getMetricsAPI))
 
 	registerVersion(r, uc.Version, auth)
+	statapi.Register(r)
 }
 
 type getHealthOutput struct {

@@ -9,8 +9,8 @@ import (
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/version"
 	"github.com/gowvp/gb28181/internal/core/version/store/versiondb"
-	"github.com/gowvp/gb28181/pkg/orm"
-	"github.com/gowvp/gb28181/pkg/web"
+	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goweb/pkg/web"
 	"gorm.io/gorm"
 )
 

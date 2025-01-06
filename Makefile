@@ -169,7 +169,7 @@ build/windows:
 	@make build/local GOOS=$(GOOS) GOARCH=$(GOARCH)
 
 docker/build:
-	@docker buildx build --force-rm=true --platform linux/amd64 -t $(IMAGE_NAME) .
+	@docker build --force-rm=true --platform linux/amd64 -t $(IMAGE_NAME) .
 
 docker/save:
 	@docker save -o $(MODULE_NAME)_$(VERSION).tar $(IMAGE_NAME)

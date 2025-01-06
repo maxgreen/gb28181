@@ -8,8 +8,8 @@ import (
 	"github.com/glebarez/sqlite"
 	"github.com/google/wire"
 	"github.com/gowvp/gb28181/internal/conf"
-	"github.com/gowvp/gb28181/pkg/orm"
-	"github.com/gowvp/gb28181/pkg/system"
+	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goweb/pkg/system"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

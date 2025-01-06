@@ -1,0 +1,10 @@
+services:
+  gowvp:
+    image: gb28181
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 18082:18081
+    volumes:
+      - ./logs:/app/logs

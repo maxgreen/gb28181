@@ -8,9 +8,11 @@ RUN apk --no-cache add ca-certificates \
 WORKDIR /app
 
 ADD ./build/linux_amd64/bin ./
+ADD ./configs/config.toml /app/configs/config.toml
+ADD ./www /app/www
 
-LABEL Name=goweb Version=0.0.1
+LABEL Name=gowvp Version=0.0.1
 
-EXPOSE 8080
+EXPOSE 18081
 
 CMD [ "./bin" ]

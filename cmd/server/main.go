@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/gowvp/gb28181/internal/conf"
-	"github.com/gowvp/gb28181/pkg/logger"
-	"github.com/gowvp/gb28181/pkg/server"
-	"github.com/gowvp/gb28181/pkg/system"
+	"github.com/ixugo/goweb/pkg/logger"
+	"github.com/ixugo/goweb/pkg/server"
+	"github.com/ixugo/goweb/pkg/system"
 )
 
 var (

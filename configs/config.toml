@@ -1,6 +1,6 @@
 [Server]
   [Server.HTTP]
-    Port = 8080
+    Port = 18081
     JwtSecret = ""
     Timeout = "60s"
 
