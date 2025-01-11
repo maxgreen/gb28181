@@ -20,13 +20,18 @@ var (
 		wire.Struct(new(Usecase), "*"),
 		NewHTTPHandler,
 		NewVersionAPI,
+		NewSMSCore,
+		NewSmsAPI,
+		NewWebHookAPI,
 	)
 )
 
 type Usecase struct {
-	Conf    *conf.Bootstrap
-	DB      *gorm.DB
-	Version VersionAPI
+	Conf       *conf.Bootstrap
+	DB         *gorm.DB
+	Version    VersionAPI
+	SMS        SmsAPI
+	WebHookAPI WebHookAPI
 }
 
 // NewHTTPHandler 生成Gin框架路由内容

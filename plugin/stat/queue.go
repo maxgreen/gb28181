@@ -9,7 +9,7 @@ import (
 // PercentData 时间百分比
 type PercentData struct {
 	Time orm.Time `json:"time"`
-	Used float64  `json:"use"`
+	Used float64  `json:"used"`
 
 	Up   float64 `json:"up"`
 	Down float64 `json:"down"`

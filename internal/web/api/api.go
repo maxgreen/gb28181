@@ -62,6 +62,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 
 	registerVersion(r, uc.Version, auth)
 	statapi.Register(r)
+	registerZLMWebhook(r, uc.WebHookAPI)
 }
 
 type getHealthOutput struct {

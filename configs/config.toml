@@ -1,6 +1,7 @@
+version = 1
 [Server]
   [Server.HTTP]
-    Port = 8080
+    Port = 18080
     JwtSecret = ""
     Timeout = "60s"
 
@@ -15,6 +16,13 @@
     MaxOpenConns = 1
     ConnMaxLifetime = '6h0m0s'
     SlowThreshold = '200ms'
+
+[Media]
+  IP = "127.0.0.1"
+  HTTPPort = 8080
+  Secret = "OHvo86N9Ww6V8mHPWMisxNgkb8dvqAV420241107"
+  WebHookIP = "192.168.10.24"
+  RTPPortRange = "20000,20500"
 
 [Log]
   # 日志存储目录，不能使用特殊符号

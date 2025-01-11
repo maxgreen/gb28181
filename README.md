@@ -2,9 +2,12 @@
 
 Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的网络视频平台，负责实现核心信令与设备管理后台部分，支持 NAT 穿透，支持海康、大华、宇视等品牌的 IPC、NVR 接入。支持国标级联。
 
-流媒体服务基于@夏楚 ZLMediaKit [https://github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
-播放器使用@dexter jessibuca [https://github.com/langhuihui/jessibuca/tree/v3](https://github.com/langhuihui/jessibuca/tree/v3)
-项目框架基于 @ixugo goweb [https://github.com/ixugo/goweb](https://github.com/ixugo/goweb)
+
+[此项目基于 Java WVP] @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
+SIP 服务 @panjjo [gosip](https://github.com/panjjo/gosip)
+流媒体服务基于@夏楚 [ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
+播放器使用@dexter [jessibuca](https://github.com/langhuihui/jessibuca/tree/v3)
+项目框架基于 @ixugo [goweb](https://github.com/ixugo/goweb)
 
 # 应用场景：
 支持浏览器无插件播放摄像头视频。

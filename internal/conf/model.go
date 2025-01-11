@@ -9,6 +9,7 @@ type Bootstrap struct {
 	Server Server // 服务器
 	Data   Data   // 数据
 	Log    Log    // 日志
+	Media  Media  // 媒体
 }
 
 type Server struct {
@@ -53,6 +54,14 @@ type Log struct {
 	MaxAge       Duration `comment:"保留日志多久，超过时间自动删除"`
 	RotationTime Duration `comment:"多久时间，分割一个新的日志文件"`
 	RotationSize int64    `comment:"多大文件，分割一个新的日志文件(MB)"`
+}
+
+type Media struct {
+	IP           string `comment:"媒体服务器 IP"`
+	HTTPPort     int    `comment:"媒体服务器 HTTP 端口"`
+	Secret       string `comment:"媒体服务器密钥"`
+	WebHookIP    string `comment:"用于流媒体 webhook 回调"`
+	RTPPortRange string `comment:"媒体服务器 RTP 端口范围"`
 }
 
 type Duration time.Duration

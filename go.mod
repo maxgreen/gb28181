@@ -3,11 +3,13 @@ module github.com/gowvp/gb28181
 go 1.23.4
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/gin-contrib/gzip v1.1.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/google/wire v0.6.0
-	github.com/ixugo/goweb v1.0.10
+	github.com/ixugo/goweb v1.0.13
+	github.com/jinzhu/copier v0.4.0
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	gorm.io/driver/postgres v1.5.11
