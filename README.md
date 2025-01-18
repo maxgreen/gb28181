@@ -3,7 +3,7 @@
 Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的网络视频平台，负责实现核心信令与设备管理后台部分，支持 NAT 穿透，支持海康、大华、宇视等品牌的 IPC、NVR 接入。支持国标级联。
 
 
-学习 Java WVP 的过程中诞生此项目，感谢 @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
+Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
 
 SIP 服务 @panjjo [gosip](https://github.com/panjjo/gosip)
 
@@ -20,9 +20,11 @@ SIP 服务 @panjjo [gosip](https://github.com/panjjo/gosip)
 + 支持国标级联。多平台级联。跨网视频预览。
 + 支持跨网网闸平台互联。
 
-
 # 文档
-ZLM使用文档 [https://github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
+
+GoWVP [[在线接口文档](apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)](https://apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)
+
+ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 
 # 功能特性
 - [x] 集成 web 界面
@@ -78,15 +80,15 @@ ZLM使用文档 [https://github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZL
     - [ ] GPS订阅与通知（直播推流）
     - [ ] 语音对讲
   - [ ] 支持同时级联到多个上级平台
-- [ ] 支持自动配置ZLM媒体服务, 减少因配置问题所出现的问题;
-- [ ] 多流媒体节点，自动选择负载最低的节点使用。
-- [ ] 支持启用udp多端口模式, 提高udp模式下媒体传输性能;
-- [ ] 支持公网部署；
-- [ ] 支持 gowvp 与 zlm 分开部署，提升平台并发能力
+- [ ] 支持自动配置ZLM媒体服务, 减少因配置问题所出现的问题
+- [ ] 多流媒体节点，自动选择负载最低的节点使用
+- [ ] 支持启用udp多端口模式, 提高udp模式下媒体传输性能
+- [x] 支持局域网/互联网/特殊网络环境部署
+- [x] 支持 gowvp 与 zlm 分开部署，提升平台并发能力
 - [ ] 支持拉流RTSP/RTMP，分发为各种流格式，或者推送到其他国标平台
 - [ ] 支持推流RTSP/RTMP，分发为各种流格式，或者推送到其他国标平台
 - [ ] 支持推流鉴权
-- [ ] 支持接口鉴权
+- [x] 支持接口鉴权
 - [ ] 云端录像，推流/代理/国标视频均可以录制在云端服务器，支持预览和下载
 - [ ] 支持跨域请求，支持前后端分离部署
 - [x] 支持 PostgreSQL 数据库

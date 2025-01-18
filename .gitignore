@@ -30,3 +30,4 @@ build/
 __debug_*
 www/
 *.db
+tables

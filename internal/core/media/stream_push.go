@@ -20,7 +20,7 @@ type StreamPushStorer interface {
 }
 
 // FindStreamPush Paginated search
-func (c *Core) FindStreamPush(ctx context.Context, in *FindStreamPushInput) ([]*StreamPush, int64, error) {
+func (c Core) FindStreamPush(ctx context.Context, in *FindStreamPushInput) ([]*StreamPush, int64, error) {
 	items := make([]*StreamPush, 0)
 	total, err := c.store.StreamPush().Find(ctx, &items, in)
 	if err != nil {
@@ -30,7 +30,7 @@ func (c *Core) FindStreamPush(ctx context.Context, in *FindStreamPushInput) ([]*
 }
 
 // GetStreamPush Query a single object
-func (c *Core) GetStreamPush(ctx context.Context, id int) (*StreamPush, error) {
+func (c Core) GetStreamPush(ctx context.Context, id string) (*StreamPush, error) {
 	var out StreamPush
 	if err := c.store.StreamPush().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
@@ -41,20 +41,35 @@ func (c *Core) GetStreamPush(ctx context.Context, id int) (*StreamPush, error) {
 	return &out, nil
 }
 
+func (c Core) GetStreamPushByAppStream(ctx context.Context, app, stream string) (*StreamPush, error) {
+	var out StreamPush
+	if err := c.store.StreamPush().Get(ctx, &out, orm.Where("app=? AND stream=?", app, stream)); err != nil {
+		if orm.IsErrRecordNotFound(err) {
+			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+		}
+		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+	}
+	return &out, nil
+}
+
 // AddStreamPush Insert into database
-func (c *Core) AddStreamPush(ctx context.Context, in *AddStreamPushInput) (*StreamPush, error) {
+func (c Core) AddStreamPush(ctx context.Context, in *AddStreamPushInput) (*StreamPush, error) {
 	var out StreamPush
 	if err := copier.Copy(&out, in); err != nil {
 		slog.Error("Copy", "err", err)
 	}
+	out.ID = RTMPIDPrefix + c.uniqueID.UniqueID()
 	if err := c.store.StreamPush().Add(ctx, &out); err != nil {
+		if orm.IsDuplicatedKey(err) {
+			return nil, web.ErrDB.Msg("stream 重复，请勿重复添加")
+		}
 		return nil, web.ErrDB.Withf(`Add err[%s]`, err.Error())
 	}
 	return &out, nil
 }
 
 // EditStreamPush Update object information
-func (c *Core) EditStreamPush(ctx context.Context, in *EditStreamPushInput, id int) (*StreamPush, error) {
+func (c Core) EditStreamPush(ctx context.Context, in *EditStreamPushInput, id string) (*StreamPush, error) {
 	var out StreamPush
 	if err := c.store.StreamPush().Edit(ctx, &out, func(b *StreamPush) {
 		if err := copier.Copy(b, in); err != nil {
@@ -67,10 +82,26 @@ func (c *Core) EditStreamPush(ctx context.Context, in *EditStreamPushInput, id i
 }
 
 // DelStreamPush Delete object
-func (c *Core) DelStreamPush(ctx context.Context, id int) (*StreamPush, error) {
+func (c *Core) DelStreamPush(ctx context.Context, id string) (*StreamPush, error) {
+	// 检查数据库
+	// 如果是推流中，需要先让 sms 停止推流
+	// TODO: 待实现国标相关，删除国标相关数据
 	var out StreamPush
 	if err := c.store.StreamPush().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
 		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
 	return &out, nil
+}
+
+// Publish 由于 hook 的函数，无需 web.error 封装
+func (c *Core) Publish(ctx context.Context, app, stream, mediaServerID string) error {
+	result, err := c.GetStreamPushByAppStream(ctx, app, stream)
+	if err != nil {
+		return err
+	}
+	var s StreamPush
+	return c.store.StreamPush().Edit(ctx, &s, func(b *StreamPush) {
+		b.MediaServerID = mediaServerID
+		b.Status = StatusPushing
+	}, orm.Where("id=?", result.ID))
 }

@@ -21,14 +21,14 @@ version = 1
   IP = "127.0.0.1"
   HTTPPort = 8080
   Secret = "OHvo86N9Ww6V8mHPWMisxNgkb8dvqAV420241107"
-  WebHookIP = "192.168.10.24"
+  WebHookIP = "192.168.10.25"
   RTPPortRange = "20000,20500"
 
 [Log]
   # 日志存储目录，不能使用特殊符号
   Dir = './logs'
   # 记录级别 debug/info/warn/error
-  Level = 'info'
+  Level = 'debug'
   # 保留日志多久，超过时间自动删除
   MaxAge = '744h0m0s'
   # 多久时间，分割一个新的日志文件

@@ -136,3 +136,45 @@ type Data struct {
 	UDPServer             int `json:"UdpServer"`
 	UDPSession            int `json:"UdpSession"`
 }
+
+type onPublishInput struct {
+	MediaServerID string `json:"mediaServerId"`
+	App           string `json:"app"`
+	ID            string `json:"id"`     // TCP 链接唯一 ID
+	IP            string `json:"ip"`     // 推流器 ip
+	Params        string `json:"params"` // 推流 url 参数
+	Port          int    `json:"port"`   // 推流器端口号
+	Schema        string `json:"schema"` // 推流的协议，可能是 rtsp、rtmp
+	Stream        string `json:"stream"`
+	Vhost         string `json:"vhost"` // 流虚拟主机
+}
+
+type onPublishOutput struct {
+	DefaultOutput
+	AddMuteAudio   *bool   `json:"add_mute_audio,omitempty"`
+	ContinuePushMs *int    `json:"continue_push_ms,omitempty"`
+	EnableAudio    *bool   `json:"enable_audio,omitempty"`
+	EnableFmp4     *bool   `json:"enable_fmp4,omitempty"`
+	EnableHls      *bool   `json:"enable_hls,omitempty"`
+	EnableHlsFmp4  *bool   `json:"enable_hls_fmp4,omitempty"`
+	EnableMp4      *bool   `json:"enable_mp4,omitempty"`
+	EnableRtmp     *bool   `json:"enable_rtmp,omitempty"`
+	EnableRtsp     *bool   `json:"enable_rtsp,omitempty"`
+	EnableTs       *bool   `json:"enable_ts,omitempty"`
+	HlsSavePath    *string `json:"hls_save_path,omitempty"`
+	ModifyStamp    *bool   `json:"modify_stamp,omitempty"`
+	Mp4AsPlayer    *bool   `json:"mp4_as_player,omitempty"`
+	Mp4MaxSecond   *int    `json:"mp4_max_second,omitempty"`
+	Mp4SavePath    *string `json:"mp4_save_path,omitempty"`
+	AutoClose      *bool   `json:"auto_close,omitempty"`
+	StreamReplace  *string `json:"stream_replace,omitempty"`
+}
+
+type DefaultOutput struct {
+	Code int    `json:"code"` // 错误代码，0 代表允许推流
+	Msg  string `json:"msg"`  // 不允许推流时的错误提示
+}
+
+func newDefaultOutputOK() DefaultOutput {
+	return DefaultOutput{Code: 0, Msg: "success"}
+}

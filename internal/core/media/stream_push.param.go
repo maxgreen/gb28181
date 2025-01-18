@@ -28,6 +28,7 @@ type EditStreamPushInput struct {
 }
 
 type AddStreamPushInput struct {
+	Name          string    `json:"name"`            // 推流名称
 	App           string    `json:"app"`             // 应用名
 	PushedAt      *orm.Time `json:"pushed_at"`       // 最后一次推流时间
 	StoppedAt     *orm.Time `json:"stopped_at"`      // 最后一次停止时间

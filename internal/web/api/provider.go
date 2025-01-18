@@ -7,6 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/gowvp/gb28181/internal/conf"
+	"github.com/gowvp/gb28181/internal/core/media"
+	"github.com/gowvp/gb28181/internal/core/media/store/mediadb"
+	"github.com/gowvp/gb28181/internal/core/uniqueid"
+	"github.com/gowvp/gb28181/internal/core/uniqueid/store/uniqueiddb"
 	"github.com/gowvp/gb28181/internal/core/version"
 	"github.com/gowvp/gb28181/internal/core/version/store/versiondb"
 	"github.com/ixugo/goweb/pkg/orm"
@@ -20,9 +24,10 @@ var (
 		wire.Struct(new(Usecase), "*"),
 		NewHTTPHandler,
 		NewVersionAPI,
-		NewSMSCore,
-		NewSmsAPI,
+		NewSMSCore, NewSmsAPI,
 		NewWebHookAPI,
+		NewUniqueID,
+		NewMediaCore, NewMediaAPI,
 	)
 )
 
@@ -30,8 +35,10 @@ type Usecase struct {
 	Conf       *conf.Bootstrap
 	DB         *gorm.DB
 	Version    VersionAPI
-	SMS        SmsAPI
+	SMSAPI     SmsAPI
 	WebHookAPI WebHookAPI
+	UniqueID   uniqueid.Core
+	MediaAPI   MediaAPI
 }
 
 // NewHTTPHandler 生成Gin框架路由内容
@@ -74,4 +81,13 @@ func NewVersion(db *gorm.DB) *version.Core {
 	}
 	orm.EnabledAutoMigrate = isOK
 	return core
+}
+
+// NewUniqueID 唯一 id 生成器
+func NewUniqueID(ver *version.Core, db *gorm.DB) uniqueid.Core {
+	return uniqueid.NewCore(uniqueiddb.NewDB(db).AutoMigrate(*ver.IsMigrate), 6)
+}
+
+func NewMediaCore(ver *version.Core, db *gorm.DB, uni uniqueid.Core) media.Core {
+	return media.NewCore(mediadb.NewDB(db).AutoMigrate(*ver.IsMigrate), uni)
 }

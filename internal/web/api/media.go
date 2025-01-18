@@ -2,25 +2,21 @@
 package api
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/core/media"
-	"github.com/gowvp/gb28181/internal/core/media/store/mediadb"
 	"github.com/ixugo/goweb/pkg/web"
-	"gorm.io/gorm"
 )
 
 type MediaAPI struct {
-	mediaCore *media.Core
+	mediaCore media.Core
 }
 
-func NewMediaAPI(db *gorm.DB) MediaAPI {
-	core := media.NewCore(mediadb.NewDB(db).AutoMigrate(true))
-	return MediaAPI{mediaCore: core}
+// NewMediaAPI 媒体相关接口
+func NewMediaAPI(mc media.Core) MediaAPI {
+	return MediaAPI{mediaCore: mc}
 }
 
-func registerMedia(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
+func registerMediaAPI(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/stream_pushs", handler...)
 		group.GET("", web.WarpH(api.findStreamPush))
@@ -39,12 +35,12 @@ func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) 
 }
 
 func (a MediaAPI) getStreamPush(c *gin.Context, _ *struct{}) (any, error) {
-	streamPushID, _ := strconv.Atoi(c.Param("id"))
+	streamPushID := c.Param("id")
 	return a.mediaCore.GetStreamPush(c.Request.Context(), streamPushID)
 }
 
 func (a MediaAPI) editStreamPush(c *gin.Context, in *media.EditStreamPushInput) (any, error) {
-	streamPushID, _ := strconv.Atoi(c.Param("id"))
+	streamPushID := c.Param("id")
 	return a.mediaCore.EditStreamPush(c.Request.Context(), in, streamPushID)
 }
 
@@ -53,6 +49,6 @@ func (a MediaAPI) addStreamPush(c *gin.Context, in *media.AddStreamPushInput) (a
 }
 
 func (a MediaAPI) delStreamPush(c *gin.Context, _ *struct{}) (any, error) {
-	streamPushID, _ := strconv.Atoi(c.Param("id"))
+	streamPushID := c.Param("id")
 	return a.mediaCore.DelStreamPush(c.Request.Context(), streamPushID)
 }

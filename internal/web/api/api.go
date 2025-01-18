@@ -60,9 +60,13 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	r.GET("/health", web.WarpH(uc.getHealth))
 	r.GET("/app/metrics/api", web.WarpH(uc.getMetricsAPI))
 
-	registerVersion(r, uc.Version, auth)
+	registerVersionAPI(r, uc.Version, auth)
 	statapi.Register(r)
-	registerZLMWebhook(r, uc.WebHookAPI)
+	registerZLMWebhookAPI(r, uc.WebHookAPI)
+	registerMediaAPI(r, uc.MediaAPI)
+	r.POST("/channels/:id/play", func(ctx *gin.Context) {
+		web.Success(ctx, gin.H{"msg": "ok"})
+	})
 }
 
 type getHealthOutput struct {

@@ -14,7 +14,7 @@ func NewVersionAPI(ver *version.Core) VersionAPI {
 	return VersionAPI{versionCore: ver}
 }
 
-func registerVersion(r gin.IRouter, verAPI VersionAPI, handler ...gin.HandlerFunc) {
+func registerVersionAPI(r gin.IRouter, verAPI VersionAPI, handler ...gin.HandlerFunc) {
 	{
 		group := r.Group("/version", handler...)
 		group.GET("", web.WarpH(verAPI.getVersion))

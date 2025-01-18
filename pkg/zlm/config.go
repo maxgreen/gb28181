@@ -192,6 +192,8 @@ func NewBool(b bool) *bool {
 	return &b
 }
 
+// SetServerConfigRequest
+// https://github.com/zlmediakit/ZLMediaKit/wiki/MediaServer%E6%94%AF%E6%8C%81%E7%9A%84HTTP-HOOK-API
 type SetServerConfigRequest struct {
 	APIAPIDebug                        *string `json:"api.apiDebug,omitempty"`
 	APIDefaultSnap                     *string `json:"api.defaultSnap,omitempty"`
@@ -252,7 +254,7 @@ type SetServerConfigRequest struct {
 	HookRetry                          *string `json:"hook.retry,omitempty"`
 	HookRetryDelay                     *string `json:"hook.retry_delay,omitempty"`
 	HookStreamChangedSchemas           *string `json:"hook.stream_changed_schemas,omitempty"`
-	HookTimeoutSec                     *string `json:"hook.timeoutSec,omitempty"`
+	HookTimeoutSec                     *string `json:"hook.timeoutSec,omitempty"` // 事件触发 http post 超时时间。
 	HTTPAllowCrossDomains              *string `json:"http.allow_cross_domains,omitempty"`
 	HTTPAllowIPRange                   *string `json:"http.allow_ip_range,omitempty"`
 	HTTPCharSet                        *string `json:"http.charSet,omitempty"`

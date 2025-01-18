@@ -161,10 +161,10 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 			HookOnFlowReport:     zlm.NewString(""),
 			// HookOnPlay: ,
 			HookOnHTTPAccess: zlm.NewString(""),
-			// HookOnPublish: ,
-			HookOnRecordTs:  zlm.NewString(""),
-			HookOnRtspAuth:  zlm.NewString(""),
-			HookOnRtspRealm: zlm.NewString(""),
+			HookOnPublish:    zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
+			HookOnRecordTs:   zlm.NewString(""),
+			HookOnRtspAuth:   zlm.NewString(""),
+			HookOnRtspRealm:  zlm.NewString(""),
 			// HookOnServerStarted: ,
 			HookOnShellLogin:    zlm.NewString(""),
 			HookOnStreamChanged: zlm.NewString(fmt.Sprintf("%s/on_stream_changed", hookPrefix)),
@@ -173,7 +173,7 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 			// HookOnSendRtpStopped: ,
 			// HookOnRtpServerTimeout: ,
 			// HookOnRecordMp4: ,
-			HookTimeoutSec: zlm.NewString("30"),
+			HookTimeoutSec: zlm.NewString("20"),
 			// TODO: 回调时间间隔有问题
 			HookAliveInterval: zlm.NewString(fmt.Sprint(server.HookAliveInterval)),
 			// 推流断开后可以在超时时间内重新连接上继续推流，这样播放器会接着播放。
