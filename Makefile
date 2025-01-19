@@ -172,7 +172,7 @@ docker/build:
 	@docker build --force-rm=true --platform linux/amd64 -t $(IMAGE_NAME) .
 
 docker/save:
-	@docker save -o $(MODULE_NAME)_$(VERSION).tar $(IMAGE_NAME)
+	@docker save -o $(MODULE_NAME).tar $(IMAGE_NAME)
 
 docker/push:
 	@docker push $(IMAGE_NAME)

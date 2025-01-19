@@ -31,3 +31,5 @@ __debug_*
 www/
 *.db
 tables
+*.tar
+*.zip

@@ -48,6 +48,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		// react-router 路由指向前端资源
 		if strings.HasPrefix(c.Request.URL.Path, staticPrefix) {
 			c.File(filepath.Join(system.Getwd(), staticDir, "index.html"))
+			return
 		}
 		c.JSON(404, "来到了无人的荒漠")
 	})
@@ -63,7 +64,9 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerVersionAPI(r, uc.Version, auth)
 	statapi.Register(r)
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
+	// TODO: 待增加鉴权
 	registerMediaAPI(r, uc.MediaAPI)
+	// TODO: 临时播放接口，待重构
 	r.POST("/channels/:id/play", func(ctx *gin.Context) {
 		web.Success(ctx, gin.H{"msg": "ok"})
 	})
