@@ -2,8 +2,6 @@
 package api
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/sms"
@@ -54,12 +52,12 @@ func (a SmsAPI) findMediaServer(c *gin.Context, in *sms.FindMediaServerInput) (a
 }
 
 func (a SmsAPI) getMediaServer(c *gin.Context, _ *struct{}) (any, error) {
-	mediaServerID, _ := strconv.Atoi(c.Param("id"))
+	mediaServerID := c.Param("id")
 	return a.smsCore.GetMediaServer(c.Request.Context(), mediaServerID)
 }
 
 func (a SmsAPI) editMediaServer(c *gin.Context, in *sms.EditMediaServerInput) (any, error) {
-	mediaServerID, _ := strconv.Atoi(c.Param("id"))
+	mediaServerID := c.Param("id")
 	return a.smsCore.EditMediaServer(c.Request.Context(), in, mediaServerID)
 }
 
@@ -68,6 +66,6 @@ func (a SmsAPI) addMediaServer(c *gin.Context, in *sms.AddMediaServerInput) (any
 }
 
 func (a SmsAPI) delMediaServer(c *gin.Context, _ *struct{}) (any, error) {
-	mediaServerID, _ := strconv.Atoi(c.Param("id"))
+	mediaServerID := c.Param("id")
 	return a.smsCore.DelMediaServer(c.Request.Context(), mediaServerID)
 }

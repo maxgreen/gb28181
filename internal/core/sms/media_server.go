@@ -30,7 +30,7 @@ func (c *Core) FindMediaServer(ctx context.Context, in *FindMediaServerInput) ([
 }
 
 // GetMediaServer Query a single object
-func (c *Core) GetMediaServer(ctx context.Context, id int) (*MediaServer, error) {
+func (c *Core) GetMediaServer(ctx context.Context, id string) (*MediaServer, error) {
 	var out MediaServer
 	if err := c.storer.MediaServer().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
@@ -54,7 +54,7 @@ func (c *Core) AddMediaServer(ctx context.Context, in *AddMediaServerInput) (*Me
 }
 
 // EditMediaServer Update object information
-func (c *Core) EditMediaServer(ctx context.Context, in *EditMediaServerInput, id int) (*MediaServer, error) {
+func (c *Core) EditMediaServer(ctx context.Context, in *EditMediaServerInput, id string) (*MediaServer, error) {
 	var out MediaServer
 	if err := c.storer.MediaServer().Edit(ctx, &out, func(b *MediaServer) {
 		if err := copier.Copy(b, in); err != nil {
@@ -67,7 +67,7 @@ func (c *Core) EditMediaServer(ctx context.Context, in *EditMediaServerInput, id
 }
 
 // DelMediaServer Delete object
-func (c *Core) DelMediaServer(ctx context.Context, id int) (*MediaServer, error) {
+func (c *Core) DelMediaServer(ctx context.Context, id string) (*MediaServer, error) {
 	var out MediaServer
 	if err := c.storer.MediaServer().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
 		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())

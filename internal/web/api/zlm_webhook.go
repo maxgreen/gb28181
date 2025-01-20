@@ -22,6 +22,7 @@ func registerZLMWebhookAPI(r gin.IRouter, api WebHookAPI, handler ...gin.Handler
 		group.POST("/on_server_keepalive", web.WarpH(api.onServerKeepalive))
 		group.POST("/on_stream_changed", web.WarpH(api.onStreamChanged))
 		group.POST("/on_publish", web.WarpH(api.onPublish))
+		group.POST("/on_play", web.WarpH(api.onPlay))
 	}
 }
 
@@ -47,6 +48,14 @@ func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOut
 
 // onStreamChanged rtsp/rtmp 流注册或注销时触发此事件；此事件对回复不敏感。
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_12%E3%80%81on-stream-changed
-func (w WebHookAPI) onStreamChanged(_ *gin.Context, in *onStreamChangedInput) (DefaultOutput, error) {
+func (w WebHookAPI) onStreamChanged(_ *gin.Context, in *struct{}) (DefaultOutput, error) {
+	return newDefaultOutputOK(), nil
+}
+
+// onPlay rtsp/rtmp/http-flv/ws-flv/hls 播放触发播放器身份验证事件。
+// 播放流时会触发此事件。如果流不存在，则首先触发 on_play 事件，然后触发 on_stream_not_found 事件。
+// 播放rtsp流时，如果该流开启了rtsp专用认证（on_rtsp_realm），则不会触发on_play事件。
+// https://docs.zlmediakit.com/guide/media_server/web_hook_api.html#_6-on-play
+func (w WebHookAPI) onPlay(_ *gin.Context, in *onPublishInput) (DefaultOutput, error) {
 	return newDefaultOutputOK(), nil
 }

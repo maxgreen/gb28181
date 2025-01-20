@@ -2,6 +2,7 @@ package api
 
 import (
 	"expvar"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"path/filepath"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/plugin/stat"
 	"github.com/gowvp/gb28181/plugin/stat/statapi"
 	"github.com/ixugo/goweb/pkg/system"
@@ -66,10 +68,61 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权
 	registerMediaAPI(r, uc.MediaAPI)
+
 	// TODO: 临时播放接口，待重构
-	r.POST("/channels/:id/play", func(ctx *gin.Context) {
-		web.Success(ctx, gin.H{"msg": "ok"})
-	})
+	r.POST("/channels/:id/play", web.WarpH(func(c *gin.Context, _ *struct{}) (*playOutput, error) {
+		channelID := c.Param("id")
+
+		// TODO: 目前仅开发到 rtsp，待扩展 rtsp/gb 等
+		if !strings.HasPrefix(channelID, media.RTMPIDPrefix) {
+			return nil, web.ErrNotFound.Msg("不支持的播放通道")
+		}
+
+		push, err := uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
+		if err != nil {
+			return nil, err
+		}
+		if push.Status != media.StatusPushing {
+			return nil, web.ErrNotFound.Msg("未推流")
+		}
+
+		svr, err := uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), push.MediaServerID)
+		if err != nil {
+			return nil, err
+		}
+
+		stream := push.App + "/" + push.Stream
+
+		host := c.Request.Host
+		if l := strings.Split(c.Request.Host, ":"); len(l) == 2 {
+			host = l[0]
+		}
+
+		return &playOutput{
+			App:    push.App,
+			Stream: push.Stream,
+			Items: []streamAddrItem{
+				{
+					WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.WsFLV, stream),
+					HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.FLV, stream),
+					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream),
+					RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream),
+				},
+			},
+		}, nil
+	}))
+}
+
+type playOutput struct {
+	App    string           `json:"app"`
+	Stream string           `json:"stream"`
+	Items  []streamAddrItem `json:"items"`
+}
+type streamAddrItem struct {
+	WSFLV   string `json:"ws_flv"`
+	HTTPFLV string `json:"http_flv"`
+	RTMP    string `json:"rtmp"`
+	RTSP    string `json:"rtsp"`
 }
 
 type getHealthOutput struct {

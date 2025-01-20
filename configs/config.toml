@@ -18,10 +18,10 @@ version = 1
     SlowThreshold = '200ms'
 
 [Media]
-  IP = "127.0.0.1"
+  IP = "192.168.1.10"
   HTTPPort = 8080
-  Secret = "OHvo86N9Ww6V8mHPWMisxNgkb8dvqAV420241107"
-  WebHookIP = "192.168.10.25"
+  Secret = "s1kPE7bzqKeHUaVcp8dCA0jeB8yxyFq4"
+  WebHookIP = "192.168.1.10"
   RTPPortRange = "20000,20500"
 
 [Log]

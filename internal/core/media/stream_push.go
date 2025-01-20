@@ -22,7 +22,16 @@ type StreamPushStorer interface {
 // FindStreamPush Paginated search
 func (c Core) FindStreamPush(ctx context.Context, in *FindStreamPushInput) ([]*StreamPush, int64, error) {
 	items := make([]*StreamPush, 0)
-	total, err := c.store.StreamPush().Find(ctx, &items, in)
+	args := make([]orm.QueryOption, 0, 2)
+	args = append(args, orm.OrderBy("created_at DESC"))
+	if in.Status != "" {
+		args = append(args, orm.Where("status=?", in.Status))
+	}
+	if in.Key != "" {
+		args = append(args, orm.Where("id=? OR app LIKE ? OR stream LIKE ?", in.Key, "%"+in.Key+"%", "%"+in.Key+"%"))
+	}
+
+	total, err := c.store.StreamPush().Find(ctx, &items, in, args...)
 	if err != nil {
 		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}

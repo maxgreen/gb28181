@@ -30,6 +30,7 @@ build/
 __debug_*
 www/
 *.db
-tables
+tables/
 *.tar
 *.zip
+.idea/

@@ -8,13 +8,14 @@ import (
 
 type FindStreamPushInput struct {
 	web.PagerFilter
-	App           string    `form:"app"`             // 应用名
-	PushedAt      *orm.Time `form:"pushed_at"`       // 最后一次推流时间
-	StoppedAt     *orm.Time `form:"stopped_at"`      // 最后一次停止时间
-	Stream        string    `form:"stream"`          // 流 ID
-	MediaServerID string    `form:"media_server_id"` // 媒体服务器 ID
-	ServerID      string    `form:"server_id"`       // 服务器 ID
-	Status        string    `form:"status"`          // 推流状态(PUSHING)
+	// App           string    `form:"app"`             // 应用名
+	// PushedAt      *orm.Time `form:"pushed_at"`       // 最后一次推流时间
+	// StoppedAt     *orm.Time `form:"stopped_at"`      // 最后一次停止时间
+	// Stream        string    `form:"stream"`          // 流 ID
+	// MediaServerID string    `form:"media_server_id"` // 媒体服务器 ID
+	// ServerID      string    `form:"server_id"`       // 服务器 ID
+	Status string `form:"status"` // 推流状态(PUSHING)
+	Key    string `form:"key"`
 }
 
 type EditStreamPushInput struct {

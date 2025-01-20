@@ -110,7 +110,9 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 
 [GoWVP 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
 
-[GoWVP 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/spost/7457228085826764834)
+[GoWVP 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
+
+[GoWVP 全栈开发日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
 
 开发中...
 

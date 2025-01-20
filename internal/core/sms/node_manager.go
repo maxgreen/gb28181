@@ -136,8 +136,11 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 		zlmConfig := resp.Data[0]
 		var ms MediaServer
 		if err := n.storer.MediaServer().Edit(context.Background(), &ms, func(b *MediaServer) {
-			b.Ports.FLV = zlmConfig.HTTPPort
-			b.Ports.WsFLV = zlmConfig.HTTPSslport
+			// b.Ports.FLV = zlmConfig.HTTPPort
+			// TODO: 映射的端口，会导致获取配置文件的端口不一定能访问
+			http := server.Ports.HTTP
+			b.Ports.FLV = http
+			b.Ports.WsFLV = http //   zlmConfig.HTTPSslport
 			b.Ports.HTTPS = zlmConfig.HTTPSslport
 			b.Ports.RTMP = zlmConfig.RtmpPort
 			b.Ports.RTMPS = zlmConfig.RtmpSslport
@@ -159,12 +162,12 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 			GeneralMediaServerID: zlm.NewString(server.ID),
 			HookEnable:           zlm.NewString("1"),
 			HookOnFlowReport:     zlm.NewString(""),
-			// HookOnPlay: ,
-			HookOnHTTPAccess: zlm.NewString(""),
-			HookOnPublish:    zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
-			HookOnRecordTs:   zlm.NewString(""),
-			HookOnRtspAuth:   zlm.NewString(""),
-			HookOnRtspRealm:  zlm.NewString(""),
+			HookOnPlay:           zlm.NewString(fmt.Sprintf("%s/on_play", hookPrefix)),
+			// HookOnHTTPAccess:     zlm.NewString(""),
+			HookOnPublish:   zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
+			HookOnRecordTs:  zlm.NewString(""),
+			HookOnRtspAuth:  zlm.NewString(""),
+			HookOnRtspRealm: zlm.NewString(""),
 			// HookOnServerStarted: ,
 			HookOnShellLogin:    zlm.NewString(""),
 			HookOnStreamChanged: zlm.NewString(fmt.Sprintf("%s/on_stream_changed", hookPrefix)),

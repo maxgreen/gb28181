@@ -36,12 +36,14 @@ func getBuildRelease() bool {
 
 func main() {
 	flag.Parse()
+	// 以可执行文件所在目录为工作目录，防止以服务方式运行时，工作目录切换到其它位置
 	bin, _ := os.Executable()
 	if err := os.Chdir(filepath.Dir(bin)); err != nil {
 		slog.Error("change dir error")
 	}
 	// 初始化配置
 	var bc conf.Bootstrap
+	// 获取配置目录绝对路径
 	filedir, _ := abs(*configDir)
 	filePath := filepath.Join(filedir, "config.toml")
 	if err := conf.SetupConfig(&bc, filePath); err != nil {
