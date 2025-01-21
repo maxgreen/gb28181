@@ -35,6 +35,7 @@ func (c Core) FindStreamPush(ctx context.Context, in *FindStreamPushInput) ([]*S
 	if err != nil {
 		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
+
 	return items, total, nil
 }
 
@@ -112,5 +113,16 @@ func (c *Core) Publish(ctx context.Context, app, stream, mediaServerID string) e
 	return c.store.StreamPush().Edit(ctx, &s, func(b *StreamPush) {
 		b.MediaServerID = mediaServerID
 		b.Status = StatusPushing
+		now := orm.Now()
+		b.PushedAt = &now
 	}, orm.Where("id=?", result.ID))
+}
+
+func (c *Core) UnPublish(ctx context.Context, app, stream string) error {
+	var s StreamPush
+	return c.store.StreamPush().Edit(ctx, &s, func(b *StreamPush) {
+		b.Status = StatusStopped
+		now := orm.Now()
+		b.StoppedAt = &now
+	}, orm.Where("app = ? AND stream=?", app, stream))
 }

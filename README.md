@@ -4,7 +4,8 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 
 ## 在线演示平台
 
-[点击查看](http://wvp.golang.space/)
++ [演示平台线路 1 (推荐)，点击访问](http://gowvp.golang.space:15123/)
++ [演示平台线路 2 (3MB 带宽手下留情)](http://wvp.golang.space/)
 
 
 ## 应用场景：
@@ -13,6 +14,32 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 + 支持非国标(onvif, rtsp, rtmp，直播设备等等)设备接入，充分利旧。
 + 支持国标级联。多平台级联。跨网视频预览。
 + 支持跨网网闸平台互联。
+
+## 快速开始
+
+待 1.0 版本发布才提供安装包，如果你是 Go 语言开发者并熟悉 docker，可以继续~~~
+
+**前置条件**
+
++ Golang
++ Docker & Docker Compose
++ Make
+
+**操作流程**
+
++ 1. 克隆本项目
++ 2. 修改 configs/config.toml 中 `WebHookIP` 为你的局域网 IP
++ 3. 执行 `make build/linux && docker compose up -d`
++ 4. 自动创建了 zlm.conf 文件夹，获取 config.ini 的 api 秘钥，填写到 `configs/config.toml` 的 `Secret`
++ 5. 执行 `docker compose restart`
++ 6. 浏览器访问 `http://localhost:15123`
+
+##  如何参与开发?
+
+1. fork 本项目
+2. 编辑器 run/debug 设置配置输出目录为项目根目录
+3. 修改，提交 PR，说明修改内容
+
 
 ## 文档
 
@@ -106,13 +133,17 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 
 > 有没有代码相关的学习资料?
 
-[GoWVP 全栈开发日记[1]：从 0 到实现 GB/T 28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
+[GB/T28181 全栈开发日记[1]：从 0 到实现 GB28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
 
-[GoWVP 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
+[GB/T28181 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
 
-[GoWVP 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
+[GB/T28181 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
 
-[GoWVP 全栈开发日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
+[GB/T28181 全栈开发日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
+
+[GB/T28181 全栈开发日记[5]：使用 react-hook-form 完成表单](https://juejin.cn/post/7461899974198181922)
+
+[GB/T28181 全栈开发日记[6]：React 快速接入 jessibuca.js 播放器](https://juejin.cn/post/7462229773982351410)
 
 开发中...
 

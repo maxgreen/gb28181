@@ -25,10 +25,10 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	versionAPI := api.NewVersionAPI(core)
 	smsCore := api.NewSMSCore(db, bc)
 	smsAPI := api.NewSmsAPI(smsCore)
-	uniqueidCore := api.NewUniqueID(core, db)
-	mediaCore := api.NewMediaCore(core, db, uniqueidCore)
-	webHookAPI := api.NewWebHookAPI(smsCore, mediaCore)
-	mediaAPI := api.NewMediaAPI(mediaCore)
+	uniqueidCore := api.NewUniqueID(db)
+	mediaCore := api.NewMediaCore(db, uniqueidCore)
+	webHookAPI := api.NewWebHookAPI(smsCore, mediaCore, bc)
+	mediaAPI := api.NewMediaAPI(mediaCore, smsCore, bc)
 	usecase := &api.Usecase{
 		Conf:       bc,
 		DB:         db,

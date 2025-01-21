@@ -15,6 +15,7 @@ import (
 type IDManager struct {
 	store  UniqueIDStorer
 	length int
+	// TODO: 可以初始化时读取数据库内的数量，判断重复因子，从而减少尝试或更换策略
 }
 
 func NewIDManager(store UniqueIDStorer, length int) *IDManager {
@@ -25,13 +26,15 @@ func NewIDManager(store UniqueIDStorer, length int) *IDManager {
 }
 
 func (m *IDManager) UniqueID() string {
-	for range 100 {
-		id := GenerateRandomString(m.length)
-		if err := m.store.Add(context.Background(), &UniqueID{ID: id}); err != nil {
-			slog.Error("UniqueID", "err", err)
-			continue
+	for i := range 10 {
+		for range 66 {
+			id := GenerateRandomString(m.length + i)
+			if err := m.store.Add(context.Background(), &UniqueID{ID: id}); err != nil {
+				slog.Error("UniqueID", "err", err)
+				continue
+			}
+			return id
 		}
-		return id
 	}
 	slog.Error("UniqueID", "err", "超过最大循环次数，未获取到唯一 id")
 	return "unknown"

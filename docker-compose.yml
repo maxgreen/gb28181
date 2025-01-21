@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - 18082:18081
+      - 15123:15123
     volumes:
       - ./logs:/app/logs
   zlm:

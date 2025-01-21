@@ -103,10 +103,18 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 			Stream: push.Stream,
 			Items: []streamAddrItem{
 				{
+					Label:   "默认线路",
 					WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.WsFLV, stream),
 					HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.FLV, stream),
 					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream),
 					RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream),
+				},
+				{
+					Label:   "SSL 线路",
+					WSFLV:   fmt.Sprintf("wss://%s:%d/%s.live.flv", host, svr.Ports.WsFLVs, stream),
+					HTTPFLV: fmt.Sprintf("https://%s:%d/%s.live.flv", host, svr.Ports.FLVs, stream),
+					RTMP:    fmt.Sprintf("rtmps://%s:%d/%s", host, svr.Ports.RTMPs, stream),
+					RTSP:    fmt.Sprintf("rtsps://%s:%d/%s", host, svr.Ports.RTSPs, stream),
 				},
 			},
 		}, nil
@@ -119,6 +127,7 @@ type playOutput struct {
 	Items  []streamAddrItem `json:"items"`
 }
 type streamAddrItem struct {
+	Label   string `json:"label"`
 	WSFLV   string `json:"ws_flv"`
 	HTTPFLV string `json:"http_flv"`
 	RTMP    string `json:"rtmp"`

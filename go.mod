@@ -8,7 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/google/wire v0.6.0
-	github.com/ixugo/goweb v1.0.16
+	github.com/ixugo/goweb v1.0.17
 	github.com/jinzhu/copier v0.4.0
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/shirou/gopsutil v3.21.11+incompatible

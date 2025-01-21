@@ -17,7 +17,7 @@ type MediaServerPorts struct {
 	FLVs     int `json:"flvs"`
 	WsFLV    int `json:"ws_flv"`
 	WsFLVs   int `json:"ws_flvs"`
-	RTMPS    int `json:"rtmps"`
+	RTMPs    int `json:"rtmps"`
 	RTPPorxy int `json:"rtpporxy"`
 	RTSP     int `json:"rtsp"`
 	RTSPs    int `json:"rtsps"`

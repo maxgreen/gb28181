@@ -44,8 +44,9 @@ func main() {
 	// 初始化配置
 	var bc conf.Bootstrap
 	// 获取配置目录绝对路径
-	filedir, _ := abs(*configDir)
-	filePath := filepath.Join(filedir, "config.toml")
+	fileDir, _ := abs(*configDir)
+	filePath := filepath.Join(fileDir, "config.toml")
+	configIsNotExistWrite(filePath)
 	if err := conf.SetupConfig(&bc, filePath); err != nil {
 		panic(err)
 	}
@@ -113,4 +114,12 @@ func abs(path string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(filepath.Dir(bin), path), nil
+}
+
+func configIsNotExistWrite(path string) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := conf.WriteConfig(conf.DefaultConfig(), path); err != nil {
+			system.ErrPrintf("WriteConfig", "err", err)
+		}
+	}
 }

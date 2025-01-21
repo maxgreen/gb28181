@@ -2,18 +2,26 @@
 package api
 
 import (
+	"fmt"
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
+	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/media"
+	"github.com/gowvp/gb28181/internal/core/sms"
+	"github.com/ixugo/goweb/pkg/hook"
 	"github.com/ixugo/goweb/pkg/web"
 )
 
 type MediaAPI struct {
 	mediaCore media.Core
+	smsCore   sms.Core
+	conf      *conf.Bootstrap
 }
 
 // NewMediaAPI 媒体相关接口
-func NewMediaAPI(mc media.Core) MediaAPI {
-	return MediaAPI{mediaCore: mc}
+func NewMediaAPI(mc media.Core, sc sms.Core, conf *conf.Bootstrap) MediaAPI {
+	return MediaAPI{mediaCore: mc, smsCore: sc, conf: conf}
 }
 
 func registerMediaAPI(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
@@ -31,7 +39,38 @@ func registerMediaAPI(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
 
 func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) (any, error) {
 	items, total, err := a.mediaCore.FindStreamPush(c.Request.Context(), in)
-	return gin.H{"items": items, "total": total}, err
+	if err != nil {
+		return nil, err
+	}
+
+	cacheFn := hook.UseCache(func(s string) (*sms.MediaServer, error) {
+		v, err := a.smsCore.GetMediaServer(c.Request.Context(), s)
+		if err != nil {
+			slog.Error("GetMediaServer", "err", err)
+		}
+		return v, err
+	})
+
+	out := make([]*media.FindStreamPushOutputItem, len(items))
+	for i, item := range items {
+		rtmpAddrs := []string{"unknow"}
+		mediaID := item.MediaServerID
+		if mediaID == "" {
+			mediaID = sms.DefaultMediaServerID
+		}
+		if svr, _ := cacheFn(mediaID); svr != nil {
+			rtmpAddrs[0] = fmt.Sprintf("rtmp://%s:%d/%s/%s?sign=%s",
+				web.GetHost(c.Request), svr.Ports.RTMP, item.App, item.Stream, a.conf.Server.RTMPSecret,
+			)
+		}
+
+		out[i] = &media.FindStreamPushOutputItem{
+			StreamPush: *item,
+			PushAddrs:  rtmpAddrs,
+		}
+	}
+
+	return gin.H{"items": out, "total": total}, err
 }
 
 func (a MediaAPI) getStreamPush(c *gin.Context, _ *struct{}) (any, error) {

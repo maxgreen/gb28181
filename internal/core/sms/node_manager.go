@@ -143,7 +143,7 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 			b.Ports.WsFLV = http //   zlmConfig.HTTPSslport
 			b.Ports.HTTPS = zlmConfig.HTTPSslport
 			b.Ports.RTMP = zlmConfig.RtmpPort
-			b.Ports.RTMPS = zlmConfig.RtmpSslport
+			b.Ports.RTMPs = zlmConfig.RtmpSslport
 			b.Ports.RTSP = zlmConfig.RtspPort
 			b.Ports.RTSPs = zlmConfig.RtspSslport
 			b.Ports.RTPPorxy = zlmConfig.RtpProxyPort

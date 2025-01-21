@@ -1,7 +1,8 @@
 version = 1
 [Server]
+  rtmpSecret = "123"
   [Server.HTTP]
-    Port = 18080
+    Port = 15123
     JwtSecret = ""
     Timeout = "60s"
 
@@ -18,10 +19,10 @@ version = 1
     SlowThreshold = '200ms'
 
 [Media]
-  IP = "192.168.1.10"
+  IP = "127.0.0.1"
   HTTPPort = 8080
   Secret = "s1kPE7bzqKeHUaVcp8dCA0jeB8yxyFq4"
-  WebHookIP = "192.168.1.10"
+  WebHookIP = "192.168.10.25"
   RTPPortRange = "20000,20500"
 
 [Log]

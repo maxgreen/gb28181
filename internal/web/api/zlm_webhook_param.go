@@ -79,16 +79,16 @@ type OriginSock struct {
 	PeerPort   int    `json:"peer_port"`
 }
 type Tracks struct {
-	Channels    int    `json:"channels,omitempty"`
-	CodecID     int    `json:"codec_id"`
-	CodecIDName string `json:"codec_id_name"`
-	CodecType   int    `json:"codec_type"`
-	Ready       bool   `json:"ready"`
-	SampleBit   int    `json:"sample_bit,omitempty"`
-	SampleRate  int    `json:"sample_rate,omitempty"`
-	Fps         int    `json:"fps,omitempty"`
-	Height      int    `json:"height,omitempty"`
-	Width       int    `json:"width,omitempty"`
+	Channels    int     `json:"channels,omitempty"`
+	CodecID     int     `json:"codec_id"`
+	CodecIDName string  `json:"codec_id_name"`
+	CodecType   int     `json:"codec_type"`
+	Ready       bool    `json:"ready"`
+	SampleBit   int     `json:"sample_bit,omitempty"`
+	SampleRate  int     `json:"sample_rate,omitempty"`
+	Fps         float32 `json:"fps,omitempty"`
+	Height      int     `json:"height,omitempty"`
+	Width       int     `json:"width,omitempty"`
 }
 
 // 心跳

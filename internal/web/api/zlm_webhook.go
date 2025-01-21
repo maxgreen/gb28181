@@ -1,7 +1,12 @@
 package api
 
 import (
+	"fmt"
+	"log/slog"
+	"net/url"
+
 	"github.com/gin-gonic/gin"
+	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/ixugo/goweb/pkg/web"
@@ -10,10 +15,11 @@ import (
 type WebHookAPI struct {
 	smsCore   sms.Core
 	mediaCore media.Core
+	conf      *conf.Bootstrap
 }
 
-func NewWebHookAPI(core sms.Core, mediaCore media.Core) WebHookAPI {
-	return WebHookAPI{smsCore: core, mediaCore: mediaCore}
+func NewWebHookAPI(core sms.Core, mediaCore media.Core, conf *conf.Bootstrap) WebHookAPI {
+	return WebHookAPI{smsCore: core, mediaCore: mediaCore, conf: conf}
 }
 
 func registerZLMWebhookAPI(r gin.IRouter, api WebHookAPI, handler ...gin.HandlerFunc) {
@@ -36,11 +42,23 @@ func (w WebHookAPI) onServerKeepalive(_ *gin.Context, in *onServerKeepaliveInput
 // onPublish rtsp/rtmp/rtp 推流鉴权事件。
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_7%E3%80%81on-publish
 func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOutput, error) {
+	if in.Schema == "rtmp" {
+		params, err := url.ParseQuery(in.Params)
+		if err != nil {
+			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: err.Error()}}, nil
+		}
+		if sign := params.Get("sign"); sign != w.conf.Server.RTMPSecret {
+			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: fmt.Sprintf("rtmp secret 错误, got[%s] expect[%s]", sign, w.conf.Server.RTMPSecret)}}, nil
+		}
+
+		if err := w.mediaCore.Publish(c.Request.Context(), in.App, in.Stream, in.MediaServerID); err != nil {
+			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: err.Error()}}, nil
+		}
+	}
+
 	// TODO: 待完善，鉴权推流
 	// TODO: 待重构，封装 publish 接口
-	if err := w.mediaCore.Publish(c.Request.Context(), in.App, in.Stream, in.MediaServerID); err != nil {
-		return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: err.Error()}}, nil
-	}
+
 	return &onPublishOutput{
 		DefaultOutput: newDefaultOutputOK(),
 	}, nil
@@ -48,7 +66,16 @@ func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOut
 
 // onStreamChanged rtsp/rtmp 流注册或注销时触发此事件；此事件对回复不敏感。
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_12%E3%80%81on-stream-changed
-func (w WebHookAPI) onStreamChanged(_ *gin.Context, in *struct{}) (DefaultOutput, error) {
+func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (DefaultOutput, error) {
+	switch in.Schema {
+	case "rtmp":
+		if !in.Regist {
+			if err := w.mediaCore.UnPublish(c.Request.Context(), in.App, in.Stream); err != nil {
+				slog.Error("UnPublish", "err", err)
+			}
+		}
+	case "rtsp":
+	}
 	return newDefaultOutputOK(), nil
 }
 
