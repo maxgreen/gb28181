@@ -5,8 +5,8 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 
 ## 在线演示平台
 
-+ [演示平台线路 1 (推荐)，点击访问](http://gowvp.golang.space:15123/)
-+ [演示平台线路 2 (3MB 带宽手下留情)](http://wvp.golang.space/)
++ [演示平台线路 1 (推荐! 推荐! 推荐!)](http://gowvp.golang.space:15123/)
++ [演示平台线路 2 (爆满)](http://wvp.golang.space/)
 
 
 ![](./docs/demo/home.webp)
@@ -20,6 +20,59 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 + 支持非国标(onvif, rtsp, rtmp，直播设备等等)设备接入，充分利旧。
 + 支持国标级联。多平台级联。跨网视频预览。
 + 支持跨网网闸平台互联。
+
+
+
+
+## 开源库
+
+Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
+
+流媒体服务基于@夏楚 [ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
+
+播放器使用@dexter [jessibuca](https://github.com/langhuihui/jessibuca/tree/v3)
+
+项目框架基于 @ixugo [goweb](https://github.com/ixugo/goweb)
+
+## GoWVP, GB/T28181 交流群
+
+ <img src="./wechat.jpg" alt="wechat" width="240"/>
+
+## QA
+
+> 怎么没有前端资源? 如何加载网页呢?
+
+前端资源打包后放到项目根目录，重命名为 `www` 即可正常加载。
+
+> 有没有代码相关的学习资料?
+
+[GB/T28181 全栈开发日记[1]：从 0 到实现 GB28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
+
+[GB/T28181 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
+
+[GB/T28181 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
+
+[GB/T28181 全栈开发日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
+
+[GB/T28181 全栈开发日记[5]：使用 react-hook-form 完成表单](https://juejin.cn/post/7461899974198181922)
+
+[GB/T28181 全栈开发日记[6]：React 快速接入 jessibuca.js 播放器](https://juejin.cn/post/7462229773982351410)
+
+开发中...
+
+> 有没有使用资料?
+
+[RTMP 推拉流规则](https://juejin.cn/post/7463046634558718004)
+
+码字中...
+
+
+
+## 文档
+
+GoWVP [在线接口文档](apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)
+
+ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 
 
 ## 快速开始
@@ -41,6 +94,8 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 + 5. 执行 `docker compose restart`
 + 6. 浏览器访问 `http://localhost:15123`
 
+
+
 ##  如何参与开发?
 
 1. fork 本项目
@@ -48,11 +103,7 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 3. 修改，提交 PR，说明修改内容
 
 
-## 文档
 
-GoWVP [[在线接口文档](apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)](https://apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)
-
-ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 
 ## 功能特性
 - [x] 集成 web 界面
@@ -122,53 +173,11 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 - [x] 支持 PostgreSQL 数据库
 - [ ] 支持录制计划, 根据设定的时间对通道进行录制. 暂不支持将录制的内容转发到国标上级
 
+
+
 ## 授权协议
 本项目自有代码使用宽松的MIT协议，在保留版权信息的情况下可以自由应用于各自商用、非商业的项目。
 
 但是本项目也零碎的使用了一些其他的开源代码，在商用的情况下请自行替代或剔除； 由于使用本项目而产生的商业纠纷或侵权行为一概与本项目及开发者无关，请自行承担法律风险。
 
 在使用本项目代码时，也应该在授权协议中同时表明本项目依赖的第三方库的协议
-
-## GoWVP, GB/T28181 交流群
-
- <img src="./wechat.jpg" alt="wechat" width="240"/>
-
-## QA
-
-> 怎么没有前端资源? 如何加载网页呢?
-
-前端资源打包后放到项目根目录，重命名为 `www` 即可正常加载。
-
-> 有没有代码相关的学习资料?
-
-[GB/T28181 全栈开发日记[1]：从 0 到实现 GB28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
-
-[GB/T28181 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
-
-[GB/T28181 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
-
-[GB/T28181 全栈开发日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
-
-[GB/T28181 全栈开发日记[5]：使用 react-hook-form 完成表单](https://juejin.cn/post/7461899974198181922)
-
-[GB/T28181 全栈开发日记[6]：React 快速接入 jessibuca.js 播放器](https://juejin.cn/post/7462229773982351410)
-
-开发中...
-
-> 有没有使用资料?
-
-[RTMP 推拉流规则](https://juejin.cn/post/7463046634558718004)
-
-码字中...
-
-
-## 开源库
-Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
-
-SIP 服务 @panjjo [gosip](https://github.com/panjjo/gosip)
-
-流媒体服务基于@夏楚 [ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
-
-播放器使用@dexter [jessibuca](https://github.com/langhuihui/jessibuca/tree/v3)
-
-项目框架基于 @ixugo [goweb](https://github.com/ixugo/goweb)

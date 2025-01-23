@@ -13,6 +13,6 @@ ADD ./www /app/www
 
 LABEL Name=gowvp Version=0.0.1
 
-EXPOSE 18081
+EXPOSE 15123
 
 CMD [ "./bin" ]
