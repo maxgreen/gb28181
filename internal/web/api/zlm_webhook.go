@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"log/slog"
 	"net/url"
 
@@ -19,7 +18,11 @@ type WebHookAPI struct {
 }
 
 func NewWebHookAPI(core sms.Core, mediaCore media.Core, conf *conf.Bootstrap) WebHookAPI {
-	return WebHookAPI{smsCore: core, mediaCore: mediaCore, conf: conf}
+	return WebHookAPI{
+		smsCore:   core,
+		mediaCore: mediaCore,
+		conf:      conf,
+	}
 }
 
 func registerZLMWebhookAPI(r gin.IRouter, api WebHookAPI, handler ...gin.HandlerFunc) {
@@ -47,18 +50,18 @@ func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOut
 		if err != nil {
 			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: err.Error()}}, nil
 		}
-		if sign := params.Get("sign"); sign != w.conf.Server.RTMPSecret {
-			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: fmt.Sprintf("rtmp secret 错误, got[%s] expect[%s]", sign, w.conf.Server.RTMPSecret)}}, nil
-		}
-
-		if err := w.mediaCore.Publish(c.Request.Context(), in.App, in.Stream, in.MediaServerID); err != nil {
+		sign := params.Get("sign")
+		if err := w.mediaCore.Publish(c.Request.Context(), media.PublishInput{
+			App:           in.App,
+			Stream:        in.Stream,
+			MediaServerID: in.MediaServerID,
+			Sign:          sign,
+			Secret:        w.conf.Server.RTMPSecret,
+			Session:       params.Get("session"),
+		}); err != nil {
 			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: err.Error()}}, nil
 		}
 	}
-
-	// TODO: 待完善，鉴权推流
-	// TODO: 待重构，封装 publish 接口
-
 	return &onPublishOutput{
 		DefaultOutput: newDefaultOutputOK(),
 	}, nil
@@ -83,6 +86,23 @@ func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (D
 // 播放流时会触发此事件。如果流不存在，则首先触发 on_play 事件，然后触发 on_stream_not_found 事件。
 // 播放rtsp流时，如果该流开启了rtsp专用认证（on_rtsp_realm），则不会触发on_play事件。
 // https://docs.zlmediakit.com/guide/media_server/web_hook_api.html#_6-on-play
-func (w WebHookAPI) onPlay(_ *gin.Context, in *onPublishInput) (DefaultOutput, error) {
+func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, error) {
+	switch in.Schema {
+	case "rtmp":
+		params, err := url.ParseQuery(in.Params)
+		if err != nil {
+			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
+		}
+		session := params.Get("session")
+		if err := w.mediaCore.OnPlay(c.Request.Context(), media.OnPlayInput{
+			App:     in.App,
+			Stream:  in.Stream,
+			Session: session,
+		}); err != nil {
+			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
+		}
+	case "rtsp":
+	}
+
 	return newDefaultOutputOK(), nil
 }

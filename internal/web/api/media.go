@@ -37,7 +37,7 @@ func registerMediaAPI(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
 
 // >>> streamPush >>>>>>>>>>>>>>>>>>>>
 
-func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) (any, error) {
+func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) (*web.PageOutput, error) {
 	items, total, err := a.mediaCore.FindStreamPush(c.Request.Context(), in)
 	if err != nil {
 		return nil, err
@@ -58,10 +58,12 @@ func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) 
 		if mediaID == "" {
 			mediaID = sms.DefaultMediaServerID
 		}
-		if svr, _ := cacheFn(mediaID); svr != nil {
-			rtmpAddrs[0] = fmt.Sprintf("rtmp://%s:%d/%s/%s?sign=%s",
-				web.GetHost(c.Request), svr.Ports.RTMP, item.App, item.Stream, a.conf.Server.RTMPSecret,
-			)
+		if svr, _, _ := cacheFn(mediaID); svr != nil {
+			addr := fmt.Sprintf("rtmp://%s:%d/%s/%s", web.GetHost(c.Request), svr.Ports.RTMP, item.App, item.Stream)
+			if !item.IsAuthDisabled {
+				addr += fmt.Sprintf("?sign=%s", hook.MD5(a.conf.Server.RTMPSecret))
+			}
+			rtmpAddrs[0] = addr
 		}
 
 		out[i] = &media.FindStreamPushOutputItem{
@@ -69,25 +71,24 @@ func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) 
 			PushAddrs:  rtmpAddrs,
 		}
 	}
-
-	return gin.H{"items": out, "total": total}, err
+	return &web.PageOutput{Items: out, Total: total}, err
 }
 
-func (a MediaAPI) getStreamPush(c *gin.Context, _ *struct{}) (any, error) {
+func (a MediaAPI) getStreamPush(c *gin.Context, _ *struct{}) (*media.StreamPush, error) {
 	streamPushID := c.Param("id")
 	return a.mediaCore.GetStreamPush(c.Request.Context(), streamPushID)
 }
 
-func (a MediaAPI) editStreamPush(c *gin.Context, in *media.EditStreamPushInput) (any, error) {
+func (a MediaAPI) editStreamPush(c *gin.Context, in *media.EditStreamPushInput) (*media.StreamPush, error) {
 	streamPushID := c.Param("id")
 	return a.mediaCore.EditStreamPush(c.Request.Context(), in, streamPushID)
 }
 
-func (a MediaAPI) addStreamPush(c *gin.Context, in *media.AddStreamPushInput) (any, error) {
+func (a MediaAPI) addStreamPush(c *gin.Context, in *media.AddStreamPushInput) (*media.StreamPush, error) {
 	return a.mediaCore.AddStreamPush(c.Request.Context(), in)
 }
 
-func (a MediaAPI) delStreamPush(c *gin.Context, _ *struct{}) (any, error) {
+func (a MediaAPI) delStreamPush(c *gin.Context, _ *struct{}) (*media.StreamPush, error) {
 	streamPushID := c.Param("id")
 	return a.mediaCore.DelStreamPush(c.Request.Context(), streamPushID)
 }

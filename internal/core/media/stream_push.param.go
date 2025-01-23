@@ -2,7 +2,6 @@
 package media
 
 import (
-	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 )
 
@@ -19,22 +18,23 @@ type FindStreamPushInput struct {
 }
 
 type EditStreamPushInput struct {
-	App    string `json:"app"`    // 应用名
-	Stream string `json:"stream"` // 流 ID
+	App            string `json:"app"`              // 应用名
+	Stream         string `json:"stream"`           // 流 ID
+	IsAuthDisabled bool   `json:"is_auth_disabled"` // 是否禁用推流鉴权
 	// MediaServerID string    `json:"media_server_id"` // 媒体服务器 ID
 	// ServerID      string    `json:"server_id"`       // 服务器 ID
 	// Status        string    `json:"status"`          // 推流状态(PUSHING)
 }
 
 type AddStreamPushInput struct {
-	Name          string    `json:"name"`            // 推流名称
-	App           string    `json:"app"`             // 应用名
-	PushedAt      *orm.Time `json:"pushed_at"`       // 最后一次推流时间
-	StoppedAt     *orm.Time `json:"stopped_at"`      // 最后一次停止时间
-	Stream        string    `json:"stream"`          // 流 ID
-	MediaServerID string    `json:"media_server_id"` // 媒体服务器 ID
-	ServerID      string    `json:"server_id"`       // 服务器 ID
-	Status        string    `json:"status"`          // 推流状态(PUSHING)
+	Name           string `json:"name"`             // 推流名称
+	App            string `json:"app,required"`     // 应用名
+	Stream         string `json:"stream,required"`  // 流 ID
+	IsAuthDisabled bool   `json:"is_auth_disabled"` // 是否禁用推流鉴权
+
+	// MediaServerID string    `json:"media_server_id"` // 媒体服务器 ID
+	// ServerID      string    `json:"server_id"`       // 服务器 ID
+	// Status        string    `json:"status"`          // 推流状态(PUSHING)
 }
 
 type FindStreamPushOutputItem struct {

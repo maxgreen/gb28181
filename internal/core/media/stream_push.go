@@ -3,8 +3,10 @@ package media
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
+	"github.com/ixugo/goweb/pkg/hook"
 	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"github.com/jinzhu/copier"
@@ -68,7 +70,7 @@ func (c Core) AddStreamPush(ctx context.Context, in *AddStreamPushInput) (*Strea
 	if err := copier.Copy(&out, in); err != nil {
 		slog.Error("Copy", "err", err)
 	}
-	out.ID = RTMPIDPrefix + c.uniqueID.UniqueID()
+	out.ID = c.uniqueID.UniqueID(RTMPIDPrefix)
 	if err := c.store.StreamPush().Add(ctx, &out); err != nil {
 		if orm.IsDuplicatedKey(err) {
 			return nil, web.ErrDB.Msg("stream 重复，请勿重复添加")
@@ -103,18 +105,35 @@ func (c *Core) DelStreamPush(ctx context.Context, id string) (*StreamPush, error
 	return &out, nil
 }
 
+type PublishInput struct {
+	App           string
+	Stream        string
+	MediaServerID string
+	Sign          string
+	Secret        string
+	Session       string
+}
+
 // Publish 由于 hook 的函数，无需 web.error 封装
-func (c *Core) Publish(ctx context.Context, app, stream, mediaServerID string) error {
-	result, err := c.GetStreamPushByAppStream(ctx, app, stream)
+func (c *Core) Publish(ctx context.Context, in PublishInput) error {
+	result, err := c.GetStreamPushByAppStream(ctx, in.App, in.Stream)
 	if err != nil {
 		return err
 	}
+	if !result.IsAuthDisabled {
+		if s := hook.MD5(in.Session + in.Secret); s != in.Sign {
+			slog.Info("推流鉴权失败", "got", in.Sign, "expect", s)
+			return fmt.Errorf("rtmp secret error, got[%s]", in.Sign)
+		}
+	}
+
 	var s StreamPush
 	return c.store.StreamPush().Edit(ctx, &s, func(b *StreamPush) {
-		b.MediaServerID = mediaServerID
+		b.MediaServerID = in.MediaServerID
 		b.Status = StatusPushing
 		now := orm.Now()
 		b.PushedAt = &now
+		b.Session = in.Session
 	}, orm.Where("id=?", result.ID))
 }
 
@@ -124,5 +143,27 @@ func (c *Core) UnPublish(ctx context.Context, app, stream string) error {
 		b.Status = StatusStopped
 		now := orm.Now()
 		b.StoppedAt = &now
+		b.Session = ""
 	}, orm.Where("app = ? AND stream=?", app, stream))
+}
+
+type OnPlayInput struct {
+	App     string
+	Stream  string
+	Session string
+}
+
+func (c *Core) OnPlay(ctx context.Context, in OnPlayInput) error {
+	result, err := c.GetStreamPushByAppStream(ctx, in.App, in.Stream)
+	if err != nil {
+		return err
+	}
+	if result.IsAuthDisabled {
+		return nil
+	}
+	if in.Session != result.Session {
+		slog.Info("拉流鉴权失败", "got", in.Session, "expect", result.Session)
+		return fmt.Errorf("session error, got[%s]", in.Session)
+	}
+	return nil
 }

@@ -20,6 +20,7 @@ func NewCore(store Storer, length int) Core {
 	}
 }
 
-func (c Core) UniqueID() string {
-	return c.m.UniqueID()
+// UniqueID 获取全局唯一 ID
+func (c Core) UniqueID(prefix string) string {
+	return c.m.UniqueID(prefix)
 }

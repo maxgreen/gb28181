@@ -10,6 +10,9 @@ import (
 	"crypto/rand"
 	"log/slog"
 	"math/big"
+	"time"
+
+	"github.com/ixugo/goweb/pkg/hook"
 )
 
 type IDManager struct {
@@ -25,10 +28,16 @@ func NewIDManager(store UniqueIDStorer, length int) *IDManager {
 	}
 }
 
-func (m *IDManager) UniqueID() string {
+// UniqueID 获取唯一 id
+func (m *IDManager) UniqueID(prefix string) string {
+	cost := hook.UseTiming(time.Second)
+	defer cost()
+
+	// 如果在最低长度中，碰撞比较频繁，增加 1 位长度再试一次
 	for i := range 10 {
+		// 生成自定义长度随机数，通过数据库主键来防止碰撞，碰撞后再次尝试
 		for range 66 {
-			id := GenerateRandomString(m.length + i)
+			id := prefix + GenerateRandomString(m.length+i)
 			if err := m.store.Add(context.Background(), &UniqueID{ID: id}); err != nil {
 				slog.Error("UniqueID", "err", err)
 				continue
@@ -41,6 +50,7 @@ func (m *IDManager) UniqueID() string {
 }
 
 // GenerateRandomString 生成随机字符串
+// 采用全小写+数字，有识别需求，可以删除 o/0，i/l 之一
 func GenerateRandomString(length int) string {
 	const letterBytes = "abcdefghijklmnopqrstuvwxyz1234567890"
 	lettersLength := big.NewInt(int64(len(letterBytes)))
