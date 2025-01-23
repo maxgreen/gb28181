@@ -91,6 +91,7 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 	case "rtmp":
 		params, err := url.ParseQuery(in.Params)
 		if err != nil {
+			slog.Info("onPlay 鉴权失败", "err", err)
 			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
 		}
 		session := params.Get("session")
@@ -99,6 +100,7 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 			Stream:  in.Stream,
 			Session: session,
 		}); err != nil {
+			slog.Info("onPlay 鉴权失败", "err", err)
 			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
 		}
 	case "rtsp":

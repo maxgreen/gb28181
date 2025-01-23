@@ -92,10 +92,13 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		}
 
 		stream := push.App + "/" + push.Stream
-
 		host := c.Request.Host
 		if l := strings.Split(c.Request.Host, ":"); len(l) == 2 {
 			host = l[0]
+		}
+		var session string
+		if !push.IsAuthDisabled && push.Session != "" {
+			session = "?session=" + push.Session
 		}
 
 		return &playOutput{
@@ -106,14 +109,14 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 					Label:   "默认线路",
 					WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.WsFLV, stream),
 					HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.FLV, stream),
-					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream),
+					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream) + session,
 					RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream),
 				},
 				{
 					Label:   "SSL 线路",
 					WSFLV:   fmt.Sprintf("wss://%s:%d/%s.live.flv", host, svr.Ports.WsFLVs, stream),
 					HTTPFLV: fmt.Sprintf("https://%s:%d/%s.live.flv", host, svr.Ports.FLVs, stream),
-					RTMP:    fmt.Sprintf("rtmps://%s:%d/%s", host, svr.Ports.RTMPs, stream),
+					RTMP:    fmt.Sprintf("rtmps://%s:%d/%s", host, svr.Ports.RTMPs, stream) + session,
 					RTSP:    fmt.Sprintf("rtsps://%s:%d/%s", host, svr.Ports.RTSPs, stream),
 				},
 			},

@@ -22,7 +22,7 @@ version = 1
   IP = "127.0.0.1"
   HTTPPort = 8080
   Secret = "s1kPE7bzqKeHUaVcp8dCA0jeB8yxyFq4"
-  WebHookIP = "192.168.10.25"
+  WebHookIP = "192.168.10.28"
   RTPPortRange = "20000,20500"
 
 [Log]
