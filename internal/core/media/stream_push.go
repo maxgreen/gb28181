@@ -123,7 +123,7 @@ func (c *Core) Publish(ctx context.Context, in PublishInput) error {
 	if !result.IsAuthDisabled {
 		if s := hook.MD5(in.Session + in.Secret); s != in.Sign {
 			slog.Info("推流鉴权失败", "got", in.Sign, "expect", s)
-			return fmt.Errorf("rtmp secret error, got[%s]", in.Sign)
+			return fmt.Errorf("Unauthorized, rtmp secret error, got[%s]", in.Sign)
 		}
 	}
 
@@ -163,7 +163,7 @@ func (c *Core) OnPlay(ctx context.Context, in OnPlayInput) error {
 	}
 	if in.Session != result.Session {
 		slog.Info("拉流鉴权失败", "got", in.Session, "expect", result.Session)
-		return fmt.Errorf("session error, got[%s]", in.Session)
+		return fmt.Errorf("Unauthorized, session error, got[%s]", in.Session)
 	}
 	return nil
 }

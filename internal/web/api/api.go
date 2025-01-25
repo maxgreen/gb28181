@@ -98,26 +98,32 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		}
 		var session string
 		if !push.IsAuthDisabled && push.Session != "" {
-			session = "?session=" + push.Session
+			session = "session=" + push.Session
 		}
 
+		// 播放规则
+		// https://github.com/zlmediakit/ZLMediaKit/wiki/%E6%92%AD%E6%94%BEurl%E8%A7%84%E5%88%99
 		return &playOutput{
 			App:    push.App,
 			Stream: push.Stream,
 			Items: []streamAddrItem{
 				{
 					Label:   "默认线路",
-					WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.WsFLV, stream),
-					HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.FLV, stream),
-					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream) + session,
-					RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream),
+					WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
+					HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
+					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream) + "?" + session,
+					RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream) + "?" + session,
+					WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTP, push.App, push.Stream) + "&" + session,
+					HLS:     fmt.Sprintf("http://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTP, stream) + "?" + session,
 				},
 				{
 					Label:   "SSL 线路",
-					WSFLV:   fmt.Sprintf("wss://%s:%d/%s.live.flv", host, svr.Ports.WsFLVs, stream),
-					HTTPFLV: fmt.Sprintf("https://%s:%d/%s.live.flv", host, svr.Ports.FLVs, stream),
+					WSFLV:   fmt.Sprintf("wss://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + session,
+					HTTPFLV: fmt.Sprintf("https://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + session,
 					RTMP:    fmt.Sprintf("rtmps://%s:%d/%s", host, svr.Ports.RTMPs, stream) + session,
-					RTSP:    fmt.Sprintf("rtsps://%s:%d/%s", host, svr.Ports.RTSPs, stream),
+					RTSP:    fmt.Sprintf("rtsps://%s:%d/%s", host, svr.Ports.RTSPs, stream) + session,
+					WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTPS, push.App, push.Stream) + "&" + session,
+					HLS:     fmt.Sprintf("https://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTPS, stream) + "?" + session,
 				},
 			},
 		}, nil
@@ -135,6 +141,8 @@ type streamAddrItem struct {
 	HTTPFLV string `json:"http_flv"`
 	RTMP    string `json:"rtmp"`
 	RTSP    string `json:"rtsp"`
+	WebRTC  string `json:"webrtc"`
+	HLS     string `json:"hls"`
 }
 
 type getHealthOutput struct {

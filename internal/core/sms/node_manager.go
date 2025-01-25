@@ -159,6 +159,7 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 
 		hookPrefix := fmt.Sprintf("http://%s:%d/webhook", server.HookIP, serverPort)
 		req := zlm.SetServerConfigRequest{
+			RtcExternIP:          zlm.NewString(server.IP),
 			GeneralMediaServerID: zlm.NewString(server.ID),
 			HookEnable:           zlm.NewString("1"),
 			HookOnFlowReport:     zlm.NewString(""),

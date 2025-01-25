@@ -58,11 +58,15 @@ Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-p
 
 [GB/T28181 全栈开发日记[6]：React 快速接入 jessibuca.js 播放器](https://juejin.cn/post/7462229773982351410)
 
+[GB/T28181 全栈开发日记[7]：实现 RTMP 鉴权与播放](https://juejin.cn/post/7463504223177261119)
+
 开发中...
 
 > 有没有使用资料?
 
-[RTMP 推拉流规则](https://juejin.cn/post/7463046634558718004)
+[RTMP 推拉流规则](https://juejin.cn/post/7463124448540934194)
+
+[如何使用 OBS RTMP 推流到 GB/T28181平台](https://juejin.cn/post/7463350947100786739)
 
 码字中...
 
