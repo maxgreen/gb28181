@@ -26,13 +26,15 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 
 ## 开源库
 
-Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
+sip 信令基于 gosip 修改， @panjjo [gosip](https://github.com/panjjo/gosip)
 
 流媒体服务基于@夏楚 [ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 
 播放器使用@dexter [jessibuca](https://github.com/langhuihui/jessibuca/tree/v3)
 
 项目框架基于 @ixugo [goweb](https://github.com/ixugo/goweb)
+
+Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
 
 ## GoWVP, GB/T28181 交流群
 
