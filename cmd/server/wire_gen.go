@@ -10,6 +10,7 @@ import (
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/data"
 	"github.com/gowvp/gb28181/internal/web/api"
+	"github.com/gowvp/gb28181/pkg/gbs"
 	"log/slog"
 	"net/http"
 )
@@ -29,6 +30,8 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	mediaCore := api.NewMediaCore(db, uniqueidCore)
 	webHookAPI := api.NewWebHookAPI(smsCore, mediaCore, bc)
 	mediaAPI := api.NewMediaAPI(mediaCore, smsCore, bc)
+	gb28181API := api.NewGb28181API(db, uniqueidCore)
+	server := gbs.NewServer()
 	usecase := &api.Usecase{
 		Conf:       bc,
 		DB:         db,
@@ -37,6 +40,8 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 		WebHookAPI: webHookAPI,
 		UniqueID:   uniqueidCore,
 		MediaAPI:   mediaAPI,
+		GB28181API: gb28181API,
+		SipServer:  server,
 	}
 	handler := api.NewHTTPHandler(usecase)
 	return handler, func() {

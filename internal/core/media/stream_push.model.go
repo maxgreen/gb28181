@@ -8,10 +8,6 @@ const (
 	StatusStopped = "STOPPED" // 停止
 )
 
-const (
-	RTMPIDPrefix = "r" // rtmp ID 前缀，取 rtmp 首字母
-)
-
 // StreamPush domain model
 type StreamPush struct {
 	ID             string    `gorm:"primaryKey" json:"id"`

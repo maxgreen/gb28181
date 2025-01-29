@@ -13,6 +13,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/uniqueid/store/uniqueiddb"
 	"github.com/gowvp/gb28181/internal/core/version"
 	"github.com/gowvp/gb28181/internal/core/version/store/versiondb"
+	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"gorm.io/gorm"
@@ -28,6 +29,8 @@ var (
 		NewWebHookAPI,
 		NewUniqueID,
 		NewMediaCore, NewMediaAPI,
+		gbs.NewServer,
+		NewGb28181API,
 	)
 )
 
@@ -39,6 +42,9 @@ type Usecase struct {
 	WebHookAPI WebHookAPI
 	UniqueID   uniqueid.Core
 	MediaAPI   MediaAPI
+	GB28181API Gb28181API
+
+	SipServer *gbs.Server
 }
 
 // NewHTTPHandler 生成Gin框架路由内容
@@ -85,7 +91,7 @@ func NewVersion(db *gorm.DB) version.Core {
 
 // NewUniqueID 唯一 id 生成器
 func NewUniqueID(db *gorm.DB) uniqueid.Core {
-	return uniqueid.NewCore(uniqueiddb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), 6)
+	return uniqueid.NewCore(uniqueiddb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), 5)
 }
 
 func NewMediaCore(db *gorm.DB, uni uniqueid.Core) media.Core {

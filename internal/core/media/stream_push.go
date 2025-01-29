@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/ixugo/goweb/pkg/hook"
 	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
@@ -70,7 +71,7 @@ func (c Core) AddStreamPush(ctx context.Context, in *AddStreamPushInput) (*Strea
 	if err := copier.Copy(&out, in); err != nil {
 		slog.Error("Copy", "err", err)
 	}
-	out.ID = c.uniqueID.UniqueID(RTMPIDPrefix)
+	out.ID = c.uniqueID.UniqueID(bz.IDPrefixRTMP)
 	if err := c.store.StreamPush().Add(ctx, &out); err != nil {
 		if orm.IsDuplicatedKey(err) {
 			return nil, web.ErrDB.Msg("stream 重复，请勿重复添加")

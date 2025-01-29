@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/plugin/stat"
 	"github.com/gowvp/gb28181/plugin/stat/statapi"
@@ -68,13 +69,14 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权
 	registerMediaAPI(r, uc.MediaAPI)
+	registerGb28181(r, uc.GB28181API)
 
 	// TODO: 临时播放接口，待重构
 	r.POST("/channels/:id/play", web.WarpH(func(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		channelID := c.Param("id")
 
 		// TODO: 目前仅开发到 rtsp，待扩展 rtsp/gb 等
-		if !strings.HasPrefix(channelID, media.RTMPIDPrefix) {
+		if !strings.HasPrefix(channelID, bz.IDPrefixRTMP) {
 			return nil, web.ErrNotFound.Msg("不支持的播放通道")
 		}
 

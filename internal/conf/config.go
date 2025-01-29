@@ -9,7 +9,8 @@ type Bootstrap struct {
 	Server Server // 服务器
 	Data   Data   // 数据
 	Log    Log    // 日志
-	Media  Media  // 媒体
+	Sip    SIP
+	Media  Media // 媒体
 }
 
 type Server struct {
@@ -55,6 +56,13 @@ type Log struct {
 	MaxAge       Duration `comment:"保留日志多久，超过时间自动删除"`
 	RotationTime Duration `comment:"多久时间，分割一个新的日志文件"`
 	RotationSize int64    `comment:"多大文件，分割一个新的日志文件(MB)"`
+}
+
+type SIP struct {
+	Port     int    `comment:"服务监听的 tcp/udp 端口号"`
+	ID       string `comment:"gb/t28181 20 位国标 ID"`
+	Domain   string
+	Password int `comment:"注册密码"`
 }
 
 type Media struct {

@@ -36,7 +36,7 @@ func (m *IDManager) UniqueID(prefix string) string {
 	// 如果在最低长度中，碰撞比较频繁，增加 1 位长度再试一次
 	for i := range 10 {
 		// 生成自定义长度随机数，通过数据库主键来防止碰撞，碰撞后再次尝试
-		for range 66 {
+		for range 36 {
 			id := prefix + GenerateRandomString(m.length+i)
 			if err := m.store.Add(context.Background(), &UniqueID{ID: id}); err != nil {
 				slog.Error("UniqueID", "err", err)
