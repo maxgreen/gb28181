@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/ixugo/goweb/pkg/conc"
 )
 
 var bufferSize uint16 = 65535 - 20 - 8 // IPv4 max size - IPv4 Header size - UDP Header size
@@ -22,12 +24,11 @@ var bufferSize uint16 = 65535 - 20 - 8 // IPv4 max size - IPv4 Header size - UDP
 // Server Server
 type Server struct {
 	udpaddr net.Addr
-	conn    Connection
+	udpConn Connection
 
 	txs *transacionts
 
-	hmu   *sync.RWMutex
-	route map[string][]HandlerFunc
+	route conc.Map[string, []HandlerFunc]
 
 	port *Port
 	host net.IP
@@ -36,42 +37,58 @@ type Server struct {
 	tcpListener *net.TCPListener
 
 	tcpaddr net.Addr
+
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	from *Address
 }
 
 // NewServer NewServer
-func NewServer() *Server {
+func NewServer(form *Address) *Server {
 	activeTX = &transacionts{txs: map[string]*Transaction{}, rwm: &sync.RWMutex{}}
+	ctx, cancel := context.WithCancel(context.TODO())
 	srv := &Server{
-		hmu:   &sync.RWMutex{},
-		txs:   activeTX,
-		route: make(map[string][]HandlerFunc),
+		txs:    activeTX,
+		ctx:    ctx,
+		cancel: cancel,
+		from:   form,
 	}
 	return srv
 }
 
-func (s *Server) addRoute(method string, pattern string, handler ...HandlerFunc) {
-	s.hmu.Lock()
-	defer s.hmu.Unlock()
-	key := method + "-" + pattern
-	s.route[key] = handler
+func (s *Server) addRoute(method string, handler ...HandlerFunc) {
+	s.route.Store(strings.ToUpper(method), handler)
 }
 
 func (s *Server) Register(handler ...HandlerFunc) {
-	s.addRoute(MethodRegister, "", handler...)
+	s.addRoute(MethodRegister, handler...)
 }
 
-func (s *Server) Message(handler ...HandlerFunc) {
-	s.addRoute(MethodMessage, "", handler...)
+func (s *Server) Message(handler ...HandlerFunc) *RouteGroup {
+	s.addRoute(MethodMessage, handler...)
+	return newRouteGroup(MethodMessage, s, handler...)
+}
+
+func (s *Server) Notify(handler ...HandlerFunc) *RouteGroup {
+	s.addRoute(MethodNotify, handler...)
+	return newRouteGroup(MethodNotify, s, handler...)
 }
 
 func (s *Server) getTX(key string) *Transaction {
 	return s.txs.getTX(key)
 }
 
-func (s *Server) mustTX(key string) *Transaction {
+func (s *Server) mustTX(msg *Request) *Transaction {
+	key := getTXKey(msg)
 	tx := s.txs.getTX(key)
+
 	if tx == nil {
-		tx = s.txs.newTX(key, s.conn)
+		if msg.conn.Network() == "udp" {
+			tx = s.txs.newTX(key, s.udpConn)
+		} else {
+			tx = s.txs.newTX(key, msg.conn)
+		}
 	}
 	return tx
 }
@@ -91,7 +108,7 @@ func (s *Server) ListenUDPServer(addr string) {
 	if err != nil {
 		panic(fmt.Errorf("net.ListenUDP err[%w]", err))
 	}
-	s.conn = newUDPConnection(udp)
+	s.udpConn = newUDPConnection(udp)
 	var (
 		raddr net.Addr
 		num   int
@@ -101,17 +118,22 @@ func (s *Server) ListenUDPServer(addr string) {
 	defer parser.stop()
 	go s.handlerListen(parser.out)
 	for {
-		num, raddr, err = s.conn.ReadFrom(buf)
-		if err != nil {
-			// logrus.Errorln("udp.ReadFromUDP err", err)
-			continue
+		select {
+		case <-s.ctx.Done():
+			return
+		default:
+			num, raddr, err = s.udpConn.ReadFrom(buf)
+			if err != nil {
+				slog.Error("udp.ReadFromUDP", "err", err)
+				continue
+			}
+			parser.in <- newPacket(append([]byte{}, buf[:num]...), raddr, s.udpConn)
 		}
-		parser.in <- newPacket(append([]byte{}, buf[:num]...), raddr, s.conn)
 	}
 }
 
 // ListenTCPServer 启动 TCP 服务器并监听指定地址。
-func (s *Server) ListenTCPServer(ctx context.Context, addr string) {
+func (s *Server) ListenTCPServer(addr string) {
 	// 解析传入的地址为 TCP 地址
 	tcpaddr, err := net.ResolveTCPAddr("tcp", addr)
 	// 如果解析地址失败，则抛出错误
@@ -138,7 +160,7 @@ func (s *Server) ListenTCPServer(ctx context.Context, addr string) {
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-s.ctx.Done():
 			slog.Info("ListenTCPServer Has Been Exits")
 			return
 		default:
@@ -152,14 +174,25 @@ func (s *Server) ListenTCPServer(ctx context.Context, addr string) {
 	}
 }
 
+func (s *Server) Close() {
+	if s.cancel != nil {
+		s.cancel()
+		s.cancel = nil
+	}
+	if s.udpConn != nil {
+		s.udpConn.Close()
+		s.udpConn = nil
+	}
+	if s.tcpListener != nil {
+		s.tcpListener.Close()
+		s.tcpListener = nil
+	}
+}
+
 // ProcessTcpConn 处理传入的 TCP 连接。
 func (s *Server) ProcessTcpConn(conn net.Conn) {
-	// 确保在方法退出时关闭连接
-	defer conn.Close() // 关闭连接
-	// 创建一个新的缓冲读取器，用于从连接中读取数据
+	defer conn.Close()
 	reader := bufio.NewReader(conn)
-	// lenBuf := make([]byte, 2)
-	// 创建一个新的 TCP 连接实例
 	c := NewTCPConnection(conn)
 
 	parser := newParser()
@@ -167,47 +200,34 @@ func (s *Server) ProcessTcpConn(conn net.Conn) {
 	go s.handlerListen(parser.out)
 
 	for {
-		// 初始化一个缓冲区，用于存储读取的数据
 		var buffer bytes.Buffer
-		// 初始化 body 长度
 		bodyLen := 0
 		for {
 			// 读取一行数据，以 '\n' 为结束符
 			line, err := reader.ReadBytes('\n')
-			// 如果读取过程中出错，则退出方法
 			if err != nil {
 				// logrus.Debugln("tcp conn read error:", err)
 				return
 			}
-			// 将读取的数据写入缓冲区
 			buffer.Write(line)
-			// 如果读取到的行长度小于等于2且 body 长度小于等于0，则跳出循环
 			if len(line) <= 2 {
 				if bodyLen <= 0 {
 					break
 				}
 
-				// 读取 body 数据
-				// read body
 				bodyBuf := make([]byte, bodyLen)
 				n, err := io.ReadFull(reader, bodyBuf)
-				// 如果读取 body 数据时出错，则记录错误并退出循环
 				if err != nil || n != bodyLen {
 					slog.Error(`error while read full`, "err", err)
-					// err process
 				}
-				// 将读取的 body 数据写入缓冲区
 				buffer.Write(bodyBuf)
 				break
 			}
 
-			// 如果读取到 "Content-Length" 头部，则解析 body 长度
 			if strings.Contains(string(line), "Content-Length") {
-				// 以: 对line做分割
 				s := strings.Split(string(line), ":")
 				value := strings.Trim(s[len(s)-1], " \r\n")
 				bodyLen, err = strconv.Atoi(value)
-				// 如果解析 "Content-Length" 头部失败，则记录错误并退出循环
 				if err != nil {
 					slog.Error("parse Content-Length failed")
 					break
@@ -236,11 +256,22 @@ func (s *Server) handlerListen(msgs chan Message) {
 		switch tmsg := msg.(type) {
 		case *Request:
 			req := tmsg
-			req.SetDestination(s.udpaddr)
+
+			dst := s.udpaddr
+			if req.conn.Network() == "tcp" {
+				dst = s.tcpaddr
+			}
+
+			req.SetDestination(dst)
 			s.handlerRequest(req)
 		case *Response:
 			resp := tmsg
-			resp.SetDestination(s.udpaddr)
+
+			dst := s.udpaddr
+			if resp.conn.Network() == "tcp" {
+				dst = s.tcpaddr
+			}
+			resp.SetDestination(dst)
 			s.handlerResponse(resp)
 		default:
 			// logrus.Errorln("undefind msg type,", tmsg, msg.String())
@@ -249,19 +280,35 @@ func (s *Server) handlerListen(msgs chan Message) {
 }
 
 func (s *Server) handlerRequest(msg *Request) {
-	tx := s.mustTX(getTXKey(msg))
+	tx := s.mustTX(msg)
 	// logrus.Traceln("receive request from:", msg.Source(), ",method:", msg.Method(), "txKey:", tx.key, "message: \n", msg.String())
-	s.hmu.RLock()
-	handlers, ok := s.route[msg.Method()]
-	s.hmu.RUnlock()
+
+	key := msg.Method()
+	if key == MethodMessage || key == MethodNotify {
+
+		if l, ok := msg.ContentLength(); !ok || l.Equals(0) {
+			slog.Error("ContentLength is empty")
+			return
+		}
+		body := msg.Body()
+		var msg MessageReceive
+		if err := XMLDecode(body, &msg); err != nil {
+			slog.Error("xml decode err")
+			return
+		}
+		key += "-" + msg.CmdType
+	}
+	handlers, ok := s.route.Load(strings.ToUpper(key))
 	if !ok {
-		// logrus.Errorln("not found handler func,string:", msg.Method(), msg.String())
+		slog.Error("not found handler func,string:", "method", msg.Method(), "msg", msg.String())
 		go handlerMethodNotAllowed(msg, tx)
 		return
 	}
 
 	ctx := newContext(msg, tx)
 	ctx.handlers = handlers
+	ctx.fromAddr = s.from
+	ctx.svr = s
 	go ctx.Next()
 }
 
@@ -290,7 +337,7 @@ func (s *Server) Request(req *Request) (*Transaction, error) {
 		viaHop.Params.Add("rport", nil)
 	}
 
-	tx := s.mustTX(getTXKey(req))
+	tx := s.mustTX(req)
 	return tx, tx.Request(req)
 }
 

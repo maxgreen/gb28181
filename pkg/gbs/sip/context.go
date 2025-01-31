@@ -1,37 +1,111 @@
 package sip
 
+import (
+	"fmt"
+	"log/slog"
+	"math"
+	"net"
+	"strings"
+)
+
+const abortIndex int8 = math.MaxInt8 >> 1
+
 type HandlerFunc func(*Context)
 
 type Context struct {
 	Request  *Request
 	Tx       *Transaction
 	handlers []HandlerFunc
-	index    int
+	index    int8
 
 	cache map[string]any
+
+	DeviceID string
+	Host     string
+	Port     string
+
+	Source   net.Addr
+	toAddr   *Address
+	fromAddr *Address
+
+	Log *slog.Logger
+
+	svr *Server
 }
 
 func newContext(req *Request, tx *Transaction) *Context {
-	return &Context{
+	c := Context{
 		Request: req,
 		Tx:      tx,
 		cache:   make(map[string]any),
+		Log:     slog.Default(),
+		index:   -1,
 	}
+	if err := c.parserRequest(); err != nil {
+		slog.Error("parserRequest", "err", err)
+	}
+	return &c
+}
+
+func (c *Context) parserRequest() error {
+	req := c.Request
+	header, ok := req.From()
+	if !ok {
+		return fmt.Errorf("req from is nil")
+	}
+
+	if header.Address == nil {
+		return fmt.Errorf("header address is nil")
+	}
+	user := header.Address.User()
+	if user == nil {
+		return fmt.Errorf("address user is nil")
+	}
+	c.DeviceID = user.String()
+	c.Host = header.Address.Host()
+	via, ok := req.ViaHop()
+	if !ok {
+		return fmt.Errorf("via is nil")
+	}
+	c.Host = via.Host
+	c.Port = via.Port.String()
+
+	c.Source = req.Source()
+	c.toAddr = NewAddressFromFromHeader(header)
+
+	c.Log = slog.Default().With("deviceID", c.DeviceID, "host", c.Host)
+	return nil
 }
 
 func (c *Context) Next() {
-	l := len(c.handlers)
-	for {
-		c.handlers[c.index](c)
-		if c.index == -1 || c.index >= l {
-			return
+	c.index++
+	for c.index < int8(len(c.handlers)) {
+		if fn := c.handlers[c.index]; fn != nil {
+			fn(c)
 		}
 		c.index++
 	}
 }
 
+func (c *Context) GetHeader(key string) string {
+	headers := c.Request.GetHeaders(key)
+	if len(headers) > 0 {
+		header := headers[0]
+		splits := strings.Split(header.String(), ":")
+		if len(splits) == 2 {
+			return strings.TrimSpace(splits[1])
+		}
+	}
+	return ""
+}
+
 func (c *Context) Abort() {
-	c.index = -1
+	c.index = abortIndex
+}
+
+func (c *Context) AbortString(status int, msg string) {
+	c.Abort()
+	c.String(status, msg)
 }
 
 func (c *Context) String(status int, msg string) {
@@ -59,4 +133,15 @@ func (c *Context) GetMustInt(k string) int {
 		return v.(int)
 	}
 	return 0
+}
+
+func (c *Context) SendRequest(method string, body []byte) (*Transaction, error) {
+	hb := NewHeaderBuilder().SetTo(c.toAddr).SetFrom(c.fromAddr).AddVia(&ViaHop{
+		Params: NewParams().Add("branch", String{Str: GenerateBranch()}),
+	}).SetContentType(&ContentTypeXML).SetMethod(method)
+
+	req := NewRequest("", method, c.toAddr.URI, DefaultSipVersion, hb.Build(), body)
+	req.SetDestination(c.Source)
+	req.SetConnection(c.Request.conn)
+	return c.svr.Request(req)
 }

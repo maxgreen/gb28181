@@ -4,7 +4,9 @@ package gb28181
 import (
 	"context"
 	"log/slog"
+	"strings"
 
+	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"github.com/jinzhu/copier"
@@ -22,7 +24,21 @@ type ChannelStorer interface {
 // FindChannel Paginated search
 func (c *Core) FindChannel(ctx context.Context, in *FindChannelInput) ([]*Channel, int64, error) {
 	items := make([]*Channel, 0)
-	total, err := c.store.Channel().Find(ctx, &items, in)
+
+	query := orm.NewQuery(1)
+	query.OrderBy("channel_id ASC")
+	if in.DeviceID != "" {
+		query.Where("device_id = ?", in.DeviceID)
+	}
+	if in.Key != "" {
+		if strings.HasPrefix(in.Key, bz.IDPrefixGBChannel) {
+			query.Where("id=?", in.Key)
+		} else {
+			query.Where("channel_id like ? OR name like ?", "%"+in.Key+"%", "%"+in.Key+"%")
+		}
+	}
+
+	total, err := c.store.Channel().Find(ctx, &items, in, query.Encode()...)
 	if err != nil {
 		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}

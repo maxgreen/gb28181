@@ -30,7 +30,7 @@ func SipRecordList(to *Channels, start, end int64) (*Records, error) {
 	}).SetContentType(&sip.ContentTypeXML).SetMethod(sip.MethodMessage)
 	req := sip.NewRequest("", sip.MethodMessage, to.addr.URI, sip.DefaultSipVersion, hb.Build(), sip.GetRecordInfoXML(to.ChannelID, sn, start, end))
 	req.SetDestination(device.source)
-	tx, err := srv.Request(req)
+	tx, err := svr.Request(req)
 	if err != nil {
 		return nil, err
 	}

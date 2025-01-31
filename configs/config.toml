@@ -18,11 +18,17 @@ version = 1
     ConnMaxLifetime = '6h0m0s'
     SlowThreshold = '200ms'
 
+[Sip]
+  Port = 15062
+  ID = "3402000000200000001"
+  Domain = "3402000000"
+  Password = "12345678"
+
 [Media]
   IP = "127.0.0.1"
   HTTPPort = 8080
   Secret = "s1kPE7bzqKeHUaVcp8dCA0jeB8yxyFq4"
-  WebHookIP = "192.168.10.28"
+  WebHookIP = "host.docker.internal"
   RTPPortRange = "20000,20500"
 
 [Log]

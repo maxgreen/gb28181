@@ -138,7 +138,7 @@ func sipPlayPush(data *Streams, channel Channels, device Devices) (*Streams, err
 	req.SetDestination(device.source)
 	req.AppendHeader(&sip.GenericHeader{HeaderName: "Subject", Contents: fmt.Sprintf("%s:%s,%s:%s", channel.ChannelID, data.StreamID, _serverDevices.DeviceID, data.StreamID)})
 	req.SetRecipient(channel.addr.URI)
-	tx, err := srv.Request(req)
+	tx, err := svr.Request(req)
 	if err != nil {
 		// logrus.Warningln("sipPlayPush fail.id:", device.DeviceID, channel.ChannelID, "err:", err)
 		return data, err
@@ -192,7 +192,7 @@ func SipStopPlay(ssrc string) {
 		user := u.(Devices)
 		req := sip.NewRequestFromResponse(sip.MethodBYE, resp)
 		req.SetDestination(user.source)
-		tx, err := srv.Request(req)
+		tx, err := svr.Request(req)
 		if err != nil {
 			// logrus.Warningln("sipStopPlay bye fail.id:", play.DeviceID, play.ChannelID, "err:", err)
 		}

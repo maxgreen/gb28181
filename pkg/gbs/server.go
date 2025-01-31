@@ -1,7 +1,6 @@
 package gbs
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -9,29 +8,42 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/gowvp/gb28181/internal/conf"
+	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
 )
 
 type Server struct {
 	*sip.Server
+	gb *GB28181API
 }
 
-func NewServer() *Server {
-	api := GB28181API{}
+func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181) (*Server, func()) {
+	api := NewGB28181API(cfg, store)
 
-	srv = sip.NewServer()
-	srv.Register(api.handlerRegister)
-	// srv.RegistHandler(sip.MethodMessage, api.handlerMessage)
-	// srv.Message("catalog", api.handlerMessage)
-	// srv.Message("keepalive", api.handlerMessage)
-	// srv.Message("RecordInfo", api.handlerMessage)
-	// srv.Message("DeviceInfo", api.handlerMessage)
-	go srv.ListenUDPServer("0.0.0.0:15060")
-	go srv.ListenTCPServer(context.TODO(), "0.0.0.0:15060")
-	return &Server{
-		Server: srv,
+	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s", cfg.Sip.ID, cfg.Sip.Domain))
+	from := sip.Address{
+		DisplayName: sip.String{Str: "gowvp"},
+		URI:         &uri,
+		Params:      sip.NewParams(),
 	}
+
+	svr = sip.NewServer(&from)
+	svr.Register(api.handlerRegister)
+	msg := svr.Message()
+	msg.Handle("Keepalive", api.sipMessageKeepalive)
+	msg.Handle("Catalog", api.sipMessageCatalog)
+	msg.Handle("DeviceInfo", api.sipMessageDeviceInfo)
+
+	// msg.Handle("RecordInfo", api.handlerMessage)
+
+	go svr.ListenUDPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
+	go svr.ListenTCPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
+	c := Server{
+		Server: svr,
+	}
+	return &c, c.Close
 }
 
 func Start() {
@@ -44,8 +56,8 @@ func Start() {
 
 	LoadSYSInfo()
 
-	srv = sip.NewServer()
-	go srv.ListenUDPServer(config.UDP)
+	// svr = sip.NewServer()
+	// go svr.ListenUDPServer(config.UDP)
 }
 
 // MODDEBUG MODDEBUG
@@ -97,14 +109,14 @@ func LoadSYSInfo() {
 	// }
 	m.MConfig.GB28181 = _sysinfo
 
-	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s", _sysinfo.LID, _sysinfo.Region))
+	// uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s", _sysinfo.LID, _sysinfo.Region))
 	_serverDevices = Devices{
 		DeviceID: _sysinfo.LID,
-		Region:   _sysinfo.Region,
+		// Region:   _sysinfo.Region,
 		addr: &sip.Address{
 			DisplayName: sip.String{Str: "sipserver"},
-			URI:         &uri,
-			Params:      sip.NewParams(),
+			// URI:         &uri,
+			Params: sip.NewParams(),
 		},
 	}
 
@@ -139,4 +151,13 @@ func sipResponse(tx *sip.Transaction) (*sip.Response, error) {
 		return response, sip.NewError(nil, "response fail", response.StatusCode(), response.Reason(), "tx key:", tx.Key())
 	}
 	return response, nil
+}
+
+// QueryCatalog 查询 catalog
+func (s *Server) QueryCatalog(deviceID string) {
+	// TODO: query 查询不能直接传递 ctx，需要缓存目标信息
+	s.gb.QueryCatalog(nil)
+}
+
+func (s *Server) Play() {
 }

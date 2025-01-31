@@ -2,7 +2,6 @@ package api
 
 import (
 	"expvar"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"path/filepath"
@@ -14,8 +13,6 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
-	"github.com/gowvp/gb28181/internal/core/bz"
-	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/plugin/stat"
 	"github.com/gowvp/gb28181/plugin/stat/statapi"
 	"github.com/ixugo/goweb/pkg/system"
@@ -69,67 +66,9 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权
 	registerMediaAPI(r, uc.MediaAPI)
-	registerGb28181(r, uc.GB28181API)
 
-	// TODO: 临时播放接口，待重构
-	r.POST("/channels/:id/play", web.WarpH(func(c *gin.Context, _ *struct{}) (*playOutput, error) {
-		channelID := c.Param("id")
-
-		// TODO: 目前仅开发到 rtsp，待扩展 rtsp/gb 等
-		if !strings.HasPrefix(channelID, bz.IDPrefixRTMP) {
-			return nil, web.ErrNotFound.Msg("不支持的播放通道")
-		}
-
-		push, err := uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
-		if err != nil {
-			return nil, err
-		}
-		if push.Status != media.StatusPushing {
-			return nil, web.ErrNotFound.Msg("未推流")
-		}
-
-		svr, err := uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), push.MediaServerID)
-		if err != nil {
-			return nil, err
-		}
-
-		stream := push.App + "/" + push.Stream
-		host := c.Request.Host
-		if l := strings.Split(c.Request.Host, ":"); len(l) == 2 {
-			host = l[0]
-		}
-		var session string
-		if !push.IsAuthDisabled && push.Session != "" {
-			session = "session=" + push.Session
-		}
-
-		// 播放规则
-		// https://github.com/zlmediakit/ZLMediaKit/wiki/%E6%92%AD%E6%94%BEurl%E8%A7%84%E5%88%99
-		return &playOutput{
-			App:    push.App,
-			Stream: push.Stream,
-			Items: []streamAddrItem{
-				{
-					Label:   "默认线路",
-					WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
-					HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
-					RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream) + "?" + session,
-					RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream) + "?" + session,
-					WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTP, push.App, push.Stream) + "&" + session,
-					HLS:     fmt.Sprintf("http://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTP, stream) + "?" + session,
-				},
-				{
-					Label:   "SSL 线路",
-					WSFLV:   fmt.Sprintf("wss://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + session,
-					HTTPFLV: fmt.Sprintf("https://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + session,
-					RTMP:    fmt.Sprintf("rtmps://%s:%d/%s", host, svr.Ports.RTMPs, stream) + session,
-					RTSP:    fmt.Sprintf("rtsps://%s:%d/%s", host, svr.Ports.RTSPs, stream) + session,
-					WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTPS, push.App, push.Stream) + "&" + session,
-					HLS:     fmt.Sprintf("https://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTPS, stream) + "?" + session,
-				},
-			},
-		}, nil
-	}))
+	uc.GB28181API.uc = uc
+	registerGB28181(r, uc.GB28181API)
 }
 
 type playOutput struct {

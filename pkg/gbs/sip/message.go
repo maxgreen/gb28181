@@ -24,7 +24,7 @@ const (
 	MethodRegister = "REGISTER"
 	MethodOptions  = "OPTIONS"
 	// SUBSCRIBE  = "SUBSCRIBE"
-	// NOTIFY   = "NOTIFY"
+	MethodNotify = "NOTIFY"
 	// REFER    = "REFER"
 	MethodInfo    = "INFO"
 	MethodMessage = "MESSAGE"
@@ -80,6 +80,7 @@ type Message interface {
 	SetSource(src net.Addr)
 	Destination() net.Addr
 	SetDestination(dest net.Addr)
+	SetConnection(Connection)
 
 	IsCancel() bool
 	IsAck() bool
@@ -93,6 +94,8 @@ type message struct {
 	body         []byte
 	source, dest net.Addr
 	startLine    func() string
+
+	conn Connection `json:"-"`
 }
 
 // MessageID MessageID
@@ -165,6 +168,10 @@ func (msg *message) Source() net.Addr {
 // SetSource SetSource
 func (msg *message) SetSource(src net.Addr) {
 	msg.source = src
+}
+
+func (msg *message) SetConnection(conn Connection) {
+	msg.conn = conn
 }
 
 // Destination Destination

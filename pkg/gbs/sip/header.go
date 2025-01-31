@@ -33,7 +33,7 @@ type HeadersBuilder struct {
 func NewHeaderBuilder() *HeadersBuilder {
 	callID := CallID(RandString(32))
 	maxForwards := MaxForwards(70)
-	userAgent := UserAgentHeader("GoSIP")
+	userAgent := UserAgentHeader("GoWVP")
 	return &HeadersBuilder{
 		protocol:        "SIP",
 		protocolVersion: "2.0",

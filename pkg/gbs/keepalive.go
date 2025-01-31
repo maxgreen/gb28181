@@ -1,9 +1,9 @@
 package gbs
 
 import (
-	"time"
-
+	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
+	"github.com/ixugo/goweb/pkg/orm"
 	// "github.com/panjjo/gosip/db"
 )
 
@@ -16,27 +16,30 @@ type MessageNotify struct {
 	Info     string `xml:"Info"`
 }
 
-func sipMessageKeepalive(u Devices, body []byte) error {
-	message := &MessageNotify{}
-	if err := sip.XMLDecode(body, message); err != nil {
-		// logrus.Errorln("Message Unmarshal xml err:", err, "body:", string(body))
-		return err
+func (g GB28181API) sipMessageKeepalive(ctx *sip.Context) {
+	var msg MessageNotify
+	if err := sip.XMLDecode(ctx.Request.Body(), &msg); err != nil {
+		ctx.Log.Error("Message Unmarshal xml err", "err", err)
+		return
 	}
-	device, ok := _activeDevices.Get(u.DeviceID)
-	if !ok {
-		device = Devices{DeviceID: u.DeviceID}
-		// if err := db.Get(db.DBClient, &device); err != nil {
-		// logrus.Warnln("Device Keepalive not found ", u.DeviceID, err)
-		// }
+
+	// device, ok := _activeDevices.Get(ctx.DeviceID)
+	// if !ok {
+	// device = Devices{DeviceID: ctx.DeviceID}
+	// if err := db.Get(db.DBClient, &device); err != nil {
+	// logrus.Warnln("Device Keepalive not found ", u.DeviceID, err)
+	// }
+	// }
+
+	if err := g.store.Edit(ctx.DeviceID, func(d *gb28181.Device) {
+		d.KeepaliveAt = orm.Now()
+		d.IsOnline = msg.Status == "OK"
+	}); err != nil {
+		ctx.Log.Error("keepalive", "err", err)
 	}
-	if message.Status == "OK" {
-		device.ActiveAt = time.Now().Unix()
-		_activeDevices.Store(u.DeviceID, u)
-	} else {
-		device.ActiveAt = -1
-		_activeDevices.Delete(u.DeviceID)
-	}
-	go notify(notifyDevicesAcitve(u.DeviceID, message.Status))
+
+	// _activeDevices.Store(u.DeviceID, u)
+	// go notify(notifyDevicesAcitve(u.DeviceID, message.Status))
 	// _, err := db.UpdateAll(db.DBClient, new(Devices), map[string]interface{}{"deviceid=?": u.DeviceID}, Devices{
 	// 	Host:     u.Host,
 	// 	Port:     u.Port,
@@ -47,5 +50,6 @@ func sipMessageKeepalive(u Devices, body []byte) error {
 	// 	ActiveAt: device.ActiveAt,
 	// })
 	// return err
-	return nil
+	// return nil
+	ctx.String(200, "OK")
 }

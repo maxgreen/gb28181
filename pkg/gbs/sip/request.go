@@ -157,6 +157,10 @@ func (req *Request) SetDestination(dest net.Addr) {
 	req.dest = dest
 }
 
+func (req *Request) SetConnection(conn Connection) {
+	req.conn = conn
+}
+
 // Clone Clone
 func (req *Request) Clone() Message {
 	return NewRequest(

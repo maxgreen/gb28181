@@ -125,7 +125,11 @@ func (conn *connection) Write(buf []byte) (int, error) {
 }
 
 func (conn *connection) WriteTo(buf []byte, raddr net.Addr) (num int, err error) {
-	num, err = conn.baseConn.(net.PacketConn).WriteTo(buf, raddr)
+	if conn.Network() == "tcp" {
+		num, err = conn.baseConn.Write(buf)
+	} else {
+		num, err = conn.baseConn.(net.PacketConn).WriteTo(buf, raddr)
+	}
 	if err != nil {
 		return num, NewError(err, conn.logKey, "writeTo", conn.baseConn.LocalAddr().String(), raddr.String())
 	}
@@ -150,7 +154,7 @@ func (conn *connection) Close() error {
 }
 
 func (conn *connection) Network() string {
-	return strings.ToUpper(conn.baseConn.LocalAddr().Network())
+	return conn.baseConn.LocalAddr().Network()
 }
 
 func (conn *connection) SetDeadline(t time.Time) error {

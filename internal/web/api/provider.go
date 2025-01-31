@@ -7,6 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/gowvp/gb28181/internal/conf"
+	"github.com/gowvp/gb28181/internal/core/gb28181"
+	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181db"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/media/store/mediadb"
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
@@ -31,6 +33,7 @@ var (
 		NewMediaCore, NewMediaAPI,
 		gbs.NewServer,
 		NewGb28181API,
+		NewGB28181,
 	)
 )
 
@@ -42,7 +45,7 @@ type Usecase struct {
 	WebHookAPI WebHookAPI
 	UniqueID   uniqueid.Core
 	MediaAPI   MediaAPI
-	GB28181API Gb28181API
+	GB28181API GB28181API
 
 	SipServer *gbs.Server
 }
@@ -96,4 +99,12 @@ func NewUniqueID(db *gorm.DB) uniqueid.Core {
 
 func NewMediaCore(db *gorm.DB, uni uniqueid.Core) media.Core {
 	return media.NewCore(mediadb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
+}
+
+func NewGB28181(db *gorm.DB, uni uniqueid.Core) gb28181.GB28181 {
+	return gb28181.NewGB28181(
+		gb28181db.NewDevice(db),
+		gb28181db.NewChannel(db),
+		uni,
+	)
 }

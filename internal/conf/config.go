@@ -62,7 +62,7 @@ type SIP struct {
 	Port     int    `comment:"服务监听的 tcp/udp 端口号"`
 	ID       string `comment:"gb/t28181 20 位国标 ID"`
 	Domain   string
-	Password int `comment:"注册密码"`
+	Password string `comment:"注册密码"`
 }
 
 type Media struct {

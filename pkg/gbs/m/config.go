@@ -46,7 +46,7 @@ type MediaServer struct {
 type SysInfo struct {
 	// db.DBModel
 	// Region 当前域
-	Region string `json:"region"   yaml:"region" mapstructure:"region"`
+	// Region string `json:"region"   yaml:"region" mapstructure:"region"`
 	// CID 通道id固定头部
 	CID string `json:"cid"   yaml:"cid" mapstructure:"cid"`
 	// CNUM 当前通道数

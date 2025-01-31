@@ -665,6 +665,7 @@ func (p *parser) start() {
 			msg.SetBody(body, false)
 		}
 		msg.SetSource(packet.raddr)
+		msg.SetConnection(packet.conn)
 		p.out <- msg
 	}
 }

@@ -31,7 +31,8 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	webHookAPI := api.NewWebHookAPI(smsCore, mediaCore, bc)
 	mediaAPI := api.NewMediaAPI(mediaCore, smsCore, bc)
 	gb28181API := api.NewGb28181API(db, uniqueidCore)
-	server := gbs.NewServer()
+	gb28181 := api.NewGB28181(db, uniqueidCore)
+	server, cleanup := gbs.NewServer(bc, gb28181)
 	usecase := &api.Usecase{
 		Conf:       bc,
 		DB:         db,
@@ -45,5 +46,6 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	}
 	handler := api.NewHTTPHandler(usecase)
 	return handler, func() {
+		cleanup()
 	}, nil
 }

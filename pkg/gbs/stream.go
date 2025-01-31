@@ -150,7 +150,7 @@ func CheckStreams() {
 			StreamList.Response.Delete(stream.StreamID)
 			StreamList.Succ.Delete(stream.ChannelID)
 
-			tx, err := srv.Request(req)
+			tx, err := svr.Request(req)
 			if err != nil {
 				// logrus.Warningln("checkStreamClosedFail", stream.StreamID, err)
 				stream.Msg = err.Error()

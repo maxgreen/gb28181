@@ -3,7 +3,6 @@ package sip
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -15,8 +14,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+	"unicode/utf8"
 
-	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 )
@@ -156,24 +155,34 @@ func GetRequest(url string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	respbody, err := ioutil.ReadAll(resp.Body)
+	respbody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 	return respbody, nil
 }
 
-// GetMD5 GetMD5
-func GetMD5(str string) string {
-	h := md5.New()
-	io.WriteString(h, str)
-	return fmt.Sprintf("%x", h.Sum(nil))
+// XMLDecode 解码 xml
+func XMLDecode(data []byte, v interface{}) error {
+	if err := xmlDecode(data, v); err == nil {
+		return nil
+	}
+	// 有些body xml发送过来的不带encoding ，而且格式不是utf8的，导致xml解析失败，此处使用gbk转utf8后再次尝试xml解析
+	body, err := GbkToUtf8(data)
+	if err != nil {
+		return err
+	}
+	return xmlDecode(body, v)
 }
 
-// XMLDecode XMLDecode
-func XMLDecode(data []byte, v interface{}) error {
+func xmlDecode(data []byte, v interface{}) error {
 	decoder := xml.NewDecoder(bytes.NewReader(data))
-	decoder.CharsetReader = charset.NewReaderLabel
+	decoder.CharsetReader = func(charset string, input io.Reader) (io.Reader, error) {
+		if utf8.Valid(data) {
+			return input, nil
+		}
+		return simplifiedchinese.GB18030.NewDecoder().Reader(input), nil
+	}
 	return decoder.Decode(v)
 }
 
@@ -226,7 +235,7 @@ func ResolveSelfIP() (net.IP, error) {
 // GBK 转 UTF-8
 func GbkToUtf8(s []byte) ([]byte, error) {
 	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
-	d, e := ioutil.ReadAll(reader)
+	d, e := io.ReadAll(reader)
 	if e != nil {
 		return nil, e
 	}
@@ -236,7 +245,7 @@ func GbkToUtf8(s []byte) ([]byte, error) {
 // UTF-8 转 GBK
 func Utf8ToGbk(s []byte) ([]byte, error) {
 	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewEncoder())
-	d, e := ioutil.ReadAll(reader)
+	d, e := io.ReadAll(reader)
 	if e != nil {
 		return nil, e
 	}

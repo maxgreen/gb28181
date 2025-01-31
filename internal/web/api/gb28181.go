@@ -2,26 +2,31 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181db"
+	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
 	"github.com/ixugo/goweb/pkg/web"
 	"gorm.io/gorm"
 )
 
-type Gb28181API struct {
+type GB28181API struct {
 	gb28181Core gb28181.Core
+	uc          *Usecase
 }
 
-func NewGb28181API(db *gorm.DB, uni uniqueid.Core) Gb28181API {
+func NewGb28181API(db *gorm.DB, uni uniqueid.Core) GB28181API {
 	core := gb28181.NewCore(gb28181db.NewDB(db).AutoMigrate(true), uni)
-	return Gb28181API{gb28181Core: core}
+	return GB28181API{gb28181Core: core}
 }
 
-func registerGb28181(g gin.IRouter, api Gb28181API, handler ...gin.HandlerFunc) {
+func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/devices", handler...)
 		group.GET("", web.WarpH(api.findDevice))
@@ -34,61 +39,129 @@ func registerGb28181(g gin.IRouter, api Gb28181API, handler ...gin.HandlerFunc) 
 	{
 		group := g.Group("/channels", handler...)
 		group.GET("", web.WarpH(api.findChannel))
-		group.GET("/:id", web.WarpH(api.getChannel))
 		group.PUT("/:id", web.WarpH(api.editChannel))
-		group.POST("", web.WarpH(api.addChannel))
-		group.DELETE("/:id", web.WarpH(api.delChannel))
+		group.POST("/:id/play", web.WarpH(api.play))
+		// group.GET("/:id", web.WarpH(api.getChannel))
+		// group.POST("", web.WarpH(api.addChannel))
+		// group.DELETE("/:id", web.WarpH(api.delChannel))
 	}
 }
 
 // >>> device >>>>>>>>>>>>>>>>>>>>
 
-func (a Gb28181API) findDevice(c *gin.Context, in *gb28181.FindDeviceInput) (any, error) {
+func (a GB28181API) findDevice(c *gin.Context, in *gb28181.FindDeviceInput) (any, error) {
 	items, total, err := a.gb28181Core.FindDevice(c.Request.Context(), in)
 	return gin.H{"items": items, "total": total}, err
 }
 
-func (a Gb28181API) getDevice(c *gin.Context, _ *struct{}) (any, error) {
+func (a GB28181API) getDevice(c *gin.Context, _ *struct{}) (any, error) {
 	deviceID, _ := strconv.Atoi(c.Param("id"))
 	return a.gb28181Core.GetDevice(c.Request.Context(), deviceID)
 }
 
-func (a Gb28181API) editDevice(c *gin.Context, in *gb28181.EditDeviceInput) (any, error) {
+func (a GB28181API) editDevice(c *gin.Context, in *gb28181.EditDeviceInput) (any, error) {
 	deviceID := c.Param("id")
 	return a.gb28181Core.EditDevice(c.Request.Context(), in, deviceID)
 }
 
-func (a Gb28181API) addDevice(c *gin.Context, in *gb28181.AddDeviceInput) (any, error) {
+func (a GB28181API) addDevice(c *gin.Context, in *gb28181.AddDeviceInput) (any, error) {
 	return a.gb28181Core.AddDevice(c.Request.Context(), in)
 }
 
-func (a Gb28181API) delDevice(c *gin.Context, _ *struct{}) (any, error) {
+func (a GB28181API) delDevice(c *gin.Context, _ *struct{}) (any, error) {
 	deviceID := c.Param("id")
 	return a.gb28181Core.DelDevice(c.Request.Context(), deviceID)
 }
 
 // >>> channel >>>>>>>>>>>>>>>>>>>>
 
-func (a Gb28181API) findChannel(c *gin.Context, in *gb28181.FindChannelInput) (any, error) {
+func (a GB28181API) findChannel(c *gin.Context, in *gb28181.FindChannelInput) (any, error) {
 	items, total, err := a.gb28181Core.FindChannel(c.Request.Context(), in)
 	return gin.H{"items": items, "total": total}, err
 }
 
-func (a Gb28181API) getChannel(c *gin.Context, _ *struct{}) (any, error) {
+func (a GB28181API) getChannel(c *gin.Context, _ *struct{}) (any, error) {
 	channelID, _ := strconv.Atoi(c.Param("id"))
 	return a.gb28181Core.GetChannel(c.Request.Context(), channelID)
 }
 
-func (a Gb28181API) editChannel(c *gin.Context, in *gb28181.EditChannelInput) (any, error) {
+func (a GB28181API) editChannel(c *gin.Context, in *gb28181.EditChannelInput) (any, error) {
 	channelID, _ := strconv.Atoi(c.Param("id"))
 	return a.gb28181Core.EditChannel(c.Request.Context(), in, channelID)
 }
 
-func (a Gb28181API) addChannel(c *gin.Context, in *gb28181.AddChannelInput) (any, error) {
+func (a GB28181API) addChannel(c *gin.Context, in *gb28181.AddChannelInput) (any, error) {
 	return a.gb28181Core.AddChannel(c.Request.Context(), in)
 }
 
-func (a Gb28181API) delChannel(c *gin.Context, _ *struct{}) (any, error) {
+func (a GB28181API) delChannel(c *gin.Context, _ *struct{}) (any, error) {
 	channelID, _ := strconv.Atoi(c.Param("id"))
 	return a.gb28181Core.DelChannel(c.Request.Context(), channelID)
+}
+
+func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
+	channelID := c.Param("id")
+
+	// TODO: 目前仅开发到 rtmp/gb28181，待扩展 rtsp... 等
+	if !strings.HasPrefix(channelID, bz.IDPrefixRTMP) || !strings.HasPrefix(channelID, bz.IDPrefixGBChannel) {
+		return nil, web.ErrNotFound.Msg("不支持的播放通道")
+	}
+
+	// 国标逻辑
+	if strings.HasPrefix(channelID, bz.IDPrefixGBChannel) {
+		// a.uc.SipServer.
+	}
+
+	push, err := a.uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
+	if err != nil {
+		return nil, err
+	}
+	if push.Status != media.StatusPushing {
+		return nil, web.ErrNotFound.Msg("未推流")
+	}
+
+	svr, err := a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), push.MediaServerID)
+	if err != nil {
+		return nil, err
+	}
+
+	stream := push.App + "/" + push.Stream
+	host := c.Request.Host
+	if l := strings.Split(c.Request.Host, ":"); len(l) == 2 {
+		host = l[0]
+	}
+	var session string
+	if !push.IsAuthDisabled && push.Session != "" {
+		session = "session=" + push.Session
+	}
+
+	// 播放规则
+	// https://github.com/zlmediakit/ZLMediaKit/wiki/%E6%92%AD%E6%94%BEurl%E8%A7%84%E5%88%99
+	return &playOutput{
+		App:    push.App,
+		Stream: push.Stream,
+		Items: []streamAddrItem{
+			{
+				Label:   "默认线路",
+				WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
+				HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
+				RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream) + "?" + session,
+				RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream) + "?" + session,
+				WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTP, push.App, push.Stream) + "&" + session,
+				HLS:     fmt.Sprintf("http://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTP, stream) + "?" + session,
+			},
+			{
+				Label:   "SSL 线路",
+				WSFLV:   fmt.Sprintf("wss://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + session,
+				HTTPFLV: fmt.Sprintf("https://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + session,
+				RTMP:    fmt.Sprintf("rtmps://%s:%d/%s", host, svr.Ports.RTMPs, stream) + session,
+				RTSP:    fmt.Sprintf("rtsps://%s:%d/%s", host, svr.Ports.RTSPs, stream) + session,
+				WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTPS, push.App, push.Stream) + "&" + session,
+				HLS:     fmt.Sprintf("https://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTPS, stream) + "?" + session,
+			},
+		},
+	}, nil
+}
+
+func (uc *Usecase) play(channelID string) {
 }

@@ -1,7 +1,6 @@
 package gbs
 
 import (
-	"encoding/xml"
 	"net"
 	"strings"
 
@@ -12,7 +11,7 @@ import (
 var (
 	// sip服务用户信息
 	_serverDevices Devices
-	srv            *sip.Server
+	svr            *sip.Server
 )
 
 // Devices NVR  设备信息
@@ -190,114 +189,6 @@ func parserDevicesFromReqeust(req *sip.Request) (Devices, bool) {
 	}
 
 	return u, true
-}
-
-// 获取设备信息（注册设备）
-func sipDeviceInfo(to Devices) {
-	hb := sip.NewHeaderBuilder().SetTo(to.addr).SetFrom(_serverDevices.addr).AddVia(&sip.ViaHop{
-		Params: sip.NewParams().Add("branch", sip.String{Str: sip.GenerateBranch()}),
-	}).SetContentType(&sip.ContentTypeXML).SetMethod(sip.MethodMessage)
-	req := sip.NewRequest("", sip.MethodMessage, to.addr.URI, sip.DefaultSipVersion, hb.Build(), sip.GetDeviceInfoXML(to.DeviceID))
-	req.SetDestination(to.source)
-	tx, err := srv.Request(req)
-	if err != nil {
-		// logrus.Warnln("sipDeviceInfo  error,", err)
-		return
-	}
-	_, err = sipResponse(tx)
-	if err != nil {
-		// logrus.Warnln("sipDeviceInfo  response error,", err)
-		return
-	}
-}
-
-// sipCatalog 获取注册设备包含的列表
-func sipCatalog(to Devices) {
-	hb := sip.NewHeaderBuilder().SetTo(to.addr).SetFrom(_serverDevices.addr).AddVia(&sip.ViaHop{
-		Params: sip.NewParams().Add("branch", sip.String{Str: sip.GenerateBranch()}),
-	}).SetContentType(&sip.ContentTypeXML).SetMethod(sip.MethodMessage)
-	req := sip.NewRequest("", sip.MethodMessage, to.addr.URI, sip.DefaultSipVersion, hb.Build(), sip.GetCatalogXML(to.DeviceID))
-	req.SetDestination(to.source)
-	tx, err := srv.Request(req)
-	if err != nil {
-		// logrus.Warnln("sipCatalog  error,", err)
-		return
-	}
-	_, err = sipResponse(tx)
-	if err != nil {
-		// logrus.Warnln("sipCatalog  response error,", err)
-		return
-	}
-}
-
-// MessageDeviceInfoResponse 主设备明细返回结构
-type MessageDeviceInfoResponse struct {
-	CmdType      string `xml:"CmdType"`
-	SN           int    `xml:"SN"`
-	DeviceID     string `xml:"DeviceID"`
-	DeviceType   string `xml:"DeviceType"`
-	Manufacturer string `xml:"Manufacturer"`
-	Model        string `xml:"Model"`
-	Firmware     string `xml:"Firmware"`
-}
-
-func sipMessageDeviceInfo(u Devices, body []byte) error {
-	message := &MessageDeviceInfoResponse{}
-	if err := sip.XMLDecode([]byte(body), message); err != nil {
-		// logrus.Errorln("sipMessageDeviceInfo Unmarshal xml err:", err, "body:", body)
-		return err
-	}
-	// db.UpdateAll(db.DBClient, new(Devices), db.M{"deviceid=?": u.DeviceID}, Devices{
-	// 	Model:        message.Model,
-	// 	DeviceType:   message.DeviceType,
-	// 	Firmware:     message.Firmware,
-	// 	Manufacturer: message.Manufacturer,
-	// })
-	return nil
-}
-
-// MessageDeviceListResponse 设备明细列表返回结构
-type MessageDeviceListResponse struct {
-	XMLName  xml.Name   `xml:"Response"`
-	CmdType  string     `xml:"CmdType"`
-	SN       int        `xml:"SN"`
-	DeviceID string     `xml:"DeviceID"`
-	SumNum   int        `xml:"SumNum"`
-	Item     []Channels `xml:"DeviceList>Item"`
-}
-
-func sipMessageCatalog(u Devices, body []byte) error {
-	message := &MessageDeviceListResponse{}
-	if err := sip.XMLDecode(body, message); err != nil {
-		// logrus.Errorln("Message Unmarshal xml err:", err, "body:", string(body))
-		return err
-	}
-	if message.SumNum > 0 {
-		// for _, d := range message.Item {
-		// channel := Channels{ChannelID: d.ChannelID, DeviceID: message.DeviceID}
-		// if err := db.Get(db.DBClient, &channel); err == nil {
-		// 	channel.Active = time.Now().Unix()
-		// 	channel.URIStr = fmt.Sprintf("sip:%s@%s", d.ChannelID, _sysinfo.Region)
-		// 	channel.Status = transDeviceStatus(d.Status)
-		// 	channel.Name = d.Name
-		// 	channel.Manufacturer = d.Manufacturer
-		// 	channel.Model = d.Model
-		// 	channel.Owner = d.Owner
-		// 	channel.CivilCode = d.CivilCode
-		// 	// Address ip地址
-		// 	channel.Address = d.Address
-		// 	channel.Parental = d.Parental
-		// 	channel.SafetyWay = d.SafetyWay
-		// 	channel.RegisterWay = d.RegisterWay
-		// 	channel.Secrecy = d.Secrecy
-		// 	db.Save(db.DBClient, &channel)
-		// 	go notify(notifyChannelsActive(channel))
-		// } else {
-		// 	// logrus.Infoln("deviceid not found,deviceid:", d.DeviceID, "pdid:", message.DeviceID, "err", err)
-		// }
-		// }
-	}
-	return nil
 }
 
 var deviceStatusMap = map[string]string{

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 var activeTX *transacionts
@@ -117,8 +118,10 @@ func (tx *Transaction) Respond(res *Response) error {
 
 // Request Request
 func (tx *Transaction) Request(req *Request) error {
+	str := req.String()
+	s := unsafe.Slice(unsafe.StringData(str), len(str))
 	// logrus.Traceln("send request,to:", req.dest.String(), "txkey:", tx.key, "message: \n", req.String())
-	_, err := tx.conn.WriteTo([]byte(req.String()), req.dest)
+	_, err := tx.conn.WriteTo(s, req.dest)
 	return err
 }
 

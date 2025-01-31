@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"time"
@@ -58,10 +59,25 @@ func (e *Engine) post(path string, data map[string]any, out any) error {
 		return err
 	}
 	defer resp.Body.Close()
-
 	// b, _ := io.ReadAll(resp.Body)
 	// fmt.Println(string(b))
 	return json.NewDecoder(resp.Body).Decode(out)
+}
+
+// post2 直接读取全部响应返回
+func (e *Engine) post2(path string, data map[string]any) ([]byte, error) {
+	bodyMap := map[string]any{
+		"secret": e.cfg.Secret,
+	}
+	maps.Copy(bodyMap, data)
+	body, _ := json.Marshal(bodyMap)
+
+	resp, err := e.cli.Post(e.cfg.URL+path, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return io.ReadAll(resp.Body)
 }
 
 func (e *Engine) ErrHandle(code int, msg string) error {
