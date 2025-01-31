@@ -22,11 +22,9 @@ Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的
 + 支持跨网网闸平台互联。
 
 
-
-
 ## 开源库
 
-sip 信令基于 gosip 修改， @panjjo [gosip](https://github.com/panjjo/gosip)
+感谢 @panjjo 大佬的开源库 [panjjo/gosip](https://github.com/panjjo/gosip)，GoWVP 的 sip 信令基于此库，出于底层封装需要，并非直接 go mod 依赖该项目，而是源代码放到了 pkg 包中。
 
 流媒体服务基于@夏楚 [ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 
@@ -34,7 +32,7 @@ sip 信令基于 gosip 修改， @panjjo [gosip](https://github.com/panjjo/gosip
 
 项目框架基于 @ixugo [goweb](https://github.com/ixugo/goweb)
 
-Java WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
+Java 语言 WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
 
 ## GoWVP, GB/T28181 交流群
 
