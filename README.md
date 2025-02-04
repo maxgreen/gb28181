@@ -1,23 +1,22 @@
 # 开箱即用的 GB/T28181 协议视频平台
 
-Web Video Platform 是一个基于 GB/T28181-2022 标准实现的开箱即用的网络视频平台，负责实现核心信令与设备管理后台部分，支持 NAT 穿透，支持海康、大华、宇视等品牌的 IPC、NVR 接入。支持国标级联。
+GoWVP (Golang Web Video Platform) 是一个基于 GB/T28181-2022 标准实现的开箱即用的网络视频平台，负责实现核心信令与设备管理后台部分，支持 NAT 穿透，支持海康、大华、宇视等品牌的 IPC、NVR 接入。
 
 
 ## 在线演示平台
 
-+ [演示平台线路 1 (推荐! 推荐! 推荐!)](http://gowvp.golang.space:15123/)
-+ [演示平台线路 2 (爆满)](http://wvp.golang.space/)
++ [在线演示平台)](http://gowvp.golang.space:15123/)
 
 
-![](./docs/demo/home.webp)
+|![](./docs/demo/home.webp)|![](./docs/demo/play.webp)|
+|-|-|
 
-![](./docs/demo/play.webp)
 
 
 ## 应用场景：
 + 支持浏览器无插件播放摄像头视频。
 + 支持国标设备(摄像机、平台、NVR等)设备接入
-+ 支持非国标(onvif, rtsp, rtmp，直播设备等等)设备接入，充分利旧。
++ 支持非国标(rtsp, rtmp，直播设备等等)设备接入，充分利旧。
 + 支持国标级联。多平台级联。跨网视频预览。
 + 支持跨网网闸平台互联。
 

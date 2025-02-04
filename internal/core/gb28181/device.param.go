@@ -2,7 +2,6 @@
 package gb28181
 
 import (
-	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 )
 
@@ -26,19 +25,20 @@ type FindDeviceInput struct {
 }
 
 type EditDeviceInput struct {
-	DeviceID     string    `json:"device_id"`   // 20 位国标编号
-	Name         string    `json:"name"`        // 设备名称
-	Trasnport    string    `json:"trasnport"`   // 传输协议(TCP/UDP)
-	StreamMode   string    `json:"stream_mode"` // 数据传输模式(UDP/TCP_PASSIVE,TCP_ACTIVE)
-	IP           string    `json:"ip"`
-	Port         int       `json:"port"`
-	IsOnline     bool      `json:"is_online"`
-	RegisteredAt orm.Time  `json:"registered_at"` // 注册时间
-	KeepaliveAt  orm.Time  `json:"keepalive_at"`  // 心跳时间
-	Keepalives   int       `json:"keepalives"`    // 心跳间隔
-	Expires      int       `json:"expires"`       // 注册有效期
-	Channels     int       `json:"channels"`      // 通道数量
-	Ext          DeviceExt `json:"ext"`           // 设备属性
+	DeviceID string `json:"device_id"` // 20 位国标编号
+	Name     string `json:"name"`      // 设备名称
+	Password string `json:"password"`  // 注册密码
+	// StreamMode string `json:"stream_mode"` // 数据传输模式(UDP/TCP_PASSIVE,TCP_ACTIVE)
+
+	// IP           string    `json:"ip"`
+	// Port         int       `json:"port"`
+	// IsOnline     bool      `json:"is_online"`
+	// RegisteredAt orm.Time  `json:"registered_at"` // 注册时间
+	// KeepaliveAt  orm.Time  `json:"keepalive_at"`  // 心跳时间
+	// Keepalives   int       `json:"keepalives"`    // 心跳间隔
+	// Expires      int       `json:"expires"`       // 注册有效期
+	// Channels     int       `json:"channels"`      // 通道数量
+	// Ext          DeviceExt `json:"ext"`           // 设备属性
 }
 
 type AddDeviceInput struct {

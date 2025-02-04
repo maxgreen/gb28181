@@ -32,7 +32,7 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	mediaAPI := api.NewMediaAPI(mediaCore, smsCore, bc)
 	gb28181API := api.NewGb28181API(db, uniqueidCore)
 	gb28181 := api.NewGB28181(db, uniqueidCore)
-	server, cleanup := gbs.NewServer(bc, gb28181)
+	server, cleanup := gbs.NewServer(bc, gb28181, smsCore)
 	usecase := &api.Usecase{
 		Conf:       bc,
 		DB:         db,

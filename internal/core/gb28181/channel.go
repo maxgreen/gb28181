@@ -46,7 +46,7 @@ func (c *Core) FindChannel(ctx context.Context, in *FindChannelInput) ([]*Channe
 }
 
 // GetChannel Query a single object
-func (c *Core) GetChannel(ctx context.Context, id int) (*Channel, error) {
+func (c *Core) GetChannel(ctx context.Context, id string) (*Channel, error) {
 	var out Channel
 	if err := c.store.Channel().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
@@ -70,7 +70,7 @@ func (c *Core) AddChannel(ctx context.Context, in *AddChannelInput) (*Channel, e
 }
 
 // EditChannel Update object information
-func (c *Core) EditChannel(ctx context.Context, in *EditChannelInput, id int) (*Channel, error) {
+func (c *Core) EditChannel(ctx context.Context, in *EditChannelInput, id string) (*Channel, error) {
 	var out Channel
 	if err := c.store.Channel().Edit(ctx, &out, func(b *Channel) {
 		if err := copier.Copy(b, in); err != nil {
@@ -83,7 +83,7 @@ func (c *Core) EditChannel(ctx context.Context, in *EditChannelInput, id int) (*
 }
 
 // DelChannel Delete object
-func (c *Core) DelChannel(ctx context.Context, id int) (*Channel, error) {
+func (c *Core) DelChannel(ctx context.Context, id string) (*Channel, error) {
 	var out Channel
 	if err := c.store.Channel().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
 		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())

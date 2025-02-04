@@ -10,16 +10,18 @@ import (
 
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
+	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
 )
 
 type Server struct {
 	*sip.Server
-	gb *GB28181API
+	gb           *GB28181API
+	mediaService sms.Core
 }
 
-func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181) (*Server, func()) {
+func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server, func()) {
 	api := NewGB28181API(cfg, store)
 
 	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s", cfg.Sip.ID, cfg.Sip.Domain))
@@ -41,7 +43,8 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181) (*Server, func()) {
 	go svr.ListenUDPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
 	go svr.ListenTCPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
 	c := Server{
-		Server: svr,
+		Server:       svr,
+		mediaService: sc,
 	}
 	return &c, c.Close
 }
@@ -154,10 +157,13 @@ func sipResponse(tx *sip.Transaction) (*sip.Response, error) {
 }
 
 // QueryCatalog 查询 catalog
-func (s *Server) QueryCatalog(deviceID string) {
+func (s *Server) QueryCatalog(deviceID string) error {
 	// TODO: query 查询不能直接传递 ctx，需要缓存目标信息
 	s.gb.QueryCatalog(nil)
+	return nil
 }
 
-func (s *Server) Play() {
+func (s *Server) Play(deviceID, channelID string) error {
+	// SipPlay(deviceID, channelID)
+	return nil
 }
