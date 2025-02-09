@@ -38,7 +38,6 @@ func (g *GB28181API) Play(in *PlayInput) error {
 
 	// 开启RTP服务器等待接收视频流
 	resp, err := g.sms.OpenRTPServer(in.SMS, zlm.OpenRTPServerRequest{
-		Port:     20010,
 		TCPMode:  in.StreamMode,
 		StreamID: in.Channel.ID,
 	})
