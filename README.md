@@ -34,8 +34,8 @@ GoWVP (Golang Web Video Platform) 是一个基于 GB/T28181-2022 标准实现的
 Java 语言 WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB28181-pro)
 
 ## GoWVP, GB/T28181 交流群
-
- <img src="./wechat.jpg" alt="wechat" width="240"/>
+<h1>点个 Star 再扫码进群呀</h1>
+<img src="./wechat.jpg" alt="wechat" width="200"/>
 
 ## QA
 
@@ -127,7 +127,7 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
   - [ ] 云台控制，控制设备转向，拉近，拉远
   - [ ] 预置位查询，使用与设置
   - [ ] 查询 NVR/IPC 上的录像与播放，支持指定时间播放与下载
-  - [ ] 无人观看自动断流，节省流量
+  - [x] 无人观看自动断流，节省流量
   - [x] 视频设备信息同步
   - [ ] 离在线监控
   - [x] 支持直接输出RTSP、RTMP、HTTP-FLV、Websocket-FLV、HLS多种协议流地址
