@@ -24,9 +24,9 @@ type Context struct {
 	Host     string
 	Port     string
 
-	Source   net.Addr
-	toAddr   *Address
-	fromAddr *Address
+	Source net.Addr
+	To     *Address
+	From   *Address
 
 	Log *slog.Logger
 
@@ -71,7 +71,7 @@ func (c *Context) parserRequest() error {
 	c.Port = via.Port.String()
 
 	c.Source = req.Source()
-	c.toAddr = NewAddressFromFromHeader(header)
+	c.To = NewAddressFromFromHeader(header)
 
 	c.Log = slog.Default().With("deviceID", c.DeviceID, "host", c.Host)
 	return nil
@@ -136,11 +136,11 @@ func (c *Context) GetMustInt(k string) int {
 }
 
 func (c *Context) SendRequest(method string, body []byte) (*Transaction, error) {
-	hb := NewHeaderBuilder().SetTo(c.toAddr).SetFrom(c.fromAddr).AddVia(&ViaHop{
+	hb := NewHeaderBuilder().SetTo(c.To).SetFrom(c.From).AddVia(&ViaHop{
 		Params: NewParams().Add("branch", String{Str: GenerateBranch()}),
 	}).SetContentType(&ContentTypeXML).SetMethod(method)
 
-	req := NewRequest("", method, c.toAddr.URI, DefaultSipVersion, hb.Build(), body)
+	req := NewRequest("", method, c.To.URI, DefaultSipVersion, hb.Build(), body)
 	req.SetDestination(c.Source)
 	req.SetConnection(c.Request.conn)
 	return c.svr.Request(req)

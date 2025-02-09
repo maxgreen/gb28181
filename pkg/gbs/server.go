@@ -19,12 +19,16 @@ type Server struct {
 	*sip.Server
 	gb           *GB28181API
 	mediaService sms.Core
+
+	fromAddress *sip.Address
+
+	devices *Client
 }
 
 func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server, func()) {
-	api := NewGB28181API(cfg, store)
+	api := NewGB28181API(cfg, store, sc.NodeManager)
 
-	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s", cfg.Sip.ID, cfg.Sip.Domain))
+	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s:%d", cfg.Sip.ID, cfg.Sip.Host, cfg.Sip.Port))
 	from := sip.Address{
 		DisplayName: sip.String{Str: "gowvp"},
 		URI:         &uri,
@@ -40,12 +44,26 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server
 
 	// msg.Handle("RecordInfo", api.handlerMessage)
 
-	go svr.ListenUDPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
-	go svr.ListenTCPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
 	c := Server{
 		Server:       svr,
 		mediaService: sc,
+		fromAddress:  &from,
+		devices:      NewClient(),
+		gb:           api,
 	}
+	api.svr = &c
+
+	// devices, err := store.FindDevices(context.TODO())
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// for _, device := range devices {
+	// c.devices.Store(device.DeviceID, newDevice(device.NetworkAddress(), device.DeviceID))
+	// }
+
+	go svr.ListenUDPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
+	go svr.ListenTCPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
+
 	return &c, c.Close
 }
 
@@ -151,7 +169,7 @@ func sipResponse(tx *sip.Transaction) (*sip.Response, error) {
 		return nil, sip.NewError(nil, "response timeout", "tx key:", tx.Key())
 	}
 	if response.StatusCode() != http.StatusOK {
-		return response, sip.NewError(nil, "response fail", response.StatusCode(), response.Reason(), "tx key:", tx.Key())
+		return response, sip.NewError(nil, "device: ", response.StatusCode(), " ", response.Reason())
 	}
 	return response, nil
 }
@@ -159,11 +177,15 @@ func sipResponse(tx *sip.Transaction) (*sip.Response, error) {
 // QueryCatalog 查询 catalog
 func (s *Server) QueryCatalog(deviceID string) error {
 	// TODO: query 查询不能直接传递 ctx，需要缓存目标信息
-	s.gb.QueryCatalog(nil)
+	s.gb.QueryCatalog(deviceID)
 	return nil
 }
 
-func (s *Server) Play(deviceID, channelID string) error {
-	// SipPlay(deviceID, channelID)
+func (s *Server) Play(in *PlayInput) error {
+	return s.gb.Play(in)
+}
+
+func (s *Server) StopPlay(ssrc string) error {
+	// return s.gb.StopPlay(ssrc)
 	return nil
 }

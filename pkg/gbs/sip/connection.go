@@ -79,12 +79,22 @@ type connection struct {
 	logKey string
 }
 
-func newUDPConnection(baseConn net.Conn) Connection {
+func NewUDPConnection(baseConn net.Conn) Connection {
 	conn := &connection{
 		baseConn: baseConn,
 		laddr:    baseConn.LocalAddr(),
 		raddr:    baseConn.RemoteAddr(),
-		logKey:   "udpConnection",
+		logKey:   "udp ",
+	}
+	return conn
+}
+
+func NewTCPConnection(baseConn net.Conn) Connection {
+	conn := &connection{
+		baseConn: baseConn,
+		laddr:    baseConn.LocalAddr(),
+		raddr:    baseConn.RemoteAddr(),
+		logKey:   "tcp ",
 	}
 	return conn
 }

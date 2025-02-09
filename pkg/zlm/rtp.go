@@ -6,12 +6,13 @@ const (
 )
 
 type OpenRTPServerResponse struct {
-	Code int `json:"code"`
-	Port int `json:"port"` // 接收端口，方便获取随机端口号
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Port int    `json:"port"` // 接收端口，方便获取随机端口号
 }
 type OpenRTPServerRequest struct {
 	Port     int    `json:"port"`      // 接收端口，0 则为随机端口
-	TCPMode  int    `json:"tcp_mode"`  // 0 udp 模式，1 tcp 被动模式, 2 tcp 主动模式。 (兼容 enable_tcp 为 0/1)
+	TCPMode  int8   `json:"tcp_mode"`  // 0 udp 模式，1 tcp 被动模式, 2 tcp 主动模式。 (兼容 enable_tcp 为 0/1)
 	StreamID string `json:"stream_id"` // 该端口绑定的流 ID，该端口只能创建这一个流(而不是根据 ssrc 创建多个)
 }
 
@@ -26,7 +27,7 @@ func (e *Engine) OpenRTPServer(in OpenRTPServerRequest) (*OpenRTPServerResponse,
 	if err := e.post(openRtpServer, body, &resp); err != nil {
 		return nil, err
 	}
-	if err := e.ErrHandle(resp.Code, "rtp err"); err != nil {
+	if err := e.ErrHandle(resp.Code, resp.Msg); err != nil {
 		return nil, err
 	}
 	return &resp, nil

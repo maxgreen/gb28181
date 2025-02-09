@@ -93,7 +93,7 @@ func (req *Request) StartLine() string {
 	buffer.WriteString(
 		fmt.Sprintf(
 			"%s %s %s",
-			string(req.method),
+			req.method,
 			req.Recipient(),
 			req.SipVersion(),
 		),
@@ -159,6 +159,10 @@ func (req *Request) SetDestination(dest net.Addr) {
 
 func (req *Request) SetConnection(conn Connection) {
 	req.conn = conn
+}
+
+func (req *Request) GetConnection() Connection {
+	return req.conn
 }
 
 // Clone Clone

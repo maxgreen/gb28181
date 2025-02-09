@@ -87,6 +87,10 @@ func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (D
 // 播放rtsp流时，如果该流开启了rtsp专用认证（on_rtsp_realm），则不会触发on_play事件。
 // https://docs.zlmediakit.com/guide/media_server/web_hook_api.html#_6-on-play
 func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, error) {
+	if in.App == "rtp" {
+		return newDefaultOutputOK(), nil
+	}
+
 	switch in.Schema {
 	case "rtmp":
 		params, err := url.ParseQuery(in.Params)

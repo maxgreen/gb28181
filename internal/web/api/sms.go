@@ -6,6 +6,7 @@ import (
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/internal/core/sms/store/smsdb"
+	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"gorm.io/gorm"
 )
@@ -15,15 +16,8 @@ type SmsAPI struct {
 }
 
 func NewSMSCore(db *gorm.DB, cfg *conf.Bootstrap) sms.Core {
-	core := sms.NewCore(smsdb.NewDB(db).AutoMigrate(true))
-	if err := core.Run(
-		cfg.Media.IP,
-		cfg.Media.Secret,
-		cfg.Media.RTPPortRange,
-		cfg.Media.WebHookIP,
-		cfg.Media.HTTPPort,
-		cfg.Server.HTTP.Port,
-	); err != nil {
+	core := sms.NewCore(smsdb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate))
+	if err := core.Run(&cfg.Media, cfg.Server.HTTP.Port); err != nil {
 		panic(err)
 	}
 	return core

@@ -5,7 +5,7 @@ GoWVP (Golang Web Video Platform) 是一个基于 GB/T28181-2022 标准实现的
 
 ## 在线演示平台
 
-+ [在线演示平台)](http://gowvp.golang.space:15123/)
++ [在线演示平台 :)](http://gowvp.golang.space:15123/)
 
 
 |![](./docs/demo/home.webp)|![](./docs/demo/play.webp)|
@@ -45,29 +45,41 @@ Java 语言 WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB
 
 > 有没有代码相关的学习资料?
 
-[GB/T28181 全栈开发日记[1]：从 0 到实现 GB28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
+[GB/T28181 开源日记[1]：从 0 到实现 GB28181 协议的完整实践](https://juejin.cn/post/7456722441395568651)
 
-[GB/T28181 全栈开发日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
+[GB/T28181 开源日记[2]：搭建服务端，解决跨域，接口联调](https://juejin.cn/post/7456796962120417314)
 
-[GB/T28181 全栈开发日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
+[GB/T28181 开源日记[3]：使用 React 组件构建监控数据面板](https://juejin.cn/post/7457228085826764834)
 
-[GB/T28181 全栈开发日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
+[GB/T28181 开源日记[4]：使用 ESlint 辅助开发](https://juejin.cn/post/7461539078111789108)
 
-[GB/T28181 全栈开发日记[5]：使用 react-hook-form 完成表单](https://juejin.cn/post/7461899974198181922)
+[GB/T28181 开源日记[5]：使用 react-hook-form 完成表单](https://juejin.cn/post/7461899974198181922)
 
-[GB/T28181 全栈开发日记[6]：React 快速接入 jessibuca.js 播放器](https://juejin.cn/post/7462229773982351410)
+[GB/T28181 开源日记[6]：React 快速接入 jessibuca.js 播放器](https://juejin.cn/post/7462229773982351410)
 
-[GB/T28181 全栈开发日记[7]：实现 RTMP 鉴权与播放](https://juejin.cn/post/7463504223177261119)
+[GB/T28181 开源日记[7]：实现 RTMP 鉴权与播放](https://juejin.cn/post/7463504223177261119)
+
+[GB/T28181 开源日记[8]：国标开发速知速会](https://juejin.cn/post/7468626309699338294)
 
 开发中...
 
 > 有没有使用资料?
 
+**RTMP**
+
 [RTMP 推拉流规则](https://juejin.cn/post/7463124448540934194)
 
 [如何使用 OBS RTMP 推流到 GB/T28181平台](https://juejin.cn/post/7463350947100786739)
 
+[海康摄像机 RTMP 推流到开源 GB/T28181 平台](https://juejin.cn/post/7468191617020313652)
+
+[大华摄像机 RTMP 推流到开源 GB/T28181 平台](https://juejin.cn/spost/7468194672773021731)
+
+**GB/T28181**
+
 [GB28181 七种注册姿势](https://juejin.cn/post/7465274924899532838)
+
+
 
 码字中...
 

@@ -61,6 +61,7 @@ type Log struct {
 type SIP struct {
 	Port     int    `comment:"服务监听的 tcp/udp 端口号"`
 	ID       string `comment:"gb/t28181 20 位国标 ID"`
+	Host     string `comment:"访问 ip"`
 	Domain   string
 	Password string `comment:"注册密码"`
 }
@@ -71,6 +72,7 @@ type Media struct {
 	Secret       string `comment:"媒体服务器密钥"`
 	WebHookIP    string `comment:"用于流媒体 webhook 回调"`
 	RTPPortRange string `comment:"媒体服务器 RTP 端口范围"`
+	SDPIP        string `comment:"媒体服务器 SDP IP"`
 }
 
 type Duration time.Duration

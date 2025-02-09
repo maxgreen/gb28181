@@ -25,10 +25,10 @@ type FindDeviceInput struct {
 }
 
 type EditDeviceInput struct {
-	DeviceID string `json:"device_id"` // 20 位国标编号
-	Name     string `json:"name"`      // 设备名称
-	Password string `json:"password"`  // 注册密码
-	// StreamMode string `json:"stream_mode"` // 数据传输模式(UDP/TCP_PASSIVE,TCP_ACTIVE)
+	DeviceID   string `json:"device_id"`   // 20 位国标编号
+	Name       string `json:"name"`        // 设备名称
+	Password   string `json:"password"`    // 注册密码
+	StreamMode int    `json:"stream_mode"` // 数据传输模式
 
 	// IP           string    `json:"ip"`
 	// Port         int       `json:"port"`

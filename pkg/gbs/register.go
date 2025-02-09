@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
+	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
+	"github.com/ixugo/goweb/pkg/conc"
 	"github.com/ixugo/goweb/pkg/orm"
 )
 
@@ -20,17 +21,43 @@ type GB28181API struct {
 	store gb28181.GB28181
 
 	catalog *sip.Collector[Channels]
+
+	// TODO: 待替换成 redis
+	streams conc.Map[string, *Streams]
+
+	svr *Server
+
+	sms *sms.NodeManager
 }
 
-func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181) *GB28181API {
+func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeManager) *GB28181API {
 	g := GB28181API{
 		cfg:   &cfg.Sip,
 		store: store,
+		sms:   sms,
 		catalog: sip.NewCollector[Channels](func(c1, c2 *Channels) bool {
 			return c1.ChannelID == c2.ChannelID
 		}),
 	}
 	go g.catalog.Start(func(s string, c []*Channels) {
+		// 零值不做变更，没有通道又何必注册上来
+		if len(c) == 0 {
+			return
+		}
+
+		ipc, ok := g.svr.devices.Load(s)
+		if ok {
+			ipc.channels.Clear()
+			for _, ch := range c {
+				ch := Channel{
+					ChannelID: ch.ChannelID,
+					device:    ipc,
+				}
+				ch.init(g.cfg.Domain)
+				ipc.channels.Store(ch.ChannelID, &ch)
+			}
+		}
+
 		out := make([]*gb28181.Channel, len(c))
 		for i, ch := range c {
 			out[i] = &gb28181.Channel{
@@ -49,7 +76,7 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181) *GB28181API {
 	return &g
 }
 
-func (g GB28181API) handlerRegister(ctx *sip.Context) {
+func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 	if len(ctx.DeviceID) < 18 {
 		ctx.String(http.StatusBadRequest, "device id too short")
 		return
@@ -110,20 +137,26 @@ func (g GB28181API) handlerRegister(ctx *sip.Context) {
 		respFn()
 		return
 	}
-	g.login(ctx.DeviceID, func(b *gb28181.Device) {
-		b.IsOnline = true
-		b.Address = ctx.Source.String()
-		b.Trasnport = strings.ToUpper(ctx.Source.Network())
-		b.RegisteredAt = orm.Now()
-		b.Expires, _ = strconv.Atoi(expire)
+	g.login(ctx.DeviceID, func(d *gb28181.Device) {
+		d.IsOnline = true
+		d.RegisteredAt = orm.Now()
+		d.Expires, _ = strconv.Atoi(expire)
 	})
 
+	conn := ctx.Request.GetConnection()
+	fmt.Printf(">>> %p\n", conn)
+
+	g.svr.devices.Store(dev.DeviceID, &Device{
+		conn:   conn,
+		source: ctx.Source,
+		to:     ctx.To,
+	})
 	ctx.Log.Info("设备注册成功")
 
 	respFn()
 
 	g.QueryDeviceInfo(ctx)
-	g.QueryCatalog(ctx)
+	g.QueryCatalog(dev.DeviceID)
 }
 
 func (g GB28181API) login(deviceID string, changeFn func(*gb28181.Device)) {

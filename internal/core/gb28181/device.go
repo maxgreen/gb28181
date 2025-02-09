@@ -38,9 +38,20 @@ func (c Core) FindDevice(ctx context.Context, in *FindDeviceInput) ([]*Device, i
 }
 
 // GetDevice Query a single object
-func (c Core) GetDevice(ctx context.Context, id int) (*Device, error) {
+func (c Core) GetDevice(ctx context.Context, id string) (*Device, error) {
 	var out Device
 	if err := c.store.Device().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
+		if orm.IsErrRecordNotFound(err) {
+			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+		}
+		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+	}
+	return &out, nil
+}
+
+func (c Core) GetDeviceByDeviceID(ctx context.Context, deviceID string) (*Device, error) {
+	var out Device
+	if err := c.store.Device().Get(ctx, &out, orm.Where("device_id=?", deviceID)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
 			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}

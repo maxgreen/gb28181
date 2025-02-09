@@ -2,7 +2,9 @@ package gbs
 
 import (
 	"encoding/xml"
+	"fmt"
 	"log/slog"
+	"net"
 
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
 )
@@ -17,6 +19,8 @@ type MessageDeviceListResponse struct {
 	Item     []Channels `xml:"DeviceList>Item"`
 }
 
+// sipMessageCatalog 设备目录信息查询应答
+// GB/T28181 90 页 A.2.6.4
 func (g GB28181API) sipMessageCatalog(ctx *sip.Context) {
 	var msg MessageDeviceListResponse
 	if err := sip.XMLDecode(ctx.Request.Body(), &msg); err != nil {
@@ -63,13 +67,55 @@ func (g GB28181API) sipMessageCatalog(ctx *sip.Context) {
 	ctx.String(200, "OK")
 }
 
-// QueryCatalog 获取注册设备包含的列表
-func (g GB28181API) QueryCatalog(ctx *sip.Context) {
-	_, err := ctx.SendRequest(sip.MethodMessage, sip.GetCatalogXML(ctx.DeviceID))
-	if err != nil {
-		slog.Error("sipCatalog", "err", err)
-		return
+// QueryCatalog 设备目录查询或订阅请求
+// GB/T28181 81 页 A.2.4.3
+func (g *GB28181API) QueryCatalog(deviceID string) error {
+	ipc, ok := g.svr.devices.Load(deviceID)
+	if !ok {
+		return fmt.Errorf("device not found")
 	}
-	g.catalog.Run(ctx.DeviceID)
-	g.catalog.Wait(ctx.DeviceID)
+
+	_, err := g.svr.wrapRequest(ipc, sip.MethodMessage, &sip.ContentTypeXML, sip.GetCatalogXML(deviceID))
+	if err != nil {
+		return err
+	}
+
+	g.catalog.Run(deviceID)
+	g.catalog.Wait(deviceID)
+	return nil
+}
+
+type Targeter interface {
+	To() *sip.Address
+	Conn() sip.Connection
+	Source() net.Addr
+}
+
+type RequestOption func(*sip.Request)
+
+func (s *Server) wrapRequest(t Targeter, method string, contentType *sip.ContentType, body []byte, opts ...RequestOption) (*sip.Transaction, error) {
+	to := t.To()
+	conn := t.Conn()
+	source := t.Source()
+
+	hb := sip.NewHeaderBuilder().
+		SetTo(to).
+		SetFrom(s.fromAddress).
+		SetContentType(contentType).
+		SetMethod(method).
+		SetContact(s.fromAddress).
+		AddVia(&sip.ViaHop{
+			Params: sip.NewParams().Add("branch", sip.String{Str: sip.GenerateBranch()}),
+		})
+
+	req := sip.NewRequest("", method, to.URI, sip.DefaultSipVersion, hb.Build(), body)
+	req.SetConnection(conn)
+	req.SetSource(source)
+	req.SetDestination(source)
+
+	for _, opt := range opts {
+		opt(req)
+	}
+
+	return s.Request(req)
 }

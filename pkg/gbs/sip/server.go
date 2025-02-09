@@ -18,10 +18,7 @@ import (
 
 var bufferSize uint16 = 65535 - 20 - 8 // IPv4 max size - IPv4 Header size - UDP Header size
 
-// RequestHandler RequestHandler
-// type RequestHandler func(req *Request, tx *Transaction)
-
-// Server Server
+// Server sip
 type Server struct {
 	udpaddr net.Addr
 	udpConn Connection
@@ -44,7 +41,7 @@ type Server struct {
 	from *Address
 }
 
-// NewServer NewServer
+// NewServer sip server
 func NewServer(form *Address) *Server {
 	activeTX = &transacionts{txs: map[string]*Transaction{}, rwm: &sync.RWMutex{}}
 	ctx, cancel := context.WithCancel(context.TODO())
@@ -108,7 +105,7 @@ func (s *Server) ListenUDPServer(addr string) {
 	if err != nil {
 		panic(fmt.Errorf("net.ListenUDP err[%w]", err))
 	}
-	s.udpConn = newUDPConnection(udp)
+	s.udpConn = NewUDPConnection(udp)
 	var (
 		raddr net.Addr
 		num   int
@@ -239,16 +236,6 @@ func (s *Server) ProcessTcpConn(conn net.Conn) {
 	}
 }
 
-func NewTCPConnection(baseConn net.Conn) Connection {
-	conn := &connection{
-		baseConn: baseConn,
-		laddr:    baseConn.LocalAddr(),
-		raddr:    baseConn.RemoteAddr(),
-		logKey:   "tcpConnection",
-	}
-	return conn
-}
-
 func (s *Server) handlerListen(msgs chan Message) {
 	var msg Message
 	for {
@@ -307,7 +294,7 @@ func (s *Server) handlerRequest(msg *Request) {
 
 	ctx := newContext(msg, tx)
 	ctx.handlers = handlers
-	ctx.fromAddr = s.from
+	ctx.From = s.from
 	ctx.svr = s
 	go ctx.Next()
 }

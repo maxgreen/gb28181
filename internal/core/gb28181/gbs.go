@@ -6,6 +6,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
 	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goweb/pkg/web"
 )
 
 type GB28181 struct {
@@ -89,4 +90,13 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 		}
 	}
 	return nil
+}
+
+// FindDevices 获取所有设备
+func (g GB28181) FindDevices(ctx context.Context) ([]*Device, error) {
+	var devices []*Device
+	if _, err := g.deviceStore.Find(ctx, &devices, web.NewPagerFilterMaxSize()); err != nil {
+		return nil, err
+	}
+	return devices, nil
 }

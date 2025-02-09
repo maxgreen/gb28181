@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goweb/pkg/conc"
 	"github.com/ixugo/goweb/pkg/orm"
@@ -68,18 +69,19 @@ func (n *NodeManager) tickCheck() {
 	}
 }
 
-func (n *NodeManager) Run(ip, secret, portRange, webhookIP string, zlmHTTPPort, serverPort int) error {
+func (n *NodeManager) Run(cfg *conf.Media, serverPort int) error {
 	ctx := context.Background()
 
 	setValueFn := func(ms *MediaServer) {
 		ms.ID = DefaultMediaServerID
-		ms.IP = ip
-		ms.Ports.HTTP = zlmHTTPPort
-		ms.Secret = secret
+		ms.IP = cfg.IP
+		ms.Ports.HTTP = cfg.HTTPPort
+		ms.Secret = cfg.Secret
 		ms.Type = "zlm"
 		ms.Status = false
-		ms.RTPPortRange = portRange
-		ms.HookIP = webhookIP
+		ms.RTPPortRange = cfg.RTPPortRange
+		ms.HookIP = cfg.WebHookIP
+		ms.SDPIP = cfg.SDPIP
 	}
 
 	var ms MediaServer
@@ -219,4 +221,19 @@ func (n *NodeManager) findMediaServer(ctx context.Context, in *FindMediaServerIn
 		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 	return items, total, nil
+}
+
+// OpenRTPServer 开启RTP服务器
+func (n *NodeManager) OpenRTPServer(server *MediaServer, in zlm.OpenRTPServerRequest) (*zlm.OpenRTPServerResponse, error) {
+	addr := fmt.Sprintf("http://%s:%d", server.IP, server.Ports.HTTP)
+	e := n.zlm.SetConfig(zlm.Config{
+		URL:    addr,
+		Secret: server.Secret,
+	})
+	return e.OpenRTPServer(in)
+}
+
+// CloseRTPServer 关闭RTP服务器
+func (n *NodeManager) CloseRTPServer(in zlm.CloseRTPServerRequest) (*zlm.CloseRTPServerResponse, error) {
+	return n.zlm.CloseRTPServer(in)
 }

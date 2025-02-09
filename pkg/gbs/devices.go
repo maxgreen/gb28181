@@ -1,11 +1,14 @@
 package gbs
 
 import (
+	"fmt"
 	"net"
 	"strings"
+	"sync"
 
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
+	"github.com/ixugo/goweb/pkg/conc"
 )
 
 var (
@@ -13,6 +16,122 @@ var (
 	_serverDevices Devices
 	svr            *sip.Server
 )
+
+// Client 客户端链接信息等临时信息存储
+type Client struct {
+	devices conc.Map[string, *Device]
+}
+
+type Device struct {
+	channels conc.Map[string, *Channel]
+
+	// 播放互斥锁也可以移动到 channel 属性
+	playMutex sync.Mutex
+
+	conn   sip.Connection
+	source net.Addr
+
+	to *sip.Address
+}
+
+// Conn implements Targeter.
+func (d *Device) Conn() sip.Connection {
+	return d.conn
+}
+
+// Source implements Targeter.
+func (d *Device) Source() net.Addr {
+	return d.source
+}
+
+// To implements Targeter.
+func (d *Device) To() *sip.Address {
+	return d.to
+}
+
+var _ Targeter = &Device{}
+
+type Channel struct {
+	ChannelID string
+
+	uriStr string
+	to     *sip.Address
+
+	device *Device
+}
+
+// Conn implements Targeter.
+func (c *Channel) Conn() sip.Connection {
+	return c.device.conn
+}
+
+// Source implements Targeter.
+func (c *Channel) Source() net.Addr {
+	return c.device.source
+}
+
+// To implements Targeter.
+func (c *Channel) To() *sip.Address {
+	return c.to
+}
+
+var _ Targeter = &Channel{}
+
+func (c *Channel) init(domain string) {
+	c.uriStr = fmt.Sprintf("sip:%s@%s", c.ChannelID, domain)
+	uri, _ := sip.ParseURI(c.uriStr)
+	c.to = &sip.Address{
+		URI:    uri,
+		Params: sip.NewParams(),
+	}
+}
+
+func newDevice(network, address string, conn sip.Connection) *Device {
+	if network == "tcp" {
+		return nil
+	}
+
+	raddr, err := net.ResolveUDPAddr(network, address)
+	if err != nil {
+		return nil
+	}
+
+	var dev Device
+	dev.source = raddr
+	dev.conn = conn
+	return &dev
+}
+
+func NewClient() *Client {
+	return &Client{
+		devices: conc.Map[string, *Device]{},
+	}
+}
+
+func (c *Client) Store(deviceID string, in *Device) {
+	v, ok := c.devices.LoadOrStore(deviceID, in)
+	if ok {
+		v.conn = in.conn
+		v.source = in.source
+		v.to = in.to
+	}
+}
+
+func (c *Client) Load(deviceID string) (*Device, bool) {
+	return c.devices.Load(deviceID)
+}
+
+func (c *Client) GetChannel(deviceID, channelID string) (*Channel, bool) {
+	ipc, ok := c.devices.Load(deviceID)
+	if !ok {
+		return nil, false
+	}
+	return ipc.channels.Load(channelID)
+}
+
+func (c *Client) Delete(deviceID string) {
+	c.devices.Delete(deviceID)
+}
 
 // Devices NVR  设备信息
 type Devices struct {

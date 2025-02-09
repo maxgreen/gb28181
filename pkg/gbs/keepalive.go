@@ -34,6 +34,9 @@ func (g GB28181API) sipMessageKeepalive(ctx *sip.Context) {
 	if err := g.store.Edit(ctx.DeviceID, func(d *gb28181.Device) {
 		d.KeepaliveAt = orm.Now()
 		d.IsOnline = msg.Status == "OK"
+
+		d.Address = ctx.Source.String()
+		d.Trasnport = ctx.Source.Network()
 	}); err != nil {
 		ctx.Log.Error("keepalive", "err", err)
 	}

@@ -85,13 +85,13 @@ func (e *Engine) ErrHandle(code int, msg string) error {
 	case Success:
 		return nil
 	case -1:
-		return fmt.Errorf("%s", msg)
+		return fmt.Errorf("zlm: %s", msg)
 	case -100:
 		return fmt.Errorf("zlm 鉴权失败: %s", msg)
 	case -200:
 		return fmt.Errorf("zlm sql 失败: %s", msg)
 	case -300:
-		return fmt.Errorf("zlm 参数不合法: %s", msg)
+		return fmt.Errorf("zlm: %s", msg)
 	case -400:
 		return fmt.Errorf("zlm 代码抛异常: %s", msg)
 	default:

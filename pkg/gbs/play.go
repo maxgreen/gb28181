@@ -3,13 +3,164 @@ package gbs
 import (
 	"errors"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
+	"github.com/gowvp/gb28181/internal/core/gb28181"
+	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
+	"github.com/gowvp/gb28181/pkg/zlm"
 	sdp "github.com/panjjo/gosdp"
 )
+
+type PlayInput struct {
+	Channel    *gb28181.Channel
+	SMS        *sms.MediaServer
+	StreamMode int8
+}
+
+func (g *GB28181API) Play(in *PlayInput) error {
+	ch, ok := g.svr.devices.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
+	if !ok {
+		return ErrDeviceNotExist
+	}
+
+	ch.device.playMutex.Lock()
+	defer ch.device.playMutex.Unlock()
+
+	// 播放中
+	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
+	if _, ok := g.streams.LoadOrStore(key, &Streams{}); ok {
+		return nil
+	}
+
+	// 开启RTP服务器等待接收视频流
+	resp, err := g.sms.OpenRTPServer(in.SMS, zlm.OpenRTPServerRequest{
+		Port:     20010,
+		TCPMode:  in.StreamMode,
+		StreamID: in.Channel.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return g.sipPlayPush2(ch, in, resp.Port)
+}
+
+func (g *GB28181API) sipPlayPush2(ch *Channel, in *PlayInput, port int) error {
+	name := "Play"
+	protocal := "TCP/RTP/AVP"
+	if in.StreamMode == 0 {
+		protocal = "RTP/AVP"
+	}
+
+	// if  {
+	// name = "Playback"
+	// protocal = "RTP/RTCP"
+	// }
+
+	video := sdp.Media{
+		Description: sdp.MediaDescription{
+			Type:     "video",
+			Port:     port,
+			Formats:  []string{"96", "97", "98"},
+			Protocol: protocal,
+		},
+	}
+	video.AddAttribute("recvonly")
+
+	switch in.StreamMode {
+	case 1:
+		video.AddAttribute("setup", "passive")
+		video.AddAttribute("connection", "new")
+	case 2:
+		video.AddAttribute("setup", "active")
+		video.AddAttribute("connection", "new")
+	}
+	video.AddAttribute("rtpmap", "96", "PS/90000")
+	video.AddAttribute("rtpmap", "97", "MPEG4/90000")
+	video.AddAttribute("rtpmap", "98", "H264/90000")
+
+	// defining message
+	msg := &sdp.Message{
+		Origin: sdp.Origin{
+			Username:    ch.ChannelID, // 媒体服务器id
+			NetworkType: "IN",
+			AddressType: "IP4",
+			Address:     in.SMS.GetSDPIP(),
+		},
+		Name: name,
+		Connection: sdp.ConnectionData{
+			NetworkType: "IN",
+			AddressType: "IP4",
+			IP:          net.ParseIP(in.SMS.GetSDPIP()),
+		},
+		Timing: []sdp.Timing{
+			{
+				// 	Start: data.S,
+				// End:   data.E,
+			},
+		},
+		Medias: []sdp.Media{video},
+		SSRC:   g.getSSRC(0),
+		// URI:    fmt.Sprintf("%s:0", channel.ChannelID),
+	}
+
+	// appending message to session
+	body := msg.Append(nil).AppendTo(nil)
+	// appending session to byte buffer
+	// uri, _ := sip.ParseURI(channel.URIStr)
+	// channel.addr = &sip.Address{URI: uri}
+	// _serverDevices.addr.Params.Add("tag", sip.String{Str: sip.RandString(20)})
+	tx, err := g.svr.wrapRequest(ch, sip.MethodInvite, &sip.ContentTypeSDP, body, func(r *sip.Request) {
+		r.AppendHeader(&sip.GenericHeader{HeaderName: "Subject", Contents: fmt.Sprintf("%s:%s,%s:%s", ch.ChannelID, in.Channel.ID, in.Channel.DeviceID, in.Channel.ID)})
+	})
+	if err != nil {
+		return err
+	}
+	resp, err := sipResponse(tx)
+	if err != nil {
+		return err
+	}
+
+	if contact, _ := resp.Contact(); contact == nil {
+		resp.AppendHeader(&sip.ContactHeader{
+			DisplayName: g.svr.fromAddress.DisplayName,
+			Address:     &sip.URI{FUser: sip.String{Str: g.cfg.ID}, FHost: g.cfg.Domain},
+			Params:      sip.NewParams(),
+		})
+	}
+
+	ackReq := sip.NewRequestFromResponse(sip.MethodACK, resp)
+	return tx.Request(ackReq)
+
+	// data.Resp = response
+	// // ACK
+	// tx.Request(sip.NewRequestFromResponse(sip.MethodACK, response))
+
+	// callid, _ := response.CallID()
+	// data.CallID = string(*callid)
+
+	// cseq, _ := response.CSeq()
+	// if cseq != nil {
+	// 	data.CseqNo = cseq.SeqNo
+	// }
+
+	// // from, _ := response.From()
+	// // to, _ := response.To()
+	// // for k, v := range to.Params.Items() {
+	// // 	data.Ttag[k] = v.String()
+	// // }
+	// // for k, v := range from.Params.Items() {
+	// // 	data.Ftag[k] = v.String()
+	// // }
+	// data.Status = 0
+
+	// return data, err
+	// return nil
+}
 
 // sip 请求播放
 func SipPlay(data *Streams) (*Streams, error) {
@@ -40,7 +191,7 @@ func SipPlay(data *Streams) (*Streams, error) {
 		// GB28181推流
 		if data.StreamID == "" {
 			ssrcLock.Lock()
-			data.ssrc = getSSRC(data.T)
+			// data.ssrc =g. getSSRC(data.T)
 			data.StreamID = ssrc2stream(data.ssrc)
 
 			// 成功后保存

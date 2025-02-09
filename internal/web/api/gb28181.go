@@ -3,7 +3,6 @@ package api
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +12,8 @@ import (
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
+	"github.com/gowvp/gb28181/pkg/gbs"
+	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"gorm.io/gorm"
 )
@@ -23,7 +24,7 @@ type GB28181API struct {
 }
 
 func NewGb28181API(db *gorm.DB, uni uniqueid.Core) GB28181API {
-	core := gb28181.NewCore(gb28181db.NewDB(db).AutoMigrate(true), uni)
+	core := gb28181.NewCore(gb28181db.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
 	return GB28181API{gb28181Core: core}
 }
 
@@ -31,12 +32,12 @@ func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) 
 	{
 		group := g.Group("/devices", handler...)
 		group.GET("", web.WarpH(api.findDevice))
-		group.GET("/:id", web.WarpH(api.getDevice))
+		// group.GET("/:id", web.WarpH(api.getDevice))
 		group.PUT("/:id", web.WarpH(api.editDevice))
 		group.POST("", web.WarpH(api.addDevice))
 		group.DELETE("/:id", web.WarpH(api.delDevice))
 
-		group.POST("/:id/query-catalog", web.WarpH(api.queryCatalog)) // 刷新通道
+		group.POST("/:id/catalog", web.WarpH(api.queryCatalog)) // 刷新通道
 	}
 
 	{
@@ -57,10 +58,10 @@ func (a GB28181API) findDevice(c *gin.Context, in *gb28181.FindDeviceInput) (any
 	return gin.H{"items": items, "total": total}, err
 }
 
-func (a GB28181API) getDevice(c *gin.Context, _ *struct{}) (any, error) {
-	deviceID, _ := strconv.Atoi(c.Param("id"))
-	return a.gb28181Core.GetDevice(c.Request.Context(), deviceID)
-}
+// func (a GB28181API) getDevice(c *gin.Context, _ *struct{}) (any, error) {
+// 	deviceID := c.Param("id")
+// 	return a.gb28181Core.GetDevice(c.Request.Context(), deviceID)
+// }
 
 func (a GB28181API) editDevice(c *gin.Context, in *gb28181.EditDeviceInput) (any, error) {
 	deviceID := c.Param("id")
@@ -114,7 +115,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 	channelID := c.Param("id")
 
 	// TODO: 目前仅开发到 rtmp/gb28181，待扩展 rtsp... 等
-	if !strings.HasPrefix(channelID, bz.IDPrefixRTMP) || !strings.HasPrefix(channelID, bz.IDPrefixGBChannel) {
+	if !(strings.HasPrefix(channelID, bz.IDPrefixRTMP) || strings.HasPrefix(channelID, bz.IDPrefixGBChannel)) {
 		return nil, web.ErrNotFound.Msg("不支持的播放通道")
 	}
 
@@ -137,7 +138,16 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			return nil, err
 		}
 
-		if err := a.uc.SipServer.Play(ch.DeviceID, ch.ChannelID); err != nil {
+		dev, err := a.gb28181Core.GetDeviceByDeviceID(c.Request.Context(), ch.DeviceID)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := a.uc.SipServer.Play(&gbs.PlayInput{
+			Channel:    ch,
+			StreamMode: dev.StreamMode,
+			SMS:        svr,
+		}); err != nil {
 			return nil, web.ErrDevice.Msg(err.Error())
 		}
 	} else {

@@ -34,3 +34,10 @@ type MediaServer struct {
 func (*MediaServer) TableName() string {
 	return "media_servers"
 }
+
+func (m *MediaServer) GetSDPIP() string {
+	if m.SDPIP != "" {
+		return m.SDPIP
+	}
+	return m.IP
+}
