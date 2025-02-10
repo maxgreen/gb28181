@@ -1,6 +1,16 @@
+
+<p align="center">
+    <img src="./docs/logo.png" alt="GoWVP Logo" width="550"/>
+</p>
+
+<p align="center">
+    <a href="https://github.com/gowvp/gb28181/releases"><img src="https://img.shields.io/github/v/release/ixugo/goweb?include_prereleases" alt="Version"/></a>
+    <a href="https://github.com/ixugo/goweb/blob/master/LICENSE.txt"><img src="https://img.shields.io/dub/l/vibe-d.svg" alt="License"/></a>
+</p>
+
 # 开箱即用的 GB/T28181 协议视频平台
 
-GoWVP (Golang Web Video Platform) 是一个基于 GB/T28181-2022 标准实现的开箱即用的网络视频平台，负责实现核心信令与设备管理后台部分，支持 NAT 穿透，支持海康、大华、宇视等品牌的 IPC、NVR 接入。
+go wvp 是 Go 语言实现的开源 GB28181 解决方案，基于GB28181-2022标准实现的网络视频平台，支持 rtmp/rtsp，客户端支持网页版本和安卓 App。支持rtsp/rtmp等视频流转发到国标平台，支持rtsp/rtmp等推流转发到国标平台。
 
 
 ## 在线演示平台
@@ -61,8 +71,6 @@ Java 语言 WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB
 
 [GB/T28181 开源日记[8]：国标开发速知速会](https://juejin.cn/post/7468626309699338294)
 
-开发中...
-
 > 有没有使用资料?
 
 **RTMP**
@@ -79,8 +87,6 @@ Java 语言 WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB
 
 [GB28181 七种注册姿势](https://juejin.cn/post/7465274924899532838)
 
-码字中...
-
 ## 文档
 
 GoWVP [在线接口文档](apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)
@@ -90,7 +96,9 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 
 ## 快速开始
 
-待 1.0 版本发布才提供安装包，如果你是 Go 语言开发者并熟悉 docker，可以继续~~~
+即将发布安装包 和 docker 版本。
+
+如果你是 Go 语言开发者并熟悉 docker，可以提前下载源代码，本地编程运行。
 
 **前置条件**
 
@@ -115,14 +123,10 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 2. 编辑器 run/debug 设置配置输出目录为项目根目录
 3. 修改，提交 PR，说明修改内容
 
-
-
 ## 功能特性
 - [x] 集成 web 界面
-- [x] 兼容性良好
 - [x] 接入设备
   - [x] 视频预览
-  - [ ] 支持主码流子码流切换
   - [x] 无限制接入路数，能接入多少设备只取决于你的服务器性能
   - [ ] 云台控制，控制设备转向，拉近，拉远
   - [ ] 预置位查询，使用与设置
@@ -152,27 +156,7 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
   -  [ ] 移动位置查询和显示
   - [x] 支持手动添加设备和给设备设置单独的密码
 -  [ ] 支持平台对接接入
--  [ ] 支持国标级联
-  - [ ] 国标通道向上级联
-    - [ ] Wweb 添加上级平台
-    - [ ] 注册
-    - [ ] 心跳保活
-    - [ ] 通道选择
-    - [ ] 支持通道编号自定义, 支持每个平台使用不同的通道编号
-    - [ ] 通道推送
-    - [ ] 点播
-    - [ ] 云台控制
-    - [ ] 平台状态查询
-    - [ ] 平台信息查询
-    - [ ] 平台远程启动
-    - [ ] 每个级联平台可自定义的虚拟目录
-    - [ ] 目录订阅与通知
-    - [ ] 录像查看与播放
-    - [ ] GPS订阅与通知（直播推流）
-    - [ ] 语音对讲
-  - [ ] 支持同时级联到多个上级平台
-- [ ] 支持自动配置ZLM媒体服务, 减少因配置问题所出现的问题
-- [ ] 多流媒体节点，自动选择负载最低的节点使用
+- [x] 支持自动配置ZLM媒体服务, 减少因配置问题所出现的问题
 - [x] 支持启用 udp 多端口模式, 提高 udp 模式下媒体传输性能
 - [x] 支持局域网/互联网/特殊网络环境部署
 - [x] 支持 gowvp 与 zlm 分开部署，提升平台并发能力
@@ -188,6 +172,7 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 
 
 ## 授权协议
+
 本项目自有代码使用宽松的MIT协议，在保留版权信息的情况下可以自由应用于各自商用、非商业的项目。
 
 但是本项目也零碎的使用了一些其他的开源代码，在商用的情况下请自行替代或剔除； 由于使用本项目而产生的商业纠纷或侵权行为一概与本项目及开发者无关，请自行承担法律风险。
