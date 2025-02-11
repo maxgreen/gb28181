@@ -23,7 +23,7 @@ type GB28181API struct {
 	catalog *sip.Collector[Channels]
 
 	// TODO: 待替换成 redis
-	streams conc.Map[string, *Streams]
+	streams *conc.Map[string, *Streams]
 
 	svr *Server
 
@@ -38,6 +38,7 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 		catalog: sip.NewCollector[Channels](func(c1, c2 *Channels) bool {
 			return c1.ChannelID == c2.ChannelID
 		}),
+		streams: &conc.Map[string, *Streams]{},
 	}
 	go g.catalog.Start(func(s string, c []*Channels) {
 		// 零值不做变更，没有通道又何必注册上来

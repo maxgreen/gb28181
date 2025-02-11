@@ -22,6 +22,7 @@ import (
 var startRuntime = time.Now()
 
 func setupRouter(r *gin.Engine, uc *Usecase) {
+	uc.GB28181API.uc = uc
 	go stat.LoadTop(system.Getwd(), func(m map[string]any) {
 		_ = m
 	})
@@ -66,9 +67,8 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权
 	registerMediaAPI(r, uc.MediaAPI)
-
-	uc.GB28181API.uc = uc
 	registerGB28181(r, uc.GB28181API)
+	registerProxy(r, uc.ProxyAPI)
 }
 
 type playOutput struct {
