@@ -35,6 +35,7 @@ var (
 		NewGb28181API,
 		NewGB28181,
 		NewProxyAPI,
+		NewConfigAPI,
 	)
 )
 
@@ -48,6 +49,7 @@ type Usecase struct {
 	MediaAPI   MediaAPI
 	GB28181API GB28181API
 	ProxyAPI   ProxyAPI
+	ConfigAPI  ConfigAPI
 
 	SipServer *gbs.Server
 }

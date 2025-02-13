@@ -69,6 +69,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerMediaAPI(r, uc.MediaAPI)
 	registerGB28181(r, uc.GB28181API)
 	registerProxy(r, uc.ProxyAPI)
+	registerConfig(r, uc.ConfigAPI)
 }
 
 type playOutput struct {

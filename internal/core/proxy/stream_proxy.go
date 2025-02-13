@@ -22,8 +22,11 @@ type StreamProxyStorer interface {
 
 // FindStreamProxy Paginated search
 func (c *Core) FindStreamProxy(ctx context.Context, in *FindStreamProxyInput) ([]*StreamProxy, int64, error) {
+	query := orm.NewQuery(1)
+	query.OrderBy("created_at desc")
+
 	items := make([]*StreamProxy, 0)
-	total, err := c.store.StreamProxy().Find(ctx, &items, in)
+	total, err := c.store.StreamProxy().Find(ctx, &items, in, query.Encode()...)
 	if err != nil {
 		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}

@@ -53,6 +53,8 @@ func main() {
 
 	bc.Debug = !getBuildRelease()
 	bc.BuildVersion = buildVersion
+	bc.ConfigDir = fileDir
+	bc.ConfigPath = filePath
 
 	// 初始化日志
 	logDir := filepath.Join(system.Getwd(), bc.Log.Dir)
