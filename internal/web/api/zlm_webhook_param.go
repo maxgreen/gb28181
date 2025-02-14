@@ -178,3 +178,25 @@ type DefaultOutput struct {
 func newDefaultOutputOK() DefaultOutput {
 	return DefaultOutput{Code: 0, Msg: "success"}
 }
+
+type onStreamNoneReaderOutput struct {
+	Code  int  `json:"code"`
+	Close bool `json:"close"`
+}
+
+type onStreamNoneReaderInput struct {
+	App           string `json:"app"`           // 流应用名
+	Schema        string `json:"schema"`        // rtsp 或 rtmp
+	Stream        string `json:"stream"`        // 流 ID
+	Vhost         string `json:"vhost"`         // 流虚拟主机
+	MediaServerID string `json:"mediaServerId"` // 服务器 id,通过配置文件设置
+}
+
+type onRTPServerTimeoutInput struct {
+	LocalPort     int    `json:"local_port"`    // openRtpServer 输入的参数
+	ReUsePort     bool   `json:"re_use_port"`   // openRtpServer 输入的参数
+	SSRC          uint32 `json:"ssrc"`          // openRtpServer 输入的参数
+	StreamID      string `json:"stream_id"`     // openRtpServer 输入的参数
+	TCPMode       int    `json:"tcp_mode"`      // openRtpServer 输入的参数
+	MediaServerID string `json:"mediaServerId"` // 服务器 id,通过配置文件设置
+}

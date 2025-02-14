@@ -21,6 +21,39 @@ type PlayInput struct {
 	StreamMode int8
 }
 
+type StopPlayInput struct {
+	Channel *gb28181.Channel
+}
+
+func (g *GB28181API) StopPlay(in *StopPlayInput) error {
+	ch, ok := g.svr.devices.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
+	if !ok {
+		return ErrDeviceNotExist
+	}
+
+	ch.device.playMutex.Lock()
+	defer ch.device.playMutex.Unlock()
+
+	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
+	stream, ok := g.streams.LoadAndDelete(key)
+	if !ok {
+		return nil
+	}
+	if stream.Resp == nil {
+		return nil
+	}
+	req := sip.NewRequestFromResponse(sip.MethodBYE, stream.Resp)
+	req.SetDestination(ch.Source())
+	req.SetConnection(ch.Conn())
+
+	tx, err := g.svr.Request(req)
+	if err != nil {
+		return err
+	}
+	_, err = sipResponse(tx)
+	return err
+}
+
 func (g *GB28181API) Play(in *PlayInput) error {
 	ch, ok := g.svr.devices.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
 	if !ok {
@@ -32,7 +65,8 @@ func (g *GB28181API) Play(in *PlayInput) error {
 
 	// 播放中
 	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
-	if _, ok := g.streams.LoadOrStore(key, &Streams{}); ok {
+	stream, ok := g.streams.LoadOrStore(key, &Streams{})
+	if ok {
 		return nil
 	}
 
@@ -45,10 +79,14 @@ func (g *GB28181API) Play(in *PlayInput) error {
 		return err
 	}
 
-	return g.sipPlayPush2(ch, in, resp.Port)
+	if err := g.sipPlayPush2(ch, in, resp.Port, stream); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (g *GB28181API) sipPlayPush2(ch *Channel, in *PlayInput, port int) error {
+func (g *GB28181API) sipPlayPush2(ch *Channel, in *PlayInput, port int, stream *Streams) error {
 	name := "Play"
 	protocal := "TCP/RTP/AVP"
 	if in.StreamMode == 0 {
@@ -131,6 +169,8 @@ func (g *GB28181API) sipPlayPush2(ch *Channel, in *PlayInput, port int) error {
 			Params:      sip.NewParams(),
 		})
 	}
+
+	stream.Resp = resp
 
 	ackReq := sip.NewRequestFromResponse(sip.MethodACK, resp)
 	return tx.Request(ackReq)

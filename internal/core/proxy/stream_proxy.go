@@ -51,6 +51,9 @@ func (c *Core) AddStreamProxy(ctx context.Context, in *AddStreamProxyInput) (*St
 	if err := copier.Copy(&out, in); err != nil {
 		slog.Error("Copy", "err", err)
 	}
+	if in.App == "rtp" {
+		return nil, web.ErrBadRequest.With("请更换 app 参数")
+	}
 	out.ID = c.uniqueID.UniqueID(bz.IDPrefixRTSP)
 	if err := c.store.StreamProxy().Add(ctx, &out); err != nil {
 		if orm.IsDuplicatedKey(err) {

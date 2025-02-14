@@ -176,16 +176,13 @@ func sipResponse(tx *sip.Transaction) (*sip.Response, error) {
 
 // QueryCatalog 查询 catalog
 func (s *Server) QueryCatalog(deviceID string) error {
-	// TODO: query 查询不能直接传递 ctx，需要缓存目标信息
-	s.gb.QueryCatalog(deviceID)
-	return nil
+	return s.gb.QueryCatalog(deviceID)
 }
 
 func (s *Server) Play(in *PlayInput) error {
 	return s.gb.Play(in)
 }
 
-func (s *Server) StopPlay(ssrc string) error {
-	// return s.gb.StopPlay(ssrc)
-	return nil
+func (s *Server) StopPlay(in *StopPlayInput) error {
+	return s.gb.StopPlay(in)
 }
