@@ -161,7 +161,7 @@ func (s *Server) ListenTCPServer(addr string) {
 			slog.Info("ListenTCPServer Has Been Exits")
 			return
 		default:
-			conn, err := tcp.Accept()
+			conn, err := tcp.AcceptTCP()
 			if err != nil {
 				slog.Error("net.ListenTCP", "err", err, "addr", addr)
 				return

@@ -25,6 +25,7 @@ go wvp 是 Go 语言实现的开源 GB28181 解决方案，基于GB28181-2022标
 + 支持国标设备(摄像机、平台、NVR等)设备接入
 + 支持非国标(rtsp, rtmp，直播设备等等)设备接入，充分利旧。
 + 支持跨网视频预览。
++ 支持 Docker, Docker Compose, Kubernetes 部署
 
 
 ## 开源库
@@ -89,6 +90,72 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 <h1>看到这里啦，恭喜你发现新项目</h1>
 <h1>点个 star 不迷路</h1>
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+## Docker
+
+[docker hub](https://hub.docker.com/r/gospace/gowvp)
+
+** gowvp & zlmediakit 融合镜像**
+docker-compose.yml
+```yml
+services:
+  gowvp:
+    image: gospace/gowvp:latest
+    ports:
+      - 15123:15123 # 管理平台 http 端口
+      - 15060:15060 # gb28181 sip tcp 端口
+      - 15060:15060/udp # gb28181 sip udp 端口
+      - 1935:1935 # rtmp
+      - 554:554 # rtsp
+      - 8080:80 # http
+      - 8443:443 # https
+      - 10000:10000
+      - 8000:8000/udp
+      - 9000:9000/udp
+      - 20050-20100:20050-20100 # gb28181 收流端口
+      - 20050-20100:20050-20100/udp # gb28181 收流端口udp
+    volumes:
+      - ./configs:/opt/media/bin/configs
+      - ./logs:/opt/media/bin/logs
+      - ./zlm.conf:/opt/media/conf
+```
+
+** gowvp & zlmediakit 分开镜像**
+
+```yml
+services:
+  gowvp:
+    image: registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest
+    ports:
+      - 15123:15123 # 管理平台 http 端口
+      - 15060:15060 # gb28181 sip tcp 端口
+      - 15060:15060/udp # gb28181 sip udp 端口
+    volumes:
+      - ./logs:/app/logs
+      - ./configs:/app/configs
+  zlm:
+    image: zlmediakit/zlmediakit:master
+    restart: always
+    # 推荐 linux 主机使用 host 模式
+    # network_mode: host
+    ports:
+      - 1935:1935 # rtmp
+      - 554:554 # rtsp
+      - 8080:80 # api
+      - 8443:443
+      - 10000:10000
+      - 10000:10000/udp
+      - 8000:8000/udp
+      - 9000:9000/udp
+      - 20050-20100:20050-20100
+      - 20050-20100:20050-20100/udp
+    volumes:
+      - ./conf:/opt/media/conf
+```
+
+
+
 
 ## 快速开始
 

@@ -20,7 +20,6 @@ version = 1
 
 [Sip]
   Port = 15062
-  Host = "192.168.10.14"
   ID = "3402000000200000001"
   Domain = "3402000000"
   Password = "12345678"
@@ -29,7 +28,7 @@ version = 1
   IP = "127.0.0.1"
   HTTPPort = 8080
   Secret = "s1kPE7bzqKeHUaVcp8dCA0jeB8yxyFq4"
-  WebHookIP = "192.168.10.14" #"host.docker.internal"
+  WebHookIP = "host.docker.internal"
   RTPPortRange = "20000-20500"
   SDPIP = "192.168.10.14"
 

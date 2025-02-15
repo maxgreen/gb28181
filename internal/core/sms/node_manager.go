@@ -238,3 +238,13 @@ func (n *NodeManager) OpenRTPServer(server *MediaServer, in zlm.OpenRTPServerReq
 func (n *NodeManager) CloseRTPServer(in zlm.CloseRTPServerRequest) (*zlm.CloseRTPServerResponse, error) {
 	return n.zlm.CloseRTPServer(in)
 }
+
+// AddStreamProxy 添加流代理
+func (n *NodeManager) AddStreamProxy(server *MediaServer, in zlm.AddStreamProxyRequest) (*zlm.AddStreamProxyResponse, error) {
+	addr := fmt.Sprintf("http://%s:%d", server.IP, server.Ports.HTTP)
+	e := n.zlm.SetConfig(zlm.Config{
+		URL:    addr,
+		Secret: server.Secret,
+	})
+	return e.AddStreamProxy(in)
+}

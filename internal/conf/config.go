@@ -63,7 +63,6 @@ type Log struct {
 type SIP struct {
 	Port     int    `comment:"服务监听的 tcp/udp 端口号" json:"port"`
 	ID       string `comment:"gb/t28181 20 位国标 ID" json:"id"`
-	Host     string `comment:"访问 ip" json:"host"`
 	Domain   string `comment:"域" json:"domain"`
 	Password string `comment:"注册密码" json:"password"`
 }

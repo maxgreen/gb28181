@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
@@ -32,6 +33,9 @@ type Device struct {
 	source net.Addr
 
 	to *sip.Address
+
+	lastKeepaliveAt time.Time
+	lastRegisterAt  time.Time
 }
 
 // Conn implements Targeter.
@@ -114,6 +118,8 @@ func (c *Client) Store(deviceID string, in *Device) {
 		v.conn = in.conn
 		v.source = in.source
 		v.to = in.to
+		v.lastKeepaliveAt = in.lastKeepaliveAt
+		v.lastRegisterAt = in.lastRegisterAt
 	}
 }
 

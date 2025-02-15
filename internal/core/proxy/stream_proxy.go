@@ -77,6 +77,16 @@ func (c *Core) EditStreamProxy(ctx context.Context, in *EditStreamProxyInput, id
 	return &out, nil
 }
 
+func (c *Core) EditStreamProxyKey(ctx context.Context, streamKey, id string) (*StreamProxy, error) {
+	var out StreamProxy
+	if err := c.store.StreamProxy().Edit(ctx, &out, func(b *StreamProxy) {
+		out.StreamKey = streamKey
+	}, orm.Where("id=?", id)); err != nil {
+		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+	}
+	return &out, nil
+}
+
 // DelStreamProxy Delete object
 func (c *Core) DelStreamProxy(ctx context.Context, id string) (*StreamProxy, error) {
 	var out StreamProxy

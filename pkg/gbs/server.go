@@ -1,18 +1,22 @@
 package gbs
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
+	"github.com/ixugo/goweb/pkg/conc"
+	"github.com/ixugo/goweb/pkg/system"
 )
 
 type Server struct {
@@ -28,7 +32,8 @@ type Server struct {
 func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server, func()) {
 	api := NewGB28181API(cfg, store, sc.NodeManager)
 
-	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s:%d", cfg.Sip.ID, cfg.Sip.Host, cfg.Sip.Port))
+	ip := system.LocalIP()
+	uri, _ := sip.ParseSipURI(fmt.Sprintf("sip:%s@%s:%d", cfg.Sip.ID, ip, cfg.Sip.Port))
 	from := sip.Address{
 		DisplayName: sip.String{Str: "gowvp"},
 		URI:         &uri,
@@ -63,8 +68,26 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server
 
 	go svr.ListenUDPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
 	go svr.ListenTCPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
-
+	go c.startTickerCheck()
 	return &c, c.Close
+}
+
+// startTickerCheck 定时检查离线
+func (s *Server) startTickerCheck() {
+	conc.Timer(context.Background(), 60*time.Second, time.Second, func() {
+		now := time.Now()
+		s.devices.devices.Range(func(key string, value *Device) bool {
+			if now.Sub(value.lastKeepaliveAt) >= 3*60*time.Second || value.conn == nil {
+				s.gb.logout(key, func(d *gb28181.Device) {
+					d.IsOnline = false
+				})
+				// 心跳超时
+				s.devices.devices.Delete(key)
+				return true
+			}
+			return true
+		})
+	})
 }
 
 func Start() {

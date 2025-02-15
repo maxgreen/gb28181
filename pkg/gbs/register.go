@@ -148,9 +148,11 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 	fmt.Printf(">>> %p\n", conn)
 
 	g.svr.devices.Store(dev.DeviceID, &Device{
-		conn:   conn,
-		source: ctx.Source,
-		to:     ctx.To,
+		conn:            conn,
+		source:          ctx.Source,
+		to:              ctx.To,
+		lastKeepaliveAt: time.Now(),
+		lastRegisterAt:  time.Now(),
 	})
 	ctx.Log.Info("设备注册成功")
 

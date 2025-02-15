@@ -35,9 +35,9 @@ type EditStreamProxyInput struct {
 }
 
 type AddStreamProxyInput struct {
-	App                       string `json:"app"`                          // 应用名
-	Stream                    string `json:"stream"`                       // 流 id
-	MediaServerID             string `json:"media_server_id"`              // 媒体服务器 id
+	App    string `json:"app"`    // 应用名
+	Stream string `json:"stream"` // 流 id
+	// MediaServerID             string `json:"media_server_id"`              // 媒体服务器 id
 	SourceURL                 string `json:"source_url"`                   // 原始 url
 	TimeoutS                  int    `json:"timeout_s"`                    // 超时时间(秒)
 	Transport                 int    `json:"transport"`                    // rtsp 拉流方式(0:udp;1:tcp)

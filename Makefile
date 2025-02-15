@@ -128,7 +128,7 @@ info:
 BUILD_DIR_ROOT := ./build
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
-IMAGE_NAME := $(MODULE_NAME):latest
+IMAGE_NAME := gospace/gowvp:latest
 
 ## build/clean: 清理构建缓存目录
 .PHONY: build/clean
@@ -169,13 +169,17 @@ build/windows:
 	@make build/local GOOS=$(GOOS) GOARCH=$(GOARCH)
 
 docker/build:
-	@docker build --force-rm=true --platform linux/amd64 -t $(IMAGE_NAME) .
+	@docker build --force-rm=true --platform linux/amd64 -t registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest -f Dockerfile .
 
 docker/save:
 	@docker save -o $(MODULE_NAME).tar $(IMAGE_NAME)
 
 docker/push:
 	@docker push $(IMAGE_NAME)
+
+docker/build/full:
+	@docker build --force-rm=true --platform linux/amd64 -t $(IMAGE_NAME) -f Dockerfile_full .
+
 
 # ==================================================================================== #
 # PRODUCTION

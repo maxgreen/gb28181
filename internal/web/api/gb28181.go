@@ -13,6 +13,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
 	"github.com/gowvp/gb28181/pkg/gbs"
+	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"gorm.io/gorm"
@@ -117,11 +118,6 @@ func (a GB28181API) editChannel(c *gin.Context, in *gb28181.EditChannelInput) (a
 func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 	channelID := c.Param("id")
 
-	// TODO: 目前仅开发到 rtmp/gb28181，待扩展 rtsp... 等
-	if !(strings.HasPrefix(channelID, bz.IDPrefixRTMP) || strings.HasPrefix(channelID, bz.IDPrefixGBChannel)) {
-		return nil, web.ErrNotFound.Msg("不支持的播放通道")
-	}
-
 	var app, appStream, host, stream, session string
 	var svr *sms.MediaServer
 
@@ -153,7 +149,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		}); err != nil {
 			return nil, web.ErrDevice.Msg(err.Error())
 		}
-	} else {
+	} else if strings.HasPrefix(channelID, bz.IDPrefixRTMP) {
 		push, err := a.uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
 		if err != nil {
 			return nil, err
@@ -172,6 +168,33 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		if !push.IsAuthDisabled && push.Session != "" {
 			session = "session=" + push.Session
 		}
+	} else if strings.HasPrefix(channelID, bz.IDPrefixRTSP) {
+		proxy, err := a.uc.ProxyAPI.proxyCore.GetStreamProxy(c.Request.Context(), channelID)
+		if err != nil {
+			return nil, err
+		}
+		app = proxy.App
+		appStream = proxy.Stream
+
+		svr, err = a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), proxy.MediaServerID)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := a.uc.SMSAPI.smsCore.AddStreamProxy(svr, zlm.AddStreamProxyRequest{
+			Vhost:      "__defaultVhost__",
+			App:        proxy.App,
+			Stream:     proxy.Stream,
+			URL:        proxy.SourceURL,
+			RetryCount: 3,
+			RTPType:    proxy.Transport,
+			TimeoutSec: 10,
+		})
+		if err != nil {
+			return nil, web.ErrServer.Msg(err.Error())
+		}
+		a.uc.ProxyAPI.proxyCore.EditStreamProxyKey(c.Request.Context(), resp.Data.Key, proxy.ID)
+	} else {
+		return nil, web.ErrNotFound.Msg("不支持的播放通道")
 	}
 	stream = app + "/" + appStream
 
