@@ -29,11 +29,18 @@ func DefaultConfig() Bootstrap {
 				SlowThreshold:   Duration(200 * time.Millisecond),
 			},
 		},
+		Sip: SIP{
+			Port:     15060,
+			ID:       "3402000000200000001",
+			Domain:   "3402000000",
+			Password: "",
+		},
 		Media: Media{
 			IP:           "127.0.0.1",
 			HTTPPort:     8080,
 			Secret:       "",
 			WebHookIP:    "127.0.0.1",
+			SDPIP:        "127.0.0.1",
 			RTPPortRange: "20000-20500",
 		},
 		Log: Log{
