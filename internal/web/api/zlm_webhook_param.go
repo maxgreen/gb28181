@@ -116,6 +116,7 @@ type Tracks struct {
 
 type onServerKeepaliveInput struct {
 	Data          Data   `json:"data"`
+	HookIndex     int    `json:"hook_index"`
 	MediaServerID string `json:"mediaServerId"`
 }
 type Data struct {

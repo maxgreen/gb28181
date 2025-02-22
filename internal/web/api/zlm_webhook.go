@@ -47,9 +47,9 @@ func registerZLMWebhookAPI(r gin.IRouter, api WebHookAPI, handler ...gin.Handler
 
 // onServerKeepalive 服务器定时上报时间，上报间隔可配置，默认 10s 上报一次
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_16%E3%80%81on-server-keepalive
-func (w WebHookAPI) onServerKeepalive(_ *gin.Context, in *onServerKeepaliveInput) (gin.H, error) {
+func (w WebHookAPI) onServerKeepalive(_ *gin.Context, in *onServerKeepaliveInput) (DefaultOutput, error) {
 	w.smsCore.Keepalive(in.MediaServerID)
-	return gin.H{}, nil
+	return newDefaultOutputOK(), nil
 }
 
 // onPublish rtsp/rtmp/rtp 推流鉴权事件。
@@ -111,6 +111,7 @@ func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (D
 // 播放rtsp流时，如果该流开启了rtsp专用认证（on_rtsp_realm），则不会触发on_play事件。
 // https://docs.zlmediakit.com/guide/media_server/web_hook_api.html#_6-on-play
 func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, error) {
+	return newDefaultOutputOK(), nil
 	if in.App == "rtp" {
 		return newDefaultOutputOK(), nil
 	}
@@ -145,6 +146,7 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 // 但是 rtsp/rtmp/rtp 转推算观看人数，也会触发该事件。
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_12%E3%80%81on-stream-changed
 func (w WebHookAPI) onStreamNoneReader(c *gin.Context, in *onStreamNoneReaderInput) (onStreamNoneReaderOutput, error) {
+	// rtmp 无人观看时，也允许推流
 	w.log.Info("无人观看", "app", in.App, "stream", in.Stream, "mediaServerID", in.MediaServerID)
 	// 存在录像计划时，不关闭流
 	return onStreamNoneReaderOutput{Close: true}, nil

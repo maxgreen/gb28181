@@ -176,7 +176,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		app = proxy.App
 		appStream = proxy.Stream
 
-		svr, err = a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), proxy.MediaServerID)
+		svr, err = a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), sms.DefaultMediaServerID)
 		if err != nil {
 			return nil, err
 		}
@@ -188,6 +188,12 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			RetryCount: 3,
 			RTPType:    proxy.Transport,
 			TimeoutSec: 10,
+			// EnableRTMP:   zlm.NewBool(true),
+			// EnableRTSP:   zlm.NewBool(true),
+			// EnableHLS:    zlm.NewBool(true),
+			// EnableAudio:  zlm.NewBool(true),
+			AddMuteAudio: zlm.NewBool(true),
+			// AutoClose:    zlm.NewBool(false),
 		})
 		if err != nil {
 			return nil, web.ErrServer.Msg(err.Error())

@@ -41,6 +41,8 @@ type AddStreamProxyResponse struct {
 	} `json:"data"`
 }
 
+// AddStreamProxy 添加流代理
+// https://docs.zlmediakit.com/zh/guide/media_server/restful_api.html#_12%E3%80%81-index-api-addstreamproxy
 func (e *Engine) AddStreamProxy(in AddStreamProxyRequest) (*AddStreamProxyResponse, error) {
 	body, err := struct2map(in)
 	if err != nil {

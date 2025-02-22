@@ -3,6 +3,7 @@ package sms
 
 import "github.com/ixugo/goweb/pkg/orm"
 
+// DefaultMediaServerID 临时变量，待未来重构分布式流媒体时，移除
 const DefaultMediaServerID = "local"
 
 // MediaServer domain model

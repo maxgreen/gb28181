@@ -13,7 +13,7 @@ type StreamProxy struct {
 	MediaServerID             string   `gorm:"column:media_server_id;notNull;default:'';comment:媒体服务器 id" json:"media_server_id"`                               // 媒体服务器 id
 	SourceURL                 string   `gorm:"column:source_url;notNull;default:'';comment:原始 url" json:"source_url"`                                           // 原始 url
 	TimeoutS                  int      `gorm:"column:timeout_s;notNull;default:0;comment:超时时间(秒)" json:"timeout_s"`                                             // 超时时间(秒)
-	Transport                 int      `gorm:"column:transport;notNull;default:0;comment:rtsp 拉流方式(0:udp;1:tcp)" json:"transport"`                              // rtsp 拉流方式(0:udp;1:tcp)
+	Transport                 int      `gorm:"column:transport;notNull;default:0;comment:rtsp 拉流方式(0:tcp，1:udp，2:组播)" json:"transport"`                         // rtsp 拉流方式
 	Enabled                   bool     `gorm:"column:enabled;notNull;default:FALSE;comment:是否启用" json:"enabled"`                                                // 是否启用
 	EnabledAudio              bool     `gorm:"column:enabled_audio;notNull;default:FALSE;comment:是否启用音频" json:"enabled_audio"`                                  // 是否启用音频
 	EnabledRemoveNoneReader   bool     `gorm:"column:enabled_remove_none_reader;notNull;default:FALSE;comment:是否无人观看时删除" json:"enabled_remove_none_reader"`     // 是否无人观看时删除
