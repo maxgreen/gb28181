@@ -37,6 +37,9 @@ func (c *Core) FindChannel(ctx context.Context, in *FindChannelInput) ([]*Channe
 			query.Where("channel_id like ? OR name like ?", "%"+in.Key+"%", "%"+in.Key+"%")
 		}
 	}
+	if in.DID != "" {
+		query.Where("did=?", in.DID)
+	}
 
 	total, err := c.store.Channel().Find(ctx, &items, in, query.Encode()...)
 	if err != nil {

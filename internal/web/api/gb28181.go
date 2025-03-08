@@ -36,7 +36,7 @@ func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) 
 	{
 		group := g.Group("/devices", handler...)
 		group.GET("", web.WarpH(api.findDevice))
-		// group.GET("/:id", web.WarpH(api.getDevice))
+		group.GET("/:id", web.WarpH(api.getDevice))
 		group.PUT("/:id", web.WarpH(api.editDevice))
 		group.POST("", web.WarpH(api.addDevice))
 		group.DELETE("/:id", web.WarpH(api.delDevice))
@@ -62,10 +62,10 @@ func (a GB28181API) findDevice(c *gin.Context, in *gb28181.FindDeviceInput) (any
 	return gin.H{"items": items, "total": total}, err
 }
 
-// func (a GB28181API) getDevice(c *gin.Context, _ *struct{}) (any, error) {
-// 	deviceID := c.Param("id")
-// 	return a.gb28181Core.GetDevice(c.Request.Context(), deviceID)
-// }
+func (a GB28181API) getDevice(c *gin.Context, _ *struct{}) (any, error) {
+	deviceID := c.Param("id")
+	return a.gb28181Core.GetDevice(c.Request.Context(), deviceID)
+}
 
 func (a GB28181API) editDevice(c *gin.Context, in *gb28181.EditDeviceInput) (any, error) {
 	deviceID := c.Param("id")

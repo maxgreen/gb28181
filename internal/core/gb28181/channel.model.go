@@ -4,6 +4,7 @@ package gb28181
 // Channel domain model
 type Channel struct {
 	ID        string    `gorm:"primaryKey" json:"id"`
+	DID       string    `gorm:"column:did;index;notNull;default:'';comment:父级 ID" json:"did"`
 	DeviceID  string    `gorm:"column:device_id;index;notNull;default:'';comment:国标编码" json:"device_id"`   // 国标编码
 	ChannelID string    `gorm:"column:channel_id;index;notNull;default:'';comment:国标编码" json:"channel_id"` // 国标编码
 	Name      string    `gorm:"column:name;notNull;default:'';comment:通道名称" json:"name"`                   // 通道名称

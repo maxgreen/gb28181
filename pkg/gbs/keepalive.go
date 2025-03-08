@@ -16,7 +16,7 @@ type MessageNotify struct {
 	Info     string `xml:"Info"`
 }
 
-func (g GB28181API) sipMessageKeepalive(ctx *sip.Context) {
+func (g *GB28181API) sipMessageKeepalive(ctx *sip.Context) {
 	var msg MessageNotify
 	if err := sip.XMLDecode(ctx.Request.Body(), &msg); err != nil {
 		ctx.Log.Error("Message Unmarshal xml err", "err", err)
@@ -30,6 +30,11 @@ func (g GB28181API) sipMessageKeepalive(ctx *sip.Context) {
 	// logrus.Warnln("Device Keepalive not found ", u.DeviceID, err)
 	// }
 	// }
+
+	ipc, ok := g.svr.devices.Load(ctx.DeviceID)
+	if ok {
+		g.svr.devices.Store(ctx.DeviceID, ipc)
+	}
 
 	if err := g.store.Edit(ctx.DeviceID, func(d *gb28181.Device) {
 		d.KeepaliveAt = orm.Now()

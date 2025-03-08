@@ -75,6 +75,7 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 	if len(channels) <= 0 {
 		return nil
 	}
+
 	var dev Device
 	g.deviceStore.Edit(context.TODO(), &dev, func(d *Device) {
 		d.Channels = len(channels)
@@ -84,8 +85,10 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 		var ch Channel
 		if err := g.channelStore.Edit(context.TODO(), &ch, func(c *Channel) {
 			c.IsOnline = channel.IsOnline
+			ch.DID = dev.ID
 		}, orm.Where("device_id = ? AND channel_id = ?", channel.DeviceID, channel.ChannelID)); err != nil {
 			channel.ID = g.uni.UniqueID(bz.IDPrefixGBChannel)
+			channel.DID = dev.ID
 			g.channelStore.Add(context.TODO(), channel)
 		}
 	}

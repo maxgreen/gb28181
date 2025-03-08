@@ -5,6 +5,7 @@ import "github.com/ixugo/goweb/pkg/web"
 
 type FindChannelInput struct {
 	web.PagerFilter
+	DID      string `form:"did"`       // 设备 id
 	DeviceID string `form:"device_id"` // 国标编码
 	Key      string `form:"key"`       // 名称/国标编码 模糊搜索，id 精确搜索
 	// Name     string    `form:"name"`      // 通道名称

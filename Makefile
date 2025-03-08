@@ -169,7 +169,7 @@ build/windows:
 	@make build/local GOOS=$(GOOS) GOARCH=$(GOARCH)
 
 docker/build:
-	@docker build --force-rm=true --platform linux/amd64 -t registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest -f Dockerfile .
+	@docker build --force-rm=true --push --platform linux/amd64 -t registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest -f Dockerfile .
 
 docker/save:
 	@docker save -o $(MODULE_NAME).tar $(IMAGE_NAME)
