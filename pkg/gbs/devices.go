@@ -2,11 +2,13 @@ package gbs
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
 	"github.com/ixugo/goweb/pkg/conc"
@@ -18,24 +20,58 @@ var (
 	svr            *sip.Server
 )
 
-// Client 客户端链接信息等临时信息存储
-type Client struct {
-	devices conc.Map[string, *Device]
-}
-
 type Device struct {
 	channels conc.Map[string, *Channel]
 
+	registerWithKeepaliveMutex sync.Mutex
 	// 播放互斥锁也可以移动到 channel 属性
 	playMutex sync.Mutex
 
+	IsOnline bool
+
 	conn   sip.Connection
 	source net.Addr
+	to     *sip.Address
 
-	to *sip.Address
+	LastKeepaliveAt time.Time
+	LastRegisterAt  time.Time
+	Expires         int
+}
 
-	lastKeepaliveAt time.Time
-	lastRegisterAt  time.Time
+func NewDevice(conn sip.Connection, d *gb28181.Device, channels []*gb28181.Channel) *Device {
+	uri, err := sip.ParseURI(fmt.Sprintf("sip:%s@%s", d.DeviceID, d.Address))
+	if err != nil {
+		slog.Error("parse uri", "err", err, "did", d.ID)
+		return nil
+	}
+
+	addr, err := net.ResolveUDPAddr("udp", d.Address)
+	if err != nil {
+		slog.Error("resolve udp addr", "err", err, "did", d.ID)
+		return nil
+	}
+
+	c := Device{
+		conn:   conn,
+		source: addr,
+		to: &sip.Address{
+			URI:    uri,
+			Params: sip.NewParams(),
+		},
+		LastKeepaliveAt: d.KeepaliveAt.Time,
+		LastRegisterAt:  d.RegisteredAt.Time,
+		IsOnline:        d.IsOnline,
+	}
+
+	for _, channel := range channels {
+		ch := Channel{
+			ChannelID: channel.ChannelID,
+			device:    &c,
+		}
+		ch.init(d.Address)
+		c.channels.Store(channel.ChannelID, &ch)
+	}
+	return &c
 }
 
 // Conn implements Targeter.
@@ -106,38 +142,34 @@ func newDevice(network, address string, conn sip.Connection) *Device {
 	return &dev
 }
 
-func NewClient() *Client {
-	return &Client{
-		devices: conc.Map[string, *Device]{},
-	}
+// func NewClient() *Client {
+// 	return &Client{
+// 		devices: conc.Map[string, *Device]{},
+// 	}
+// }
+
+// func (c *Client) Store(deviceID string, in *Device) {
+// 	v, ok := c.devices.LoadOrStore(deviceID, in)
+// 	if ok {
+// 		v.conn = in.conn
+// 		v.source = in.source
+// 		v.to = in.to
+// 		v.lastKeepaliveAt = in.lastKeepaliveAt
+// 		v.lastRegisterAt = in.lastRegisterAt
+// 	}
+// }
+
+// func (c *Client) Load(deviceID string) (*Device, bool) {
+// 	return c.devices.Load(deviceID)
+// }
+
+func (c *Device) GetChannel(channelID string) (*Channel, bool) {
+	return c.channels.Load(channelID)
 }
 
-func (c *Client) Store(deviceID string, in *Device) {
-	v, ok := c.devices.LoadOrStore(deviceID, in)
-	if ok {
-		v.conn = in.conn
-		v.source = in.source
-		v.to = in.to
-		v.lastKeepaliveAt = in.lastKeepaliveAt
-		v.lastRegisterAt = in.lastRegisterAt
-	}
-}
-
-func (c *Client) Load(deviceID string) (*Device, bool) {
-	return c.devices.Load(deviceID)
-}
-
-func (c *Client) GetChannel(deviceID, channelID string) (*Channel, bool) {
-	ipc, ok := c.devices.Load(deviceID)
-	if !ok {
-		return nil, false
-	}
-	return ipc.channels.Load(channelID)
-}
-
-func (c *Client) Delete(deviceID string) {
-	c.devices.Delete(deviceID)
-}
+// func (c *Client) Delete(deviceID string) {
+// 	c.devices.Delete(deviceID)
+// }
 
 // Devices NVR  设备信息
 type Devices struct {

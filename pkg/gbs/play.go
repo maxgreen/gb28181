@@ -26,7 +26,7 @@ type StopPlayInput struct {
 }
 
 func (g *GB28181API) StopPlay(in *StopPlayInput) error {
-	ch, ok := g.svr.devices.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
+	ch, ok := g.svr.memoryStorer.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
 	if !ok {
 		return ErrDeviceNotExist
 	}
@@ -55,7 +55,7 @@ func (g *GB28181API) StopPlay(in *StopPlayInput) error {
 }
 
 func (g *GB28181API) Play(in *PlayInput) error {
-	ch, ok := g.svr.devices.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
+	ch, ok := g.svr.memoryStorer.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
 	if !ok {
 		return ErrDeviceNotExist
 	}

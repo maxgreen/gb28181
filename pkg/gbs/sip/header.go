@@ -232,6 +232,10 @@ type Address struct {
 	Params      Params
 }
 
+func (addr Address) String() string {
+	return fmt.Sprintf("%s %s", addr.URI.String(), addr.Params.String())
+}
+
 // Clone Clone
 func (addr *Address) Clone() *Address {
 	var name MaybeString

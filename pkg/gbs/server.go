@@ -19,14 +19,26 @@ import (
 	"github.com/ixugo/goweb/pkg/system"
 )
 
+type MemoryStorer interface {
+	LoadDeviceToMemory(conn sip.Connection)               // 加载设备到内存
+	RangeDevices(fn func(key string, value *Device) bool) // 遍历设备
+
+	Change(deviceID string, changeFn func(*gb28181.Device), changeFn2 func(*Device)) error // 登出设备
+
+	Load(deviceID string) (*Device, bool)
+	Store(deviceID string, value *Device)
+	GetChannel(deviceID, channelID string) (*Channel, bool)
+
+	// Change(deviceID string, changeFn func(*gb28181.Device)) // 修改设备
+}
+
 type Server struct {
 	*sip.Server
 	gb           *GB28181API
 	mediaService sms.Core
 
-	fromAddress *sip.Address
-
-	devices *Client
+	fromAddress  *sip.Address
+	memoryStorer MemoryStorer
 }
 
 func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server, func()) {
@@ -53,22 +65,22 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server
 		Server:       svr,
 		mediaService: sc,
 		fromAddress:  &from,
-		devices:      NewClient(),
 		gb:           api,
+		memoryStorer: store.Store().(MemoryStorer),
 	}
 	api.svr = &c
-
-	// devices, err := store.FindDevices(context.TODO())
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// for _, device := range devices {
-	// c.devices.Store(device.DeviceID, newDevice(device.NetworkAddress(), device.DeviceID))
-	// }
 
 	go svr.ListenUDPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
 	go svr.ListenTCPServer(fmt.Sprintf(":%d", cfg.Sip.Port))
 	go c.startTickerCheck()
+	// 等待 UDP 连接
+	for {
+		time.Sleep(50 * time.Millisecond)
+		if svr.UDPConn() != nil {
+			c.memoryStorer.LoadDeviceToMemory(svr.UDPConn())
+			break
+		}
+	}
 	return &c, c.Close
 }
 
@@ -76,32 +88,19 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server
 func (s *Server) startTickerCheck() {
 	conc.Timer(context.Background(), 60*time.Second, time.Second, func() {
 		now := time.Now()
-		s.devices.devices.Range(func(key string, value *Device) bool {
-			if now.Sub(value.lastKeepaliveAt) >= 3*60*time.Second || value.conn == nil {
+		s.memoryStorer.RangeDevices(func(key string, value *Device) bool {
+			if !value.IsOnline {
+				return true
+			}
+
+			if now.Sub(value.LastKeepaliveAt) >= 3*60*time.Second || value.conn == nil {
 				s.gb.logout(key, func(d *gb28181.Device) {
 					d.IsOnline = false
 				})
-				// 心跳超时
-				s.devices.devices.Delete(key)
-				return true
 			}
 			return true
 		})
 	})
-}
-
-func Start() {
-	// 数据库表初始化 启动时自动同步数据结构到数据库
-	// db.DBClient.AutoMigrate(new(Devices))
-	// db.DBClient.AutoMigrate(new(Channels))
-	// db.DBClient.AutoMigrate(new(Streams))
-	// db.DBClient.AutoMigrate(new(m.SysInfo))
-	// db.DBClient.AutoMigrate(new(Files))
-
-	LoadSYSInfo()
-
-	// svr = sip.NewServer()
-	// go svr.ListenUDPServer(config.UDP)
 }
 
 // MODDEBUG MODDEBUG

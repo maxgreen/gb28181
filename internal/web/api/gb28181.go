@@ -8,15 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
-	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181db"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
 	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/gowvp/gb28181/pkg/zlm"
-	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
-	"gorm.io/gorm"
 )
 
 type GB28181API struct {
@@ -28,8 +25,8 @@ func NewGB28181API(core gb28181.Core) GB28181API {
 	return GB28181API{gb28181Core: core}
 }
 
-func NewGB28181Core(db *gorm.DB, uni uniqueid.Core) gb28181.Core {
-	return gb28181.NewCore(gb28181db.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
+func NewGB28181Core(store gb28181.Storer, uni uniqueid.Core) gb28181.Core {
+	return gb28181.NewCore(store, uni)
 }
 
 func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) {

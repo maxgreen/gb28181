@@ -10,7 +10,7 @@ type FindChannelInput struct {
 	Key      string `form:"key"`       // 名称/国标编码 模糊搜索，id 精确搜索
 	// Name     string    `form:"name"`      // 通道名称
 	// PTZType  int       `form:"ptztype"`   // 云台类型
-	IsOnline bool `form:"is_online"` // 是否在线
+	IsOnline string `form:"is_online"` // 是否在线
 }
 
 type EditChannelInput struct {

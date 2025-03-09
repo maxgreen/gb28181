@@ -14,6 +14,18 @@ var _ gb28181.ChannelStorer = Channel{}
 // Channel Related business namespaces
 type Channel DB
 
+// BatchEdit implements gb28181.ChannelStorer.
+func (d Channel) BatchEdit(ctx context.Context, column string, value any, args ...orm.QueryOption) error {
+	if len(args) == 0 {
+		panic("没有查询条件")
+	}
+	db := d.db.WithContext(ctx).Model(new(gb28181.Channel))
+	for _, fn := range args {
+		fn(db)
+	}
+	return db.UpdateColumn(column, value).Error
+}
+
 // NewChannel instance object
 func NewChannel(db *gorm.DB) Channel {
 	return Channel{db: db}

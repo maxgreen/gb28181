@@ -4,6 +4,7 @@ package gb28181
 import (
 	"context"
 	"log/slog"
+	"strconv"
 	"strings"
 
 	"github.com/gowvp/gb28181/internal/core/bz"
@@ -19,6 +20,8 @@ type ChannelStorer interface {
 	Add(context.Context, *Channel) error
 	Edit(context.Context, *Channel, func(*Channel), ...orm.QueryOption) error
 	Del(context.Context, *Channel, ...orm.QueryOption) error
+
+	BatchEdit(context.Context, string, any, ...orm.QueryOption) error // 批量更新一个字段
 }
 
 // FindChannel Paginated search
@@ -39,6 +42,11 @@ func (c *Core) FindChannel(ctx context.Context, in *FindChannelInput) ([]*Channe
 	}
 	if in.DID != "" {
 		query.Where("did=?", in.DID)
+	}
+
+	if in.IsOnline == "true" || in.IsOnline == "false" {
+		isOnline, _ := strconv.ParseBool(in.IsOnline)
+		query.Where("is_online = ?", isOnline)
 	}
 
 	total, err := c.store.Channel().Find(ctx, &items, in, query.Encode()...)

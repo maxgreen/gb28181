@@ -82,7 +82,7 @@ Java 语言 WVP @648540858 [wvp-GB28181-pro](https://github.com/648540858/wvp-GB
 
 ## 文档
 
-GoWVP [在线接口文档](apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)
+GoWVP [在线接口文档](https://apifox.com/apidoc/shared-7b67c918-5f72-4f64-b71d-0593d7427b93)
 
 ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)
 

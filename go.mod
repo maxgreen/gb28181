@@ -1,6 +1,6 @@
 module github.com/gowvp/gb28181
 
-go 1.23.4
+go 1.24
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2

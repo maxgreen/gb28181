@@ -8,6 +8,7 @@ import (
 	"github.com/google/wire"
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
+	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181cache"
 	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181db"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/media/store/mediadb"
@@ -32,6 +33,7 @@ var (
 		NewUniqueID,
 		NewMediaCore, NewMediaAPI,
 		gbs.NewServer,
+		NewGB28181Store,
 		NewGB28181API,
 		NewGB28181Core,
 		NewGB28181,
@@ -106,10 +108,13 @@ func NewMediaCore(db *gorm.DB, uni uniqueid.Core) media.Core {
 	return media.NewCore(mediadb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
 }
 
-func NewGB28181(db *gorm.DB, uni uniqueid.Core) gb28181.GB28181 {
+func NewGB28181Store(db *gorm.DB) gb28181.Storer {
+	return gb28181cache.NewCache(gb28181db.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate))
+}
+
+func NewGB28181(store gb28181.Storer, uni uniqueid.Core) gb28181.GB28181 {
 	return gb28181.NewGB28181(
-		gb28181db.NewDevice(db),
-		gb28181db.NewChannel(db),
+		store,
 		uni,
 	)
 }

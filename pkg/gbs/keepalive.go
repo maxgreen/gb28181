@@ -31,33 +31,20 @@ func (g *GB28181API) sipMessageKeepalive(ctx *sip.Context) {
 	// }
 	// }
 
-	ipc, ok := g.svr.devices.Load(ctx.DeviceID)
+	ipc, ok := g.svr.memoryStorer.Load(ctx.DeviceID)
 	if ok {
-		g.svr.devices.Store(ctx.DeviceID, ipc)
+		g.svr.memoryStorer.Store(ctx.DeviceID, ipc)
 	}
 
-	if err := g.store.Edit(ctx.DeviceID, func(d *gb28181.Device) {
+	if err := g.svr.memoryStorer.Change(ctx.DeviceID, func(d *gb28181.Device) {
 		d.KeepaliveAt = orm.Now()
-		d.IsOnline = msg.Status == "OK"
-
+		d.IsOnline = msg.Status == "OK" || msg.Status == "ON"
 		d.Address = ctx.Source.String()
 		d.Trasnport = ctx.Source.Network()
+	}, func(d *Device) {
 	}); err != nil {
 		ctx.Log.Error("keepalive", "err", err)
 	}
 
-	// _activeDevices.Store(u.DeviceID, u)
-	// go notify(notifyDevicesAcitve(u.DeviceID, message.Status))
-	// _, err := db.UpdateAll(db.DBClient, new(Devices), map[string]interface{}{"deviceid=?": u.DeviceID}, Devices{
-	// 	Host:     u.Host,
-	// 	Port:     u.Port,
-	// 	Rport:    u.Rport,
-	// 	RAddr:    u.RAddr,
-	// 	Source:   u.Source,
-	// 	URIStr:   u.URIStr,
-	// 	ActiveAt: device.ActiveAt,
-	// })
-	// return err
-	// return nil
 	ctx.String(200, "OK")
 }

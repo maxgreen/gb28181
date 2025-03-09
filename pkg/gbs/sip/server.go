@@ -90,6 +90,10 @@ func (s *Server) mustTX(msg *Request) *Transaction {
 	return tx
 }
 
+func (s *Server) UDPConn() Connection {
+	return s.udpConn
+}
+
 // ListenUDPServer ListenUDPServer
 func (s *Server) ListenUDPServer(addr string) {
 	udpaddr, err := net.ResolveUDPAddr("udp", addr)

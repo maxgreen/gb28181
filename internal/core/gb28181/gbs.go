@@ -10,28 +10,32 @@ import (
 )
 
 type GB28181 struct {
-	deviceStore  DeviceStorer
-	channelStore ChannelStorer
-	uni          uniqueid.Core
+	// deviceStore  DeviceStorer
+	// channelStore ChannelStorer
+	store Storer
+	uni   uniqueid.Core
 }
 
-func NewGB28181(ds DeviceStorer, cs ChannelStorer, uni uniqueid.Core) GB28181 {
+func NewGB28181(store Storer, uni uniqueid.Core) GB28181 {
 	return GB28181{
-		deviceStore:  ds,
-		channelStore: cs,
-		uni:          uni,
+		store: store,
+		uni:   uni,
 	}
+}
+
+func (g GB28181) Store() Storer {
+	return g.store
 }
 
 func (g GB28181) GetDeviceByDeviceID(deviceID string) (*Device, error) {
 	ctx := context.TODO()
 	var d Device
-	if err := g.deviceStore.Get(ctx, &d, orm.Where("device_id=?", deviceID)); err != nil {
+	if err := g.store.Device().Get(ctx, &d, orm.Where("device_id=?", deviceID)); err != nil {
 		if !orm.IsErrRecordNotFound(err) {
 			return nil, err
 		}
 		d.init(g.uni.UniqueID(bz.IDPrefixGB), deviceID)
-		if err := g.deviceStore.Add(ctx, &d); err != nil {
+		if err := g.store.Device().Add(ctx, &d); err != nil {
 			return nil, err
 		}
 	}
@@ -40,18 +44,7 @@ func (g GB28181) GetDeviceByDeviceID(deviceID string) (*Device, error) {
 
 func (g GB28181) Logout(deviceID string, changeFn func(*Device)) error {
 	var d Device
-	if err := g.deviceStore.Edit(context.TODO(), &d, func(d *Device) {
-		changeFn(d)
-	}, orm.Where("device_id=?", deviceID)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (g GB28181) Login(deviceID string, changeFn func(*Device)) error {
-	var d Device
-	if err := g.deviceStore.Edit(context.TODO(), &d, func(d *Device) {
+	if err := g.store.Device().Edit(context.TODO(), &d, func(d *Device) {
 		changeFn(d)
 	}, orm.Where("device_id=?", deviceID)); err != nil {
 		return err
@@ -62,7 +55,7 @@ func (g GB28181) Login(deviceID string, changeFn func(*Device)) error {
 
 func (g GB28181) Edit(deviceID string, changeFn func(*Device)) error {
 	var d Device
-	if err := g.deviceStore.Edit(context.TODO(), &d, func(d *Device) {
+	if err := g.store.Device().Edit(context.TODO(), &d, func(d *Device) {
 		changeFn(d)
 	}, orm.Where("device_id=?", deviceID)); err != nil {
 		return err
@@ -77,19 +70,19 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 	}
 
 	var dev Device
-	g.deviceStore.Edit(context.TODO(), &dev, func(d *Device) {
+	g.store.Device().Edit(context.TODO(), &dev, func(d *Device) {
 		d.Channels = len(channels)
 	}, orm.Where("device_id=?", channels[0].DeviceID))
 
 	for _, channel := range channels {
 		var ch Channel
-		if err := g.channelStore.Edit(context.TODO(), &ch, func(c *Channel) {
+		if err := g.store.Channel().Edit(context.TODO(), &ch, func(c *Channel) {
 			c.IsOnline = channel.IsOnline
 			ch.DID = dev.ID
 		}, orm.Where("device_id = ? AND channel_id = ?", channel.DeviceID, channel.ChannelID)); err != nil {
 			channel.ID = g.uni.UniqueID(bz.IDPrefixGBChannel)
 			channel.DID = dev.ID
-			g.channelStore.Add(context.TODO(), channel)
+			g.store.Channel().Add(context.TODO(), channel)
 		}
 	}
 	return nil
@@ -98,7 +91,7 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 // FindDevices 获取所有设备
 func (g GB28181) FindDevices(ctx context.Context) ([]*Device, error) {
 	var devices []*Device
-	if _, err := g.deviceStore.Find(ctx, &devices, web.NewPagerFilterMaxSize()); err != nil {
+	if _, err := g.store.Device().Find(ctx, &devices, web.NewPagerFilterMaxSize()); err != nil {
 		return nil, err
 	}
 	return devices, nil

@@ -41,7 +41,7 @@ func (g GB28181API) sipMessageDeviceInfo(ctx *sip.Context) {
 		return
 	}
 
-	if err := g.store.Edit(ctx.DeviceID, func(d *gb28181.Device) {
+	if err := g.core.Edit(ctx.DeviceID, func(d *gb28181.Device) {
 		d.Ext.Firmware = msg.Firmware
 		d.Ext.Manufacturer = msg.Manufacturer
 		d.Ext.Model = msg.Model

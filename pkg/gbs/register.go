@@ -2,6 +2,7 @@ package gbs
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,8 +18,8 @@ import (
 const ignorePassword = "#"
 
 type GB28181API struct {
-	cfg   *conf.SIP
-	store gb28181.GB28181
+	cfg  *conf.SIP
+	core gb28181.GB28181
 
 	catalog *sip.Collector[Channels]
 
@@ -32,9 +33,9 @@ type GB28181API struct {
 
 func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeManager) *GB28181API {
 	g := GB28181API{
-		cfg:   &cfg.Sip,
-		store: store,
-		sms:   sms,
+		cfg:  &cfg.Sip,
+		core: store,
+		sms:  sms,
 		catalog: sip.NewCollector[Channels](func(c1, c2 *Channels) bool {
 			return c1.ChannelID == c2.ChannelID
 		}),
@@ -46,18 +47,18 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 			return
 		}
 
-		ipc, ok := g.svr.devices.Load(s)
-		if ok {
-			ipc.channels.Clear()
-			for _, ch := range c {
-				ch := Channel{
-					ChannelID: ch.ChannelID,
-					device:    ipc,
-				}
-				ch.init(g.cfg.Domain)
-				ipc.channels.Store(ch.ChannelID, &ch)
-			}
-		}
+		// ipc, ok := g.svr.devices.Load(s)
+		// if ok {
+		// 	ipc.channels.Clear()
+		// 	for _, ch := range c {
+		// 		ch := Channel{
+		// 			ChannelID: ch.ChannelID,
+		// 			device:    ipc,
+		// 		}
+		// 		ch.init(g.cfg.Domain)
+		// 		ipc.channels.Store(ch.ChannelID, &ch)
+		// 	}
+		// }
 
 		out := make([]*gb28181.Channel, len(c))
 		for i, ch := range c {
@@ -65,14 +66,14 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 				DeviceID:  s,
 				ChannelID: ch.ChannelID,
 				Name:      ch.Name,
-				IsOnline:  ch.Status == "OK",
+				IsOnline:  ch.Status == "OK" || ch.Status == "ON",
 				Ext: gb28181.DeviceExt{
 					Manufacturer: ch.Manufacturer,
 					Model:        ch.Model,
 				},
 			}
 		}
-		g.store.SaveChannels(out)
+		g.core.SaveChannels(out)
 	})
 	return &g
 }
@@ -83,7 +84,7 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 		return
 	}
 
-	dev, err := g.store.GetDeviceByDeviceID(ctx.DeviceID)
+	dev, err := g.core.GetDeviceByDeviceID(ctx.DeviceID)
 	if err != nil {
 		ctx.Log.Error("GetDeviceByDeviceID", "err", err)
 		ctx.String(http.StatusInternalServerError, "server db error")
@@ -138,22 +139,11 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 		respFn()
 		return
 	}
-	g.login(ctx.DeviceID, func(d *gb28181.Device) {
-		d.IsOnline = true
-		d.RegisteredAt = orm.Now()
-		d.Expires, _ = strconv.Atoi(expire)
-	})
+	g.login(ctx, expire)
 
 	conn := ctx.Request.GetConnection()
 	fmt.Printf(">>> %p\n", conn)
 
-	g.svr.devices.Store(dev.DeviceID, &Device{
-		conn:            conn,
-		source:          ctx.Source,
-		to:              ctx.To,
-		lastKeepaliveAt: time.Now(),
-		lastRegisterAt:  time.Now(),
-	})
 	ctx.Log.Info("设备注册成功")
 
 	respFn()
@@ -162,10 +152,25 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 	g.QueryCatalog(dev.DeviceID)
 }
 
-func (g GB28181API) login(deviceID string, changeFn func(*gb28181.Device)) {
-	g.store.Login(deviceID, changeFn)
+func (g GB28181API) login(ctx *sip.Context, expire string) {
+	slog.Info("status change 设备上线", "device_id", ctx.DeviceID)
+	g.svr.memoryStorer.Change(ctx.DeviceID, func(d *gb28181.Device) {
+		d.IsOnline = true
+		d.RegisteredAt = orm.Now()
+		d.Expires, _ = strconv.Atoi(expire)
+	}, func(d *Device) {
+		d.conn = ctx.Request.GetConnection()
+		d.source = ctx.Source
+		d.to = ctx.To
+	})
 }
 
-func (g GB28181API) logout(deviceID string, changeFn func(*gb28181.Device)) {
-	g.store.Logout(deviceID, changeFn)
+func (g GB28181API) logout(deviceID string, changeFn func(*gb28181.Device)) error {
+	slog.Info("status change 设备离线", "device_id", deviceID)
+	return g.svr.memoryStorer.Change(deviceID, changeFn, func(d *Device) {
+		d.conn = nil
+		d.source = nil
+		d.to = nil
+		d.Expires = 0
+	})
 }
