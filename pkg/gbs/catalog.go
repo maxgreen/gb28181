@@ -2,7 +2,6 @@ package gbs
 
 import (
 	"encoding/xml"
-	"fmt"
 	"log/slog"
 	"net"
 
@@ -70,9 +69,10 @@ func (g GB28181API) sipMessageCatalog(ctx *sip.Context) {
 // QueryCatalog 设备目录查询或订阅请求
 // GB/T28181 81 页 A.2.4.3
 func (g *GB28181API) QueryCatalog(deviceID string) error {
+	slog.Debug("QueryCatalog", "deviceID", deviceID)
 	ipc, ok := g.svr.memoryStorer.Load(deviceID)
 	if !ok {
-		return fmt.Errorf("device not found")
+		return ErrDeviceOffline
 	}
 
 	_, err := g.svr.wrapRequest(ipc, sip.MethodMessage, &sip.ContentTypeXML, sip.GetCatalogXML(deviceID))

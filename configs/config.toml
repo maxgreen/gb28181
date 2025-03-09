@@ -19,18 +19,18 @@ version = 1
     SlowThreshold = '200ms'
 
 [Sip]
-  Port = 15062
+  Port = 15060
   ID = "3402000000200000001"
   Domain = "3402000000"
-  Password = "12345678"
+  Password = ""
 
 [Media]
   IP = "127.0.0.1"
   HTTPPort = 8080
   Secret = "s1kPE7bzqKeHUaVcp8dCA0jeB8yxyFq4"
-  WebHookIP = "host.docker.internal"
+  WebHookIP = "192.168.1.10"
   RTPPortRange = "20000-20500"
-  SDPIP = "192.168.10.14"
+  SDPIP = "192.168.1.10"
 
 [Log]
   # 日志存储目录，不能使用特殊符号
@@ -40,6 +40,6 @@ version = 1
   # 保留日志多久，超过时间自动删除
   MaxAge = '744h0m0s'
   # 多久时间，分割一个新的日志文件
-  RotationTime = '8h0m0s'
+  RotationTime = '12h0m0s'
   # 多大文件，分割一个新的日志文件(MB)
   RotationSize = 50

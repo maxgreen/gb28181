@@ -21,13 +21,14 @@ var (
 )
 
 type Device struct {
-	channels conc.Map[string, *Channel]
+	Channels conc.Map[string, *Channel]
 
 	registerWithKeepaliveMutex sync.Mutex
 	// 播放互斥锁也可以移动到 channel 属性
 	playMutex sync.Mutex
 
 	IsOnline bool
+	Address  string
 
 	conn   sip.Connection
 	source net.Addr
@@ -38,7 +39,7 @@ type Device struct {
 	Expires         int
 }
 
-func NewDevice(conn sip.Connection, d *gb28181.Device, channels []*gb28181.Channel) *Device {
+func NewDevice(conn sip.Connection, d *gb28181.Device) *Device {
 	uri, err := sip.ParseURI(fmt.Sprintf("sip:%s@%s", d.DeviceID, d.Address))
 	if err != nil {
 		slog.Error("parse uri", "err", err, "did", d.ID)
@@ -58,20 +59,24 @@ func NewDevice(conn sip.Connection, d *gb28181.Device, channels []*gb28181.Chann
 			URI:    uri,
 			Params: sip.NewParams(),
 		},
+		Address:         d.Address,
 		LastKeepaliveAt: d.KeepaliveAt.Time,
 		LastRegisterAt:  d.RegisteredAt.Time,
 		IsOnline:        d.IsOnline,
 	}
 
+	return &c
+}
+
+func (d *Device) LoadChannels(channels ...*gb28181.Channel) {
 	for _, channel := range channels {
 		ch := Channel{
 			ChannelID: channel.ChannelID,
-			device:    &c,
+			device:    d,
 		}
 		ch.init(d.Address)
-		c.channels.Store(channel.ChannelID, &ch)
+		d.Channels.Store(channel.ChannelID, &ch)
 	}
-	return &c
 }
 
 // Conn implements Targeter.
@@ -164,7 +169,7 @@ func newDevice(network, address string, conn sip.Connection) *Device {
 // }
 
 func (c *Device) GetChannel(channelID string) (*Channel, bool) {
-	return c.channels.Load(channelID)
+	return c.Channels.Load(channelID)
 }
 
 // func (c *Client) Delete(deviceID string) {

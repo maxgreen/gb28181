@@ -15,9 +15,8 @@ import (
 )
 
 var (
-	_ gbs.MemoryStorer     = &Cache{}
-	_ gb28181.Storer       = &Cache{}
-	_ gb28181.DeviceStorer = &Cache{}
+	_ gbs.MemoryStorer = &Cache{}
+	_ gb28181.Storer   = &Cache{}
 )
 
 type Cache struct {
@@ -26,33 +25,12 @@ type Cache struct {
 	devices *conc.Map[string, *gbs.Device]
 }
 
-// Add implements gb28181.DeviceStorer.
-func (c *Cache) Add(ctx context.Context, d *gb28181.Device) error {
-	return c.Storer.Device().Add(ctx, d)
-}
-
-// Del implements gb28181.DeviceStorer.
-func (c *Cache) Del(ctx context.Context, d *gb28181.Device, opts ...orm.QueryOption) error {
-	return c.Storer.Device().Del(ctx, d, opts...)
-}
-
-// Edit implements gb28181.DeviceStorer.
-func (c *Cache) Edit(ctx context.Context, d *gb28181.Device, changeFn func(*gb28181.Device), opts ...orm.QueryOption) error {
-	return c.Storer.Device().Edit(ctx, d, changeFn, opts...)
-}
-
-// Find implements gb28181.DeviceStorer.
-func (c *Cache) Find(ctx context.Context, d *[]*gb28181.Device, pager orm.Pager, opts ...orm.QueryOption) (int64, error) {
-	return c.Storer.Device().Find(ctx, d, pager, opts...)
-}
-
-// Get implements gb28181.DeviceStorer.
-func (c *Cache) Get(ctx context.Context, d *gb28181.Device, opts ...orm.QueryOption) error {
-	return c.Storer.Device().Get(ctx, d, opts...)
-}
-
 func (c *Cache) Device() gb28181.DeviceStorer {
-	return c
+	return (*Device)(c)
+}
+
+func (c *Cache) Channel() gb28181.ChannelStorer {
+	return (*Channel)(c)
 }
 
 func NewCache(store gb28181.Storer) *Cache {
@@ -76,15 +54,15 @@ func (c *Cache) LoadDeviceToMemory(conn sip.Connection) {
 			continue
 		}
 
-		channels := make([]*gb28181.Channel, 0, 8)
-		_, err := c.Storer.Channel().Find(context.TODO(), &channels, web.NewPagerFilterMaxSize(), orm.Where("device_id=?", d.DeviceID))
-		if err != nil {
-			panic(err)
-		}
-
-		dev := gbs.NewDevice(conn, d, channels)
+		dev := gbs.NewDevice(conn, d)
 		if dev != nil {
 			slog.Debug("load device to memory", "device_id", d.DeviceID, "to", dev.To())
+			channels := make([]*gb28181.Channel, 0, 8)
+			_, err := c.Storer.Channel().Find(context.TODO(), &channels, web.NewPagerFilterMaxSize(), orm.Where("device_id=?", d.DeviceID))
+			if err != nil {
+				panic(err)
+			}
+			dev.LoadChannels(channels...)
 			c.devices.Store(d.DeviceID, dev)
 		}
 	}

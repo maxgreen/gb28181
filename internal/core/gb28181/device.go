@@ -9,6 +9,7 @@ import (
 	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 )
 
 // DeviceStorer Instantiation interface
@@ -18,6 +19,8 @@ type DeviceStorer interface {
 	Add(context.Context, *Device) error
 	Edit(context.Context, *Device, func(*Device), ...orm.QueryOption) error
 	Del(context.Context, *Device, ...orm.QueryOption) error
+
+	Session(ctx context.Context, changeFns ...func(*gorm.DB) error) error
 }
 
 // FindDevice Paginated search
@@ -96,9 +99,9 @@ func (c Core) EditDevice(ctx context.Context, in *EditDeviceInput, id string) (*
 
 // DelDevice Delete object
 func (c Core) DelDevice(ctx context.Context, id string) (*Device, error) {
-	var out Device
-	if err := c.store.Device().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
+	var dev Device
+	if err := c.store.Device().Del(ctx, &dev, orm.Where("id=?", id)); err != nil {
 		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
-	return &out, nil
+	return &dev, nil
 }
