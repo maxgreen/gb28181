@@ -16,9 +16,7 @@ go wvp 是 Go 语言实现的开源 GB28181 解决方案，基于 GB28181-2022 �
 
 + [在线演示平台 :)](http://gowvp.golang.space:15123/)
 
-
-|![](./docs/demo/home.webp)|![](./docs/demo/play.webp)|
-|-|-|
+![](./docs/demo/play.gif)
 
 ## 应用场景：
 + 支持浏览器无插件播放摄像头视频。
