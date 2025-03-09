@@ -23,19 +23,6 @@ func (g *GB28181API) sipMessageKeepalive(ctx *sip.Context) {
 		return
 	}
 
-	// device, ok := _activeDevices.Get(ctx.DeviceID)
-	// if !ok {
-	// device = Devices{DeviceID: ctx.DeviceID}
-	// if err := db.Get(db.DBClient, &device); err != nil {
-	// logrus.Warnln("Device Keepalive not found ", u.DeviceID, err)
-	// }
-	// }
-
-	ipc, ok := g.svr.memoryStorer.Load(ctx.DeviceID)
-	if ok {
-		g.svr.memoryStorer.Store(ctx.DeviceID, ipc)
-	}
-
 	if err := g.svr.memoryStorer.Change(ctx.DeviceID, func(d *gb28181.Device) {
 		d.KeepaliveAt = orm.Now()
 		d.IsOnline = msg.Status == "OK" || msg.Status == "ON"

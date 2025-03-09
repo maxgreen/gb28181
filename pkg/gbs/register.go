@@ -157,6 +157,7 @@ func (g GB28181API) login(ctx *sip.Context, expire string) {
 	g.svr.memoryStorer.Change(ctx.DeviceID, func(d *gb28181.Device) {
 		d.IsOnline = true
 		d.RegisteredAt = orm.Now()
+		d.KeepaliveAt = orm.Now()
 		d.Expires, _ = strconv.Atoi(expire)
 	}, func(d *Device) {
 		d.conn = ctx.Request.GetConnection()

@@ -93,7 +93,10 @@ func (s *Server) startTickerCheck() {
 				return true
 			}
 
-			if now.Sub(value.LastKeepaliveAt) >= 3*60*time.Second || value.conn == nil {
+			if sub := now.Sub(value.LastKeepaliveAt); sub >= 3*60*time.Second || value.conn == nil {
+				fmt.Println(now)
+				fmt.Println(sub)
+				fmt.Println(value.LastKeepaliveAt)
 				s.gb.logout(key, func(d *gb28181.Device) {
 					d.IsOnline = false
 				})
