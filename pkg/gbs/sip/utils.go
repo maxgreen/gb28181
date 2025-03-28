@@ -186,6 +186,17 @@ func xmlDecode(data []byte, v interface{}) error {
 	return decoder.Decode(v)
 }
 
+// XMLEncode XML编码器
+func XMLEncode(data any) ([]byte, error) {
+	b, err := xml.Marshal(data)
+	if err != nil {
+		slog.Error("MarshalIndent", "err", err)
+		return nil, err
+	}
+	xmlHeader := "<?xml version=\"1.0\" encoding=\"GB2312\"?>\n"
+	return Utf8ToGbk([]byte(xmlHeader + string(b)))
+}
+
 // Max Max
 func Max(a, b int64) int64 {
 	if a > b {

@@ -3,6 +3,7 @@ package sip
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log/slog"
 	"strconv"
 	"strings"
@@ -583,7 +584,12 @@ func (p *parser) start() {
 		packet = <-p.in
 		startLine, err := packet.nextLine()
 		if err != nil {
-			slog.Error("start nextLine", "err", err, "line", startLine)
+			if err != io.EOF {
+				slog.Error("start nextLine", "err", err, "line", startLine)
+			}
+			continue
+		}
+		if len(startLine) == 0 {
 			continue
 		}
 		if isRequest(startLine) {
@@ -601,7 +607,7 @@ func (p *parser) start() {
 				termErr = NewError(err, "parserMessage", "ParseStatusLine", startLine)
 			}
 		} else {
-			slog.Error("start unknown", "err", err, "line", startLine)
+			slog.Error("start unknown", "line", startLine)
 			continue
 		}
 		if termErr != nil {

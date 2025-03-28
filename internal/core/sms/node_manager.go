@@ -126,7 +126,7 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 
 	log.Info("ZLM 服务节点连接中")
 
-	for i := range 10 {
+	for i := range 5 {
 		resp, err := engine.GetServerConfig()
 		if err != nil {
 			log.Error("ZLM 服务节点连接失败", "err", err, "retry", i)

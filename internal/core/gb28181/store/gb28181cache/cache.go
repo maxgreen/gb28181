@@ -56,6 +56,11 @@ func (c *Cache) LoadDeviceToMemory(conn sip.Connection) {
 
 		dev := gbs.NewDevice(conn, d)
 		if dev != nil {
+			if err := dev.CheckConnection(); err != nil {
+				slog.Warn("检查设备连接失败", "err", err, "device_id", d.DeviceID, "to", dev.To())
+				continue
+			}
+
 			slog.Debug("load device to memory", "device_id", d.DeviceID, "to", dev.To())
 			channels := make([]*gb28181.Channel, 0, 8)
 			_, err := c.Storer.Channel().Find(context.TODO(), &channels, web.NewPagerFilterMaxSize(), orm.Where("device_id=?", d.DeviceID))

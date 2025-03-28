@@ -1,6 +1,8 @@
 package gbs
 
 import (
+	"encoding/hex"
+
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
 )
@@ -36,7 +38,7 @@ type MessageDeviceInfoResponse struct {
 func (g GB28181API) sipMessageDeviceInfo(ctx *sip.Context) {
 	var msg MessageDeviceInfoResponse
 	if err := sip.XMLDecode(ctx.Request.Body(), &msg); err != nil {
-		ctx.Log.Error("sipMessageDeviceInfo", "err", err)
+		ctx.Log.Error("sipMessageDeviceInfo", "err", err, "body", hex.EncodeToString(ctx.Request.Body()))
 		ctx.String(400, ErrXMLDecode.Error())
 		return
 	}

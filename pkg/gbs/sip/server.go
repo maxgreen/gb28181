@@ -20,7 +20,7 @@ var bufferSize uint16 = 65535 - 20 - 8 // IPv4 max size - IPv4 Header size - UDP
 
 // Server sip
 type Server struct {
-	udpaddr net.Addr
+	// udpaddr net.Addr
 	udpConn Connection
 
 	txs *transacionts
@@ -248,21 +248,18 @@ func (s *Server) handlerListen(msgs chan Message) {
 		case *Request:
 			req := tmsg
 
-			dst := s.udpaddr
+			// dst := s.udpaddr
 			if req.conn.Network() == "tcp" {
-				dst = s.tcpaddr
+				req.SetDestination(s.tcpaddr)
 			}
 
-			req.SetDestination(dst)
 			s.handlerRequest(req)
 		case *Response:
 			resp := tmsg
 
-			dst := s.udpaddr
 			if resp.conn.Network() == "tcp" {
-				dst = s.tcpaddr
+				resp.SetDestination(s.tcpaddr)
 			}
-			resp.SetDestination(dst)
 			s.handlerResponse(resp)
 		default:
 			// logrus.Errorln("undefind msg type,", tmsg, msg.String())

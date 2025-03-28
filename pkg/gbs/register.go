@@ -36,7 +36,7 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 		cfg:  &cfg.Sip,
 		core: store,
 		sms:  sms,
-		catalog: sip.NewCollector[Channels](func(c1, c2 *Channels) bool {
+		catalog: sip.NewCollector(func(c1, c2 *Channels) bool {
 			return c1.ChannelID == c2.ChannelID
 		}),
 		streams: &conc.Map[string, *Streams]{},
@@ -141,15 +141,17 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 	}
 	g.login(ctx, expire)
 
-	conn := ctx.Request.GetConnection()
-	fmt.Printf(">>> %p\n", conn)
+	// conn := ctx.Request.GetConnection()
+	// fmt.Printf(">>> %p\n", conn)
 
 	ctx.Log.Info("设备注册成功")
+	// ctx.Log.Debug("device info", "source", ctx.Source, "host", ctx.Host)
 
 	respFn()
 
 	g.QueryDeviceInfo(ctx)
-	g.QueryCatalog(dev.DeviceID)
+	_ = g.QueryCatalog(dev.DeviceID)
+	_ = g.QueryConfigDownloadBasic(dev.DeviceID, basicParam)
 }
 
 func (g GB28181API) login(ctx *sip.Context, expire string) {
