@@ -4,8 +4,11 @@ package api
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/core/bz"
@@ -16,8 +19,30 @@ import (
 	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goweb/pkg/system"
 	"github.com/ixugo/goweb/pkg/web"
 )
+
+const (
+	dataDir  = "data"
+	coverDir = "cover"
+)
+
+// TODO: 快照不会删除，只会覆盖，设备删除时也不会删除快照，待实现
+func writeCover(channelID string, body []byte) error {
+	coverPath := filepath.Join(system.Getwd(), dataDir, coverDir)
+	os.MkdirAll(coverPath, 0o755)
+	return os.WriteFile(filepath.Join(coverPath, channelID+".jpg"), body, 0o644)
+}
+
+func readCoverPath(channelID string) string {
+	coverPath := filepath.Join(system.Getwd(), dataDir, coverDir)
+	return filepath.Join(coverPath, channelID+".jpg")
+}
+
+func readCover(channelID string) ([]byte, error) {
+	return os.ReadFile(readCoverPath(channelID))
+}
 
 type GB28181API struct {
 	gb28181Core gb28181.Core
@@ -59,8 +84,8 @@ func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) 
 		group.PUT("/:id", web.WarpH(api.editChannel))
 		group.POST("/:id/play", web.WarpH(api.play))
 
-		group.POST("/:id/snapshot", web.WarpH(api.querySnapshot)) // 图像抓拍
-		group.GET("/:id/snapshot", web.WarpH(api.getSnapshot))    // 获取图像
+		group.POST("/:id/snapshot", web.WarpH(api.refreshSnapshot)) // 图像抓拍
+		group.GET("/:id/snapshot", api.getSnapshot)                 // 获取图像
 		// group.GET("/:id", web.WarpH(api.getChannel))
 		// group.POST("", web.WarpH(api.addChannel))
 		// group.DELETE("/:id", web.WarpH(api.delChannel))
@@ -223,7 +248,8 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 
 	// 播放规则
 	// https://github.com/zlmediakit/ZLMediaKit/wiki/%E6%92%AD%E6%94%BEurl%E8%A7%84%E5%88%99
-	return &playOutput{
+
+	out := playOutput{
 		App:    app,
 		Stream: appStream,
 		Items: []streamAddrItem{
@@ -246,29 +272,72 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 				HLS:     fmt.Sprintf("https://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTPS, stream) + "?" + session,
 			},
 		},
-	}, nil
+	}
+
+	// 取一张快照
+	go func() {
+		body, err := a.uc.SMSAPI.smsCore.GetSnapshot(svr, zlm.GetSnapRequest{
+			URL:        out.Items[0].RTSP,
+			TimeoutSec: 10,
+			ExpireSec:  10,
+		})
+		if err != nil {
+			slog.Error("get snapshot", "err", err)
+		} else {
+			writeCover(channelID, body)
+		}
+	}()
+	return &out, nil
 }
 
-func (uc *Usecase) play(channelID string) {
+type refreshSnapshotInput struct {
+	// 指定获取多少秒内创建的快照
+	WithinSeconds int64 `json:"within_seconds"`
+	// 取快照的链接地址
+	URL string `json:"url"`
 }
 
-func (a GB28181API) querySnapshot(c *gin.Context, _ *struct{}) (any, error) {
+func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (any, error) {
 	channelID := c.Param("id")
-	ch, err := a.gb28181Core.GetChannel(c.Request.Context(), channelID)
-	if err != nil {
-		return nil, err
+
+	path := readCoverPath(channelID)
+
+	// 获取文件的修改时间
+	fileInfo, err := os.Stat(path)
+	if err == nil {
+		if fileInfo.ModTime().Unix() > time.Now().Unix()-in.WithinSeconds {
+			return gin.H{"link": fmt.Sprintf("/api/channels/%s/snapshot", channelID)}, nil
+		}
 	}
 
-	if err := a.uc.SipServer.QuerySnapshot(ch.DeviceID, ch.ChannelID); err != nil {
-		return nil, web.ErrDevice.Msg(err.Error())
+	if in.URL != "" {
+		svr, err := a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), sms.DefaultMediaServerID)
+		if err != nil {
+			return nil, err
+		}
+
+		img, err := a.uc.SMSAPI.smsCore.GetSnapshot(svr, zlm.GetSnapRequest{
+			URL:        in.URL,
+			TimeoutSec: 10,
+			ExpireSec:  10,
+		})
+		if err != nil {
+			slog.Error("get snapshot", "err", err)
+			// return nil, web.ErrBadRequest.Msg(err.Error())
+		} else {
+			writeCover(channelID, img)
+		}
 	}
-	return gin.H{"msg": "ok"}, nil
+
+	return gin.H{"link": fmt.Sprintf("/api/channels/%s/snapshot", channelID)}, nil
 }
 
-func (a GB28181API) getSnapshot(c *gin.Context, _ *struct{}) (any, error) {
-	// did := c.Param("id")
-	// if err := a.uc.SipServer.GetSnapshot(did); err != nil {
-	// 	return nil, web.ErrDevice.Msg(err.Error())
-	// }
-	return gin.H{"msg": "ok"}, nil
+func (a GB28181API) getSnapshot(c *gin.Context) {
+	channelID := c.Param("id")
+	body, err := readCover(channelID)
+	if err != nil {
+		web.ErrNotFound.Msg(err.Error())
+		return
+	}
+	c.Data(200, "image/jpeg", body)
 }

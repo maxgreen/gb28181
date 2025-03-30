@@ -248,3 +248,12 @@ func (n *NodeManager) AddStreamProxy(server *MediaServer, in zlm.AddStreamProxyR
 	})
 	return e.AddStreamProxy(in)
 }
+
+func (n *NodeManager) GetSnapshot(server *MediaServer, in zlm.GetSnapRequest) ([]byte, error) {
+	addr := fmt.Sprintf("http://%s:%d", server.IP, server.Ports.HTTP)
+	e := n.zlm.SetConfig(zlm.Config{
+		URL:    addr,
+		Secret: server.Secret,
+	})
+	return e.GetSnap(in)
+}

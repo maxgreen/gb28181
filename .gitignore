@@ -34,3 +34,4 @@ tables/
 *.tar
 *.zip
 .idea/
+data/
