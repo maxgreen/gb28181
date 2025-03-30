@@ -3,6 +3,8 @@ package api
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -13,6 +15,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/uniqueid"
 	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/gowvp/gb28181/pkg/zlm"
+	"github.com/ixugo/goweb/pkg/orm"
 	"github.com/ixugo/goweb/pkg/web"
 )
 
@@ -30,6 +33,15 @@ func NewGB28181Core(store gb28181.Storer, uni uniqueid.Core) gb28181.Core {
 }
 
 func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) {
+	g.Any("/gb28181/snapshot", func(c *gin.Context) {
+		fmt.Println(">>>>>>>>>>>>>>>")
+		b, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			panic(err)
+		}
+		os.WriteFile(orm.GenerateRandomString(10)+".jpg", b, 0o644)
+		c.JSON(200, gin.H{"msg": "ok"})
+	})
 	{
 		group := g.Group("/devices", handler...)
 		group.GET("", web.WarpH(api.findDevice))
@@ -46,6 +58,9 @@ func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) 
 		group.GET("", web.WarpH(api.findChannel))
 		group.PUT("/:id", web.WarpH(api.editChannel))
 		group.POST("/:id/play", web.WarpH(api.play))
+
+		group.POST("/:id/snapshot", web.WarpH(api.querySnapshot)) // 图像抓拍
+		group.GET("/:id/snapshot", web.WarpH(api.getSnapshot))    // 获取图像
 		// group.GET("/:id", web.WarpH(api.getChannel))
 		// group.POST("", web.WarpH(api.addChannel))
 		// group.DELETE("/:id", web.WarpH(api.delChannel))
@@ -235,4 +250,25 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 }
 
 func (uc *Usecase) play(channelID string) {
+}
+
+func (a GB28181API) querySnapshot(c *gin.Context, _ *struct{}) (any, error) {
+	channelID := c.Param("id")
+	ch, err := a.gb28181Core.GetChannel(c.Request.Context(), channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := a.uc.SipServer.QuerySnapshot(ch.DeviceID, ch.ChannelID); err != nil {
+		return nil, web.ErrDevice.Msg(err.Error())
+	}
+	return gin.H{"msg": "ok"}, nil
+}
+
+func (a GB28181API) getSnapshot(c *gin.Context, _ *struct{}) (any, error) {
+	// did := c.Param("id")
+	// if err := a.uc.SipServer.GetSnapshot(did); err != nil {
+	// 	return nil, web.ErrDevice.Msg(err.Error())
+	// }
+	return gin.H{"msg": "ok"}, nil
 }

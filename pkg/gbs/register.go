@@ -151,7 +151,7 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 
 	g.QueryDeviceInfo(ctx)
 	_ = g.QueryCatalog(dev.DeviceID)
-	_ = g.QueryConfigDownloadBasic(dev.DeviceID, basicParam)
+	_ = g.QueryConfigDownloadBasic(dev.DeviceID)
 }
 
 func (g GB28181API) login(ctx *sip.Context, expire string) {

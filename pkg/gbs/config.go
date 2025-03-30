@@ -3,6 +3,7 @@ package gbs
 import (
 	"encoding/hex"
 	"encoding/xml"
+	"fmt"
 	"log/slog"
 	"math"
 
@@ -33,16 +34,15 @@ const (
 	// AlarmReport = "AlarmReport"
 	// // OSDConfig 前端OSD设置
 	// OSDConfig = "OSDConfig"
-	// // SnapShotConfig 图像抓拍配置
-	// SnapShotConfig = "SnapShotConfig"
 )
 
 type ConfigDownloadRequest struct {
-	XMLName    xml.Name `xml:"Query"`
-	CmdType    string   `xml:"CmdType"`    // 命令类型：设备配置查询(必选)
-	SN         int32    `xml:"SN"`         // 命令序列号(必选)
-	DeviceID   string   `xml:"DeviceID"`   // 目标设备编码(必选)
-	ConfigType string   `xml:"ConfigType"` // 查询配置参数类型(必选)
+	XMLName        xml.Name  `xml:"Query"`
+	CmdType        string    `xml:"CmdType"`    // 命令类型：设备配置查询(必选)
+	SN             int32     `xml:"SN"`         // 命令序列号(必选)
+	DeviceID       string    `xml:"DeviceID"`   // 目标设备编码(必选)
+	ConfigType     string    `xml:"ConfigType"` // 查询配置参数类型(必选)
+	SnapShotConfig *SnapShot `xml:"SnapShotConfig"`
 }
 
 type ConfigDownloadResponse struct {
@@ -62,7 +62,14 @@ type ConfigDownloadResponse struct {
 	// FrameMirror         *FrameMirror         `xml:"FrameMirror"`
 	// AlarmReport         *AlarmReport         `xml:"AlarmReport"`
 	// OSDConfig           *OSDConfig           `xml:"OSDConfig"`
-	// SnapShot            *SnapShot            `xml:"SnapShot"`
+	SnapShot *SnapShot `xml:"SnapShot"`
+}
+
+type SnapShot struct {
+	SnapNum   int    `xml:"SnapNum"`   // 连拍张数(必选)，最多10张，当手动抓拍时，取值为1
+	Interval  int    `xml:"Interval"`  // 单张抓拍间隔时间，单位：秒(必选)，取值范围:最短1秒
+	UploadURL string `xml:"UploadURL"` // 抓拍图像上传路径(必选)
+	SessionID string `xml:"SessionID"` // 会话ID，由平台生成，用于关联抓拍的图像与平台请求(必选)
 }
 
 // BasicParam 设备基本参数配置
@@ -73,30 +80,51 @@ type BasicParam struct {
 	HeartBeatCount    int    `xml:"HeartBeatCount"`    // 心跳超时次数
 }
 
-func NewConfigDownloadRequest(sn int32, deviceID string, configType string) []byte {
+const CMDTypeConfigDownload = "ConfigDownload"
+
+func NewBasicParamRequest(sn int32, deviceID string) []byte {
 	c := ConfigDownloadRequest{
-		CmdType:    "ConfigDownload",
+		CmdType:    CMDTypeConfigDownload,
 		SN:         sn,
 		DeviceID:   deviceID,
-		ConfigType: configType,
+		ConfigType: basicParam,
 	}
 	xmlData, _ := sip.XMLEncode(c)
 	return xmlData
 }
 
-func (g *GB28181API) QueryConfigDownloadBasic(deviceID, configType string) error {
+func (g *GB28181API) QueryConfigDownloadBasic(deviceID string) error {
 	slog.Debug("QueryConfigDownloadBasic", "deviceID", deviceID)
 	ipc, ok := g.svr.memoryStorer.Load(deviceID)
 	if !ok {
 		return ErrDeviceOffline
 	}
 
-	tx, err := g.svr.wrapRequest(ipc, sip.MethodMessage, &sip.ContentTypeXML, NewConfigDownloadRequest(1, deviceID, configType))
+	tx, err := g.svr.wrapRequest(ipc, sip.MethodMessage, &sip.ContentTypeXML, NewBasicParamRequest(1, deviceID))
 	if err != nil {
 		return err
 	}
 	_, err = sipResponse(tx)
 	return err
+}
+
+func (g *GB28181API) handleDeviceConfig(ctx *sip.Context) {
+	slog.Debug("handleDeviceConfig", "deviceID", ctx.DeviceID)
+
+	b := ctx.Request.Body()
+	fmt.Println(">>>", string(b))
+	// var msg DeviceConfigResponse
+	// if err := sip.XMLDecode(ctx.Request.Body(), &msg); err != nil {
+	// 	ctx.Log.Error("handleDeviceConfig", "err", err, "body", hex.EncodeToString(ctx.Request.Body()))
+	// 	ctx.String(400, ErrXMLDecode.Error())
+	// 	return
+	// }
+
+	// if msg.SnapShotConfig != nil {
+	// 	slog.Debug("handleDeviceConfig", "snapShotConfig", msg.SnapShotConfig)
+	// }
+
+	ctx.String(200, "OK")
 }
 
 func (g *GB28181API) sipMessageConfigDownload(ctx *sip.Context) {

@@ -41,7 +41,7 @@ func DefaultConfig() Bootstrap {
 			Secret:       "",
 			WebHookIP:    "127.0.0.1",
 			SDPIP:        "127.0.0.1",
-			RTPPortRange: "20000-20500",
+			RTPPortRange: "20000-20300",
 		},
 		Log: Log{
 			Dir:          "./logs",

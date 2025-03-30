@@ -59,6 +59,7 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server
 	msg.Handle("Catalog", api.sipMessageCatalog)
 	msg.Handle("DeviceInfo", api.sipMessageDeviceInfo)
 	msg.Handle("ConfigDownload", api.sipMessageConfigDownload)
+	msg.Handle("DeviceConfig", api.handleDeviceConfig)
 
 	// msg.Handle("RecordInfo", api.handlerMessage)
 
@@ -213,4 +214,9 @@ func (s *Server) Play(in *PlayInput) error {
 
 func (s *Server) StopPlay(in *StopPlayInput) error {
 	return s.gb.StopPlay(in)
+}
+
+// QuerySnapshot 厂商实现抓图的少，sip 层已实现，先搁置
+func (s *Server) QuerySnapshot(deviceID, channelID string) error {
+	return s.gb.QuerySnapshot(deviceID, channelID)
 }
