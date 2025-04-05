@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/shirou/gopsutil/net"
 
 	"github.com/shirou/gopsutil/cpu"

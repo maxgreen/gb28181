@@ -4,8 +4,8 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/gowvp/gb28181/releases"><img src="https://img.shields.io/github/v/release/ixugo/goweb?include_prereleases" alt="Version"/></a>
-    <a href="https://github.com/ixugo/goweb/blob/master/LICENSE.txt"><img src="https://img.shields.io/dub/l/vibe-d.svg" alt="License"/></a>
+    <a href="https://github.com/gowvp/gb28181/releases"><img src="https://img.shields.io/github/v/release/ixugo/goddd?include_prereleases" alt="Version"/></a>
+    <a href="https://github.com/ixugo/goddd/blob/master/LICENSE.txt"><img src="https://img.shields.io/dub/l/vibe-d.svg" alt="License"/></a>
 </p>
 
 # 开箱即用的 GB/T28181 协议视频平台
@@ -34,7 +34,7 @@ go wvp 是 Go 语言实现的开源 GB28181 解决方案，基于 GB28181-2022 �
 
 播放器使用@dexter [jessibuca](https://github.com/langhuihui/jessibuca/tree/v3)
 
-项目框架基于 @ixugo [goweb](https://github.com/ixugo/goweb)
+项目框架基于 @ixugo [goddd](https://github.com/ixugo/goddd)
 
 ## QA
 
@@ -215,11 +215,11 @@ services:
   - [x] 按需拉流，节省流量
   - [x] 视频支持播放 H264 和 H265
   - [x] 音频支持 g711a/g711u/aac
+  - [x] 快照
   - [ ] 设备云台控制
   - [ ] 录像回放
   - [ ] 报警事件订阅
   - [ ] 报警事件通知处理
-  - [ ] 快照
 
 ## 授权协议
 

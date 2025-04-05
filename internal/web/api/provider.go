@@ -17,8 +17,8 @@ import (
 	"github.com/gowvp/gb28181/internal/core/version"
 	"github.com/gowvp/gb28181/internal/core/version/store/versiondb"
 	"github.com/gowvp/gb28181/pkg/gbs"
-	"github.com/ixugo/goweb/pkg/orm"
-	"github.com/ixugo/goweb/pkg/web"
+	"github.com/ixugo/goddd/pkg/orm"
+	"github.com/ixugo/goddd/pkg/web"
 	"gorm.io/gorm"
 )
 

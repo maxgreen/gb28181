@@ -11,7 +11,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs/m"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
-	"github.com/ixugo/goweb/pkg/conc"
+	"github.com/ixugo/goddd/pkg/conc"
 )
 
 var (

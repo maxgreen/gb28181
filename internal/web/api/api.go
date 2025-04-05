@@ -15,8 +15,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/plugin/stat"
 	"github.com/gowvp/gb28181/plugin/stat/statapi"
-	"github.com/ixugo/goweb/pkg/system"
-	"github.com/ixugo/goweb/pkg/web"
+	"github.com/ixugo/goddd/pkg/system"
+	"github.com/ixugo/goddd/pkg/web"
 )
 
 var startRuntime = time.Now()

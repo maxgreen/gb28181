@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/gowvp/gb28181/internal/core/gb28181"
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 )
 
 var _ gb28181.ChannelStorer = &Channel{}

@@ -8,9 +8,9 @@ import (
 
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/pkg/zlm"
-	"github.com/ixugo/goweb/pkg/conc"
-	"github.com/ixugo/goweb/pkg/orm"
-	"github.com/ixugo/goweb/pkg/web"
+	"github.com/ixugo/goddd/pkg/conc"
+	"github.com/ixugo/goddd/pkg/orm"
+	"github.com/ixugo/goddd/pkg/web"
 )
 
 type WarpMediaServer struct {

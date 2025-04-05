@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/plugin/stat"
-	"github.com/ixugo/goweb/pkg/web"
+	"github.com/ixugo/goddd/pkg/web"
 )
 
 func Register(g gin.IRouter, hf ...gin.HandlerFunc) {

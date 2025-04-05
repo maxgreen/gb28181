@@ -6,7 +6,7 @@ import (
 
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs"
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )

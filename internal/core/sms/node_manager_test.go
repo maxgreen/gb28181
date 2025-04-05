@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 )
 
 var (

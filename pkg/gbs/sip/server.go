@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ixugo/goweb/pkg/conc"
+	"github.com/ixugo/goddd/pkg/conc"
 )
 
 var bufferSize uint16 = 65535 - 20 - 8 // IPv4 max size - IPv4 Header size - UDP Header size

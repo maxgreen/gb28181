@@ -3,7 +3,7 @@ package stat
 import (
 	"sync"
 
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 )
 
 // PercentData 时间百分比

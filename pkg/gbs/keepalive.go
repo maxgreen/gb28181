@@ -3,7 +3,7 @@ package gbs
 import (
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/pkg/gbs/sip"
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 	// "github.com/panjjo/gosip/db"
 )
 

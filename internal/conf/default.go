@@ -3,7 +3,7 @@ package conf
 import (
 	"time"
 
-	"github.com/ixugo/goweb/pkg/orm"
+	"github.com/ixugo/goddd/pkg/orm"
 )
 
 func DefaultConfig() Bootstrap {

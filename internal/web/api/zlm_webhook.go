@@ -10,7 +10,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/gbs"
-	"github.com/ixugo/goweb/pkg/web"
+	"github.com/ixugo/goddd/pkg/web"
 )
 
 type WebHookAPI struct {

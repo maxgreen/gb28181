@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ixugo/goweb/pkg/conc"
+	"github.com/ixugo/goddd/pkg/conc"
 )
 
 // ObserverHandler 返回 true 表示完成任务

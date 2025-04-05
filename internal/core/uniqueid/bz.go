@@ -12,7 +12,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ixugo/goweb/pkg/hook"
+	"github.com/ixugo/goddd/pkg/hook"
 )
 
 type IDManager struct {
