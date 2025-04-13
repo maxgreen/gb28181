@@ -32,7 +32,7 @@ type FindMediaServerInput struct {
 type EditMediaServerInput struct {
 	IP     string `json:"ip"`
 	HookIP string `json:"hook_ip"`
-	SDPIP  string `json:"sdpip"`
+	SDPIP  string `json:"sdp_ip"`
 	// StreamIP          string           `json:"stream_ip"`
 	// Ports MediaServerPorts `json:"ports"`
 	// AutoConfig        bool             `json:"auto_config"`
