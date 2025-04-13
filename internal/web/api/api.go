@@ -52,11 +52,11 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 			c.File(filepath.Join(system.Getwd(), staticDir, "index.html"))
 			return
 		}
-		c.JSON(404, "来到了无人的荒漠")
+		c.JSON(404, gin.H{"msg": "来到了无人的荒漠"})
 	})
 	// 访问根路径时重定向到前端资源
 	r.GET("/", func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusPermanentRedirect, filepath.Join(staticPrefix, "index.html"))
+		ctx.Redirect(http.StatusPermanentRedirect, staticPrefix+"/"+"index.html")
 	})
 
 	auth := web.AuthMiddleware(uc.Conf.Server.HTTP.JwtSecret)
