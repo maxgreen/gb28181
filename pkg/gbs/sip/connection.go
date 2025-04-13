@@ -107,7 +107,8 @@ func (conn *connection) Read(buf []byte) (int, error) {
 
 	num, err = conn.baseConn.Read(buf)
 	if err != nil {
-		return num, NewError(err, conn.logKey, "read", conn.baseConn.LocalAddr().String())
+		return num, err
+		//  NewError(err, conn.logKey, "read", conn.baseConn.LocalAddr().String())
 	}
 	return num, err
 }
@@ -115,7 +116,8 @@ func (conn *connection) Read(buf []byte) (int, error) {
 func (conn *connection) ReadFrom(buf []byte) (num int, raddr net.Addr, err error) {
 	num, raddr, err = conn.baseConn.(net.PacketConn).ReadFrom(buf)
 	if err != nil {
-		return num, raddr, NewError(err, conn.logKey, "readfrom", conn.baseConn.LocalAddr().String(), raddr.String())
+		return num, raddr, err
+		//  NewError(err, conn.logKey, "readfrom", conn.baseConn.LocalAddr().String(), raddr.String())
 	}
 	// logrus.Tracef("readFrom %d , %s -> %s \n %s", num, raddr, conn.LocalAddr(), string(buf[:num]))
 	return num, raddr, err
@@ -129,7 +131,8 @@ func (conn *connection) Write(buf []byte) (int, error) {
 
 	num, err = conn.baseConn.Write(buf)
 	if err != nil {
-		return num, NewError(err, conn.logKey, "write", conn.baseConn.LocalAddr().String())
+		return num, err
+		//  NewError(err, conn.logKey, "write", conn.baseConn.LocalAddr().String())
 	}
 	return num, err
 }
@@ -141,7 +144,8 @@ func (conn *connection) WriteTo(buf []byte, raddr net.Addr) (num int, err error)
 		num, err = conn.baseConn.(net.PacketConn).WriteTo(buf, raddr)
 	}
 	if err != nil {
-		return num, NewError(err, conn.logKey, "writeTo", conn.baseConn.LocalAddr().String(), raddr.String())
+		return num, err
+		//  NewError(err, conn.logKey, "writeTo", conn.baseConn.LocalAddr().String(), raddr.String())
 	}
 	// logrus.Tracef("writeTo %d , %s -> %s \n %s", num, conn.baseConn.LocalAddr(), raddr.String(), string(buf[:num]))
 	return num, err
