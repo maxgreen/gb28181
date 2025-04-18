@@ -19,9 +19,12 @@ import (
 	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goddd/pkg/orm"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/ixugo/goddd/pkg/system"
 	"github.com/ixugo/goddd/pkg/web"
 )
+
+var ErrDevice = reason.NewError("ErrDevice", "设备错误")
 
 const (
 	dataDir  = "data"
@@ -121,7 +124,7 @@ func (a GB28181API) delDevice(c *gin.Context, _ *struct{}) (any, error) {
 func (a GB28181API) queryCatalog(c *gin.Context, _ *struct{}) (any, error) {
 	did := c.Param("id")
 	if err := a.uc.SipServer.QueryCatalog(did); err != nil {
-		return nil, web.ErrDevice.Msg(err.Error())
+		return nil, ErrDevice.SetMsg(err.Error())
 	}
 	return gin.H{"msg": "ok"}, nil
 }
@@ -184,7 +187,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			StreamMode: dev.StreamMode,
 			SMS:        svr,
 		}); err != nil {
-			return nil, web.ErrDevice.Msg(err.Error())
+			return nil, ErrDevice.SetMsg(err.Error())
 		}
 	} else if strings.HasPrefix(channelID, bz.IDPrefixRTMP) {
 		push, err := a.uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
@@ -192,7 +195,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			return nil, err
 		}
 		if push.Status != media.StatusPushing {
-			return nil, web.ErrNotFound.Msg("未推流")
+			return nil, reason.ErrNotFound.SetMsg("未推流")
 		}
 		app = push.App
 		appStream = push.Stream
@@ -233,11 +236,11 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			// AutoClose:    zlm.NewBool(false),
 		})
 		if err != nil {
-			return nil, web.ErrServer.Msg(err.Error())
+			return nil, reason.ErrServer.SetMsg(err.Error())
 		}
 		a.uc.ProxyAPI.proxyCore.EditStreamProxyKey(c.Request.Context(), resp.Data.Key, proxy.ID)
 	} else {
-		return nil, web.ErrNotFound.Msg("不支持的播放通道")
+		return nil, reason.ErrNotFound.SetMsg("不支持的播放通道")
 	}
 	stream = app + "/" + appStream
 
@@ -323,7 +326,7 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 		})
 		if err != nil {
 			slog.Error("get snapshot", "err", err)
-			// return nil, web.ErrBadRequest.Msg(err.Error())
+			// return nil, reason.ErrBadRequest.Msg(err.Error())
 		} else {
 			writeCover(channelID, img)
 		}
@@ -336,7 +339,7 @@ func (a GB28181API) getSnapshot(c *gin.Context) {
 	channelID := c.Param("id")
 	body, err := readCover(channelID)
 	if err != nil {
-		web.ErrNotFound.Msg(err.Error())
+		reason.ErrNotFound.SetMsg(err.Error())
 		return
 	}
 	c.Data(200, "image/jpeg", body)

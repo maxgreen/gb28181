@@ -9,7 +9,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/ixugo/goddd/pkg/hook"
 	"github.com/ixugo/goddd/pkg/orm"
-	"github.com/ixugo/goddd/pkg/web"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/jinzhu/copier"
 )
 
@@ -36,7 +36,7 @@ func (c Core) FindStreamPush(ctx context.Context, in *FindStreamPushInput) ([]*S
 
 	total, err := c.store.StreamPush().Find(ctx, &items, in, args...)
 	if err != nil {
-		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 
 	return items, total, nil
@@ -47,9 +47,9 @@ func (c Core) GetStreamPush(ctx context.Context, id string) (*StreamPush, error)
 	var out StreamPush
 	if err := c.store.StreamPush().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -58,9 +58,9 @@ func (c Core) GetStreamPushByAppStream(ctx context.Context, app, stream string) 
 	var out StreamPush
 	if err := c.store.StreamPush().Get(ctx, &out, orm.Where("app=? AND stream=?", app, stream)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -73,14 +73,14 @@ func (c Core) AddStreamPush(ctx context.Context, in *AddStreamPushInput) (*Strea
 	}
 
 	if in.App == "rtp" {
-		return nil, web.ErrBadRequest.With("请更换 app 参数")
+		return nil, reason.ErrBadRequest.With("请更换 app 参数")
 	}
 	out.ID = c.uniqueID.UniqueID(bz.IDPrefixRTMP)
 	if err := c.store.StreamPush().Add(ctx, &out); err != nil {
 		if orm.IsDuplicatedKey(err) {
-			return nil, web.ErrDB.Msg("stream 重复，请勿重复添加")
+			return nil, reason.ErrDB.SetMsg("stream 重复，请勿重复添加")
 		}
-		return nil, web.ErrDB.Withf(`Add err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -93,7 +93,7 @@ func (c Core) EditStreamPush(ctx context.Context, in *EditStreamPushInput, id st
 			slog.Error("Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -105,7 +105,7 @@ func (c *Core) DelStreamPush(ctx context.Context, id string) (*StreamPush, error
 	// TODO: 待实现国标相关，删除国标相关数据
 	var out StreamPush
 	if err := c.store.StreamPush().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
 	return &out, nil
 }

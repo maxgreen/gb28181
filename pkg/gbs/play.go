@@ -2,6 +2,7 @@ package gbs
 
 import (
 	"fmt"
+	"log/slog"
 	"net"
 	"sync"
 
@@ -145,6 +146,8 @@ func (g *GB28181API) sipPlayPush2(ch *Channel, in *PlayInput, port int, stream *
 
 	// appending message to session
 	body := msg.Append(nil).AppendTo(nil)
+
+	slog.Info(">>>", "body", string(body))
 	// appending session to byte buffer
 	// uri, _ := sip.ParseURI(channel.URIStr)
 	// channel.addr = &sip.Address{URI: uri}

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/ixugo/goddd/pkg/orm"
-	"github.com/ixugo/goddd/pkg/web"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/jinzhu/copier"
 )
 
@@ -26,7 +26,7 @@ func (c *Core) FindConfig(ctx context.Context, in *FindConfigInput) ([]*Config, 
 	items := make([]*Config, 0)
 	total, err := c.store.Config().Find(ctx, &items, in)
 	if err != nil {
-		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 	return items, total, nil
 }
@@ -36,9 +36,9 @@ func (c *Core) GetConfig(ctx context.Context, id int) (*Config, error) {
 	var out Config
 	if err := c.store.Config().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -50,7 +50,7 @@ func (c *Core) AddConfig(ctx context.Context, in *AddConfigInput) (*Config, erro
 		slog.Error("Copy", "err", err)
 	}
 	if err := c.store.Config().Add(ctx, &out); err != nil {
-		return nil, web.ErrDB.Withf(`Add err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -63,7 +63,7 @@ func (c *Core) EditConfig(ctx context.Context, in *EditConfigInput, id int) (*Co
 			slog.Error("Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -72,7 +72,7 @@ func (c *Core) EditConfig(ctx context.Context, in *EditConfigInput, id int) (*Co
 func (c *Core) DelConfig(ctx context.Context, id int) (*Config, error) {
 	var out Config
 	if err := c.store.Config().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
 	return &out, nil
 }

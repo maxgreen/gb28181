@@ -13,7 +13,7 @@ type Device struct {
 	DeviceID     string    `gorm:"column:device_id;notNull;uniqueIndex;default:'';comment:20 位国标编号" json:"device_id"`                          // 20 位国标编号
 	Name         string    `gorm:"column:name;notNull;default:'';comment:设备名称" json:"name"`                                                    // 设备名称
 	Trasnport    string    `gorm:"column:trasnport;notNull;default:'';comment:传输协议(tcp/udp)" json:"trasnport"`                                 // 传输协议(TCP/UDP)
-	StreamMode   int8      `gorm:"column:stream_mode;notNull;default:0;comment:数据传输模式(0:UDP; 1:TCP_PASSIVE; 2:TCP_ACTIVE)" json:"stream_mode"` // 数据传输模式
+	StreamMode   int8      `gorm:"column:stream_mode;notNull;default:1;comment:数据传输模式(0:UDP; 1:TCP_PASSIVE; 2:TCP_ACTIVE)" json:"stream_mode"` // 数据传输模式
 	IP           string    `gorm:"column:ip;notNull;default:''" json:"ip"`
 	Port         int       `gorm:"column:port;notNull;default:0" json:"port"`
 	IsOnline     bool      `gorm:"column:is_online;notNull;default:FALSE" json:"is_online"`

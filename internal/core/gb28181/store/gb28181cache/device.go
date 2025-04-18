@@ -2,6 +2,7 @@ package gb28181cache
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"github.com/gowvp/gb28181/internal/core/gb28181"
@@ -53,7 +54,7 @@ func (d *Device) Edit(ctx context.Context, dev *gb28181.Device, changeFn func(*g
 	}
 	dev2, ok := d.devices.Load(dev.DeviceID)
 	if !ok {
-		panic("edit device not found")
+		return fmt.Errorf("edit device not found")
 	}
 	// 密码修改，设备需要重新注册
 	if dev2.Password != dev.Password && dev.Password != "" {

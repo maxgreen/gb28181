@@ -6,7 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/ixugo/goddd/pkg/orm"
-	"github.com/ixugo/goddd/pkg/web"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/jinzhu/copier"
 )
 
@@ -24,7 +24,7 @@ func (c *Core) FindMediaServer(ctx context.Context, in *FindMediaServerInput) ([
 	items := make([]*MediaServer, 0)
 	total, err := c.storer.MediaServer().Find(ctx, &items, in)
 	if err != nil {
-		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 	return items, total, nil
 }
@@ -34,9 +34,9 @@ func (c *Core) GetMediaServer(ctx context.Context, id string) (*MediaServer, err
 	var out MediaServer
 	if err := c.storer.MediaServer().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -48,7 +48,7 @@ func (c *Core) AddMediaServer(ctx context.Context, in *AddMediaServerInput) (*Me
 		slog.Error("Copy", "err", err)
 	}
 	if err := c.storer.MediaServer().Add(ctx, &out); err != nil {
-		return nil, web.ErrDB.Withf(`Add err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -61,7 +61,7 @@ func (c *Core) EditMediaServer(ctx context.Context, in *EditMediaServerInput, id
 			slog.Error("Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
 	}
 	c.connection(&out, serverPort)
 	return &out, nil
@@ -71,7 +71,7 @@ func (c *Core) EditMediaServer(ctx context.Context, in *EditMediaServerInput, id
 func (c *Core) DelMediaServer(ctx context.Context, id string) (*MediaServer, error) {
 	var out MediaServer
 	if err := c.storer.MediaServer().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
 	return &out, nil
 }

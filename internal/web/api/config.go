@@ -9,6 +9,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/config"
 	"github.com/gowvp/gb28181/internal/core/config/store/configdb"
 	"github.com/ixugo/goddd/pkg/orm"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/ixugo/goddd/pkg/web"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
@@ -77,10 +78,10 @@ func (a ConfigAPI) getConfigInfo(c *gin.Context, _ *struct{}) (*getConfigInfoOut
 func (a ConfigAPI) editSIP(_ *gin.Context, in *conf.SIP) (gin.H, error) {
 	sip := a.conf.Sip
 	if err := copier.Copy(&sip, in); err != nil {
-		return nil, web.ErrServer.Msg(err.Error())
+		return nil, reason.ErrServer.SetMsg(err.Error())
 	}
 	if err := conf.WriteConfig(a.conf, a.conf.ConfigPath); err != nil {
-		return nil, web.ErrServer.Msg(err.Error())
+		return nil, reason.ErrServer.SetMsg(err.Error())
 	}
 	return gin.H{"msg": "ok"}, nil
 }

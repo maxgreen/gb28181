@@ -10,6 +10,7 @@ import (
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goddd/pkg/conc"
 	"github.com/ixugo/goddd/pkg/orm"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/ixugo/goddd/pkg/web"
 )
 
@@ -219,7 +220,7 @@ func (n *NodeManager) findMediaServer(ctx context.Context, in *FindMediaServerIn
 	items := make([]*MediaServer, 0)
 	total, err := n.storer.MediaServer().Find(ctx, &items, in)
 	if err != nil {
-		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 	return items, total, nil
 }

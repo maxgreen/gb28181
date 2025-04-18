@@ -7,7 +7,7 @@ import (
 
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/ixugo/goddd/pkg/orm"
-	"github.com/ixugo/goddd/pkg/web"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/jinzhu/copier"
 )
 
@@ -28,7 +28,7 @@ func (c *Core) FindStreamProxy(ctx context.Context, in *FindStreamProxyInput) ([
 	items := make([]*StreamProxy, 0)
 	total, err := c.store.StreamProxy().Find(ctx, &items, in, query.Encode()...)
 	if err != nil {
-		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 	return items, total, nil
 }
@@ -38,9 +38,9 @@ func (c *Core) GetStreamProxy(ctx context.Context, id string) (*StreamProxy, err
 	var out StreamProxy
 	if err := c.store.StreamProxy().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -52,14 +52,14 @@ func (c *Core) AddStreamProxy(ctx context.Context, in *AddStreamProxyInput) (*St
 		slog.Error("Copy", "err", err)
 	}
 	if in.App == "rtp" {
-		return nil, web.ErrBadRequest.With("请更换 app 参数")
+		return nil, reason.ErrBadRequest.With("请更换 app 参数")
 	}
 	out.ID = c.uniqueID.UniqueID(bz.IDPrefixRTSP)
 	if err := c.store.StreamProxy().Add(ctx, &out); err != nil {
 		if orm.IsDuplicatedKey(err) {
-			return nil, web.ErrDB.Msg("stream 重复，请勿重复添加")
+			return nil, reason.ErrDB.SetMsg("stream 重复，请勿重复添加")
 		}
-		return nil, web.ErrDB.Withf(`Add err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -72,7 +72,7 @@ func (c *Core) EditStreamProxy(ctx context.Context, in *EditStreamProxyInput, id
 			slog.Error("Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -82,7 +82,7 @@ func (c *Core) EditStreamProxyKey(ctx context.Context, streamKey, id string) (*S
 	if err := c.store.StreamProxy().Edit(ctx, &out, func(b *StreamProxy) {
 		out.StreamKey = streamKey
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -91,7 +91,7 @@ func (c *Core) EditStreamProxyKey(ctx context.Context, streamKey, id string) (*S
 func (c *Core) DelStreamProxy(ctx context.Context, id string) (*StreamProxy, error) {
 	var out StreamProxy
 	if err := c.store.StreamProxy().Del(ctx, &out, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
 	return &out, nil
 }

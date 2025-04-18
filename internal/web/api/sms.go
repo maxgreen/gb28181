@@ -7,6 +7,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/internal/core/sms/store/smsdb"
 	"github.com/ixugo/goddd/pkg/orm"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/ixugo/goddd/pkg/web"
 	"gorm.io/gorm"
 )
@@ -64,7 +65,7 @@ func (a SmsAPI) editMediaServer(c *gin.Context, in *sms.EditMediaServerInput) (a
 		a.uc.Conf.Media.Secret = out.Secret
 		a.uc.Conf.Media.WebHookIP = out.HookIP
 		if err := conf.WriteConfig(a.uc.Conf, a.uc.Conf.ConfigPath); err != nil {
-			return nil, web.ErrServer.Msg(err.Error())
+			return nil, reason.ErrServer.SetMsg(err.Error())
 		}
 	}
 	return out, err

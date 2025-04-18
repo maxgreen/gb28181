@@ -7,7 +7,7 @@ import (
 
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/ixugo/goddd/pkg/orm"
-	"github.com/ixugo/goddd/pkg/web"
+	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
@@ -35,7 +35,7 @@ func (c Core) FindDevice(ctx context.Context, in *FindDeviceInput) ([]*Device, i
 
 	total, err := c.store.Device().Find(ctx, &items, in, query.Encode()...)
 	if err != nil {
-		return nil, 0, web.ErrDB.Withf(`Find err[%s]`, err.Error())
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
 	return items, total, nil
 }
@@ -45,9 +45,9 @@ func (c Core) GetDevice(ctx context.Context, id string) (*Device, error) {
 	var out Device
 	if err := c.store.Device().Get(ctx, &out, orm.Where("id=?", id)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -56,9 +56,9 @@ func (c Core) GetDeviceByDeviceID(ctx context.Context, deviceID string) (*Device
 	var out Device
 	if err := c.store.Device().Get(ctx, &out, orm.Where("device_id=?", deviceID)); err != nil {
 		if orm.IsErrRecordNotFound(err) {
-			return nil, web.ErrNotFound.Withf(`Get err[%s]`, err.Error())
+			return nil, reason.ErrNotFound.Withf(`Get err[%s]`, err.Error())
 		}
-		return nil, web.ErrDB.Withf(`Get err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Get err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -72,14 +72,14 @@ func (c Core) AddDevice(ctx context.Context, in *AddDeviceInput) (*Device, error
 	out.ID = c.uniqueID.UniqueID(bz.IDPrefixGB)
 
 	if err := out.Check(); err != nil {
-		return nil, web.ErrBadRequest.Msg(err.Error())
+		return nil, reason.ErrBadRequest.SetMsg(err.Error())
 	}
 
 	if err := c.store.Device().Add(ctx, &out); err != nil {
 		if orm.IsDuplicatedKey(err) {
-			return nil, web.ErrDB.Msg("国标 ID 重复，请勿重复添加")
+			return nil, reason.ErrDB.SetMsg("国标 ID 重复，请勿重复添加")
 		}
-		return nil, web.ErrDB.Withf(`Add err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -92,7 +92,7 @@ func (c Core) EditDevice(ctx context.Context, in *EditDeviceInput, id string) (*
 			slog.Error("Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
 	}
 	return &out, nil
 }
@@ -101,7 +101,7 @@ func (c Core) EditDevice(ctx context.Context, in *EditDeviceInput, id string) (*
 func (c Core) DelDevice(ctx context.Context, id string) (*Device, error) {
 	var dev Device
 	if err := c.store.Device().Del(ctx, &dev, orm.Where("id=?", id)); err != nil {
-		return nil, web.ErrDB.Withf(`Del err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Del err[%s]`, err.Error())
 	}
 	return &dev, nil
 }

@@ -143,10 +143,14 @@ docker-compose.yml
 services:
   gowvp:
     image: gospace/gowvp:latest
+    # linux 解开下行注释，并将 ports 全部注释
+    # network_mode: host
     ports:
+      # gb28181
       - 15123:15123 # 管理平台 http 端口
       - 15060:15060 # gb28181 sip tcp 端口
       - 15060:15060/udp # gb28181 sip udp 端口
+      # zlm
       - 1935:1935 # rtmp
       - 554:554 # rtsp
       - 8080:80 # http
