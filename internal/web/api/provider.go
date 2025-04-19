@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,22 +11,21 @@ import (
 	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181db"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/media/store/mediadb"
-	"github.com/gowvp/gb28181/internal/core/uniqueid"
-	"github.com/gowvp/gb28181/internal/core/uniqueid/store/uniqueiddb"
-	"github.com/gowvp/gb28181/internal/core/version"
-	"github.com/gowvp/gb28181/internal/core/version/store/versiondb"
 	"github.com/gowvp/gb28181/pkg/gbs"
+	"github.com/ixugo/goddd/domain/uniqueid"
+	"github.com/ixugo/goddd/domain/uniqueid/store/uniqueiddb"
+	"github.com/ixugo/goddd/domain/version/versionapi"
 	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/ixugo/goddd/pkg/web"
 	"gorm.io/gorm"
 )
 
 var (
-	ProviderVersionSet = wire.NewSet(NewVersion)
+	ProviderVersionSet = wire.NewSet(versionapi.NewVersionCore)
 	ProviderSet        = wire.NewSet(
 		wire.Struct(new(Usecase), "*"),
 		NewHTTPHandler,
-		NewVersionAPI,
+		versionapi.New,
 		NewSMSCore, NewSmsAPI,
 		NewWebHookAPI,
 		NewUniqueID,
@@ -45,7 +43,7 @@ var (
 type Usecase struct {
 	Conf       *conf.Bootstrap
 	DB         *gorm.DB
-	Version    VersionAPI
+	Version    versionapi.API
 	SMSAPI     SmsAPI
 	WebHookAPI WebHookAPI
 	UniqueID   uniqueid.Core
@@ -81,22 +79,6 @@ func NewHTTPHandler(uc *Usecase) http.Handler {
 	setupRouter(g, uc) // 设置路由处理函数
 
 	return g // 返回配置好的 Gin 实例作为 http.Handler
-}
-
-// NewVersion ...
-func NewVersion(db *gorm.DB) version.Core {
-	vdb := versiondb.NewDB(db)
-	core := version.NewCore(vdb)
-	isOK := core.IsAutoMigrate(dbVersion)
-	vdb.AutoMigrate(isOK)
-	if isOK {
-		slog.Info("更新数据库表结构")
-		if err := core.RecordVersion(dbVersion, dbRemark); err != nil {
-			slog.Error("RecordVersion", "err", err)
-		}
-	}
-	orm.EnabledAutoMigrate = isOK
-	return core
 }
 
 // NewUniqueID 唯一 id 生成器

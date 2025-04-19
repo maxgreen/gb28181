@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/plugin/stat"
 	"github.com/gowvp/gb28181/plugin/stat/statapi"
+	"github.com/ixugo/goddd/domain/version/versionapi"
 	"github.com/ixugo/goddd/pkg/system"
 	"github.com/ixugo/goddd/pkg/web"
 )
@@ -63,7 +64,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	r.GET("/health", web.WarpH(uc.getHealth))
 	r.GET("/app/metrics/api", web.WarpH(uc.getMetricsAPI))
 
-	registerVersionAPI(r, uc.Version, auth)
+	versionapi.Register(r, uc.Version, auth)
 	statapi.Register(r)
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权

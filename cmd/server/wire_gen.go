@@ -11,6 +11,7 @@ import (
 	"github.com/gowvp/gb28181/internal/data"
 	"github.com/gowvp/gb28181/internal/web/api"
 	"github.com/gowvp/gb28181/pkg/gbs"
+	"github.com/ixugo/goddd/domain/version/versionapi"
 	"log/slog"
 	"net/http"
 )
@@ -22,8 +23,8 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	if err != nil {
 		return nil, nil, err
 	}
-	core := api.NewVersion(db)
-	versionAPI := api.NewVersionAPI(core)
+	core := versionapi.NewVersionCore(db)
+	versionapiAPI := versionapi.New(core)
 	smsCore := api.NewSMSCore(db, bc)
 	smsAPI := api.NewSmsAPI(smsCore)
 	uniqueidCore := api.NewUniqueID(db)
@@ -40,7 +41,7 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	usecase := &api.Usecase{
 		Conf:       bc,
 		DB:         db,
-		Version:    versionAPI,
+		Version:    versionapiAPI,
 		SMSAPI:     smsAPI,
 		WebHookAPI: webHookAPI,
 		UniqueID:   uniqueidCore,

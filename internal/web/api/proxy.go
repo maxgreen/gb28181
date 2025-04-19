@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/core/proxy"
 	"github.com/gowvp/gb28181/internal/core/proxy/store/proxydb"
-	"github.com/gowvp/gb28181/internal/core/uniqueid"
+	"github.com/ixugo/goddd/domain/uniqueid"
 	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/ixugo/goddd/pkg/web"
 	"gorm.io/gorm"

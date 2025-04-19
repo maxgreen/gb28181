@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/gowvp/gb28181/internal/core/bz"
-	"github.com/gowvp/gb28181/internal/core/uniqueid"
+	"github.com/ixugo/goddd/domain/uniqueid"
 	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/ixugo/goddd/pkg/web"
 )

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gowvp/gb28181/internal/conf"
+	"github.com/ixugo/goddd/domain/version/versionapi"
 	"github.com/ixugo/goddd/pkg/logger"
 	"github.com/ixugo/goddd/pkg/server"
 	"github.com/ixugo/goddd/pkg/system"
@@ -86,6 +87,9 @@ func main() {
 		slog.Info("未发现 zlm 配置，请检查 config.ini 文件", "err", err)
 	}
 
+	// 如果需要执行表迁移，递增此版本号和表更新说明
+	versionapi.DBVersion = "0.0.10"
+	versionapi.DBRemark = "add stream proxy"
 	handler, cleanUp, err := wireApp(&bc, log)
 	if err != nil {
 		slog.Error("程序构建失败", "err", err)
