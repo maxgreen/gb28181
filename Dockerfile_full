@@ -6,8 +6,10 @@ WORKDIR /opt/media/bin/
 
 # 添加应用程序文件
 ADD ./build/linux_amd64/bin ./gowvp
-ADD ./configs/config.toml ./config.toml
 ADD ./www ./www
+
+# 创建配置目录
+RUN mkdir -p configs
 
 # 添加元数据标签
 LABEL Name=gowvp \
@@ -18,9 +20,5 @@ LABEL Name=gowvp \
 # 暴露必要端口
 EXPOSE 15123 1935 8080 554 10000-10500/udp
 
-# 设置健康检查
-# HEALTHCHECK --interval=30s --timeout=3s \
-    # CMD wget -q --spider http://localhost:15123/index/api/getServerConfig || exit 1
-
 # 启动服务
-CMD ["sh", "-c", "./MediaServer -s default.pem -c & ./gowvp & wait"]
+CMD ["./gowvp"]

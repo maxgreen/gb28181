@@ -27,24 +27,23 @@ import (
 var ErrDevice = reason.NewError("ErrDevice", "设备错误")
 
 const (
-	dataDir  = "data"
 	coverDir = "cover"
 )
 
 // TODO: 快照不会删除，只会覆盖，设备删除时也不会删除快照，待实现
-func writeCover(channelID string, body []byte) error {
+func writeCover(dataDir, channelID string, body []byte) error {
 	coverPath := filepath.Join(system.Getwd(), dataDir, coverDir)
 	os.MkdirAll(coverPath, 0o755)
 	return os.WriteFile(filepath.Join(coverPath, channelID+".jpg"), body, 0o644)
 }
 
-func readCoverPath(channelID string) string {
+func readCoverPath(dataDir, channelID string) string {
 	coverPath := filepath.Join(system.Getwd(), dataDir, coverDir)
 	return filepath.Join(coverPath, channelID+".jpg")
 }
 
-func readCover(channelID string) ([]byte, error) {
-	return os.ReadFile(readCoverPath(channelID))
+func readCover(dataDir, channelID string) ([]byte, error) {
+	return os.ReadFile(readCoverPath(dataDir, channelID))
 }
 
 type GB28181API struct {
@@ -62,7 +61,6 @@ func NewGB28181Core(store gb28181.Storer, uni uniqueid.Core) gb28181.Core {
 
 func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) {
 	g.Any("/gb28181/snapshot", func(c *gin.Context) {
-		fmt.Println(">>>>>>>>>>>>>>>")
 		b, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			panic(err)
@@ -163,6 +161,10 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 
 	// 国标逻辑
 	if strings.HasPrefix(channelID, bz.IDPrefixGBChannel) {
+		// 防止错误的配置，无法收到流
+		if a.uc.Conf.Media.SDPIP == "127.0.0.1" {
+			return nil, reason.ErrUsedLogic.SetMsg("请先配置流媒体 SDP 收流地址")
+		}
 		// a.uc.SipServer.
 		ch, err := a.gb28181Core.GetChannel(c.Request.Context(), channelID)
 		if err != nil {
@@ -248,6 +250,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 	if l := strings.Split(c.Request.Host, ":"); len(l) == 2 {
 		host = l[0]
 	}
+	httpPort := a.uc.Conf.Server.HTTP.Port
 
 	// 播放规则
 	// https://github.com/zlmediakit/ZLMediaKit/wiki/%E6%92%AD%E6%94%BEurl%E8%A7%84%E5%88%99
@@ -258,12 +261,12 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		Items: []streamAddrItem{
 			{
 				Label:   "默认线路",
-				WSFLV:   fmt.Sprintf("ws://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
-				HTTPFLV: fmt.Sprintf("http://%s:%d/%s.live.flv", host, svr.Ports.HTTP, stream) + "?" + session,
+				WSFLV:   fmt.Sprintf("ws://%s:%d/proxy/sms/%s.live.flv", host, httpPort, stream) + "?" + session,
+				HTTPFLV: fmt.Sprintf("http://%s:%d/proxy/sms/%s.live.flv", host, httpPort, stream) + "?" + session,
 				RTMP:    fmt.Sprintf("rtmp://%s:%d/%s", host, svr.Ports.RTMP, stream) + "?" + session,
 				RTSP:    fmt.Sprintf("rtsp://%s:%d/%s", host, svr.Ports.RTSP, stream) + "?" + session,
-				WebRTC:  fmt.Sprintf("webrtc://%s:%d/index/api/webrtc?app=%s&stream=%s&type=play", host, svr.Ports.HTTP, app, stream) + "&" + session,
-				HLS:     fmt.Sprintf("http://%s:%d/%s/hls.fmp4.m3u8", host, svr.Ports.HTTP, stream) + "?" + session,
+				WebRTC:  fmt.Sprintf("webrtc://%s:%d/proxy/sms/index/api/webrtc?app=%s&stream=%s&type=play", host, httpPort, app, stream) + "&" + session,
+				HLS:     fmt.Sprintf("http://%s:%d/proxy/sms/%s/hls.fmp4.m3u8", host, httpPort, stream) + "?" + session,
 			},
 			{
 				Label:   "SSL 线路",
@@ -287,7 +290,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		if err != nil {
 			slog.Error("get snapshot", "err", err)
 		} else {
-			writeCover(channelID, body)
+			writeCover(a.uc.Conf.ConfigDir, channelID, body)
 		}
 	}()
 	return &out, nil
@@ -303,7 +306,7 @@ type refreshSnapshotInput struct {
 func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (any, error) {
 	channelID := c.Param("id")
 
-	path := readCoverPath(channelID)
+	path := readCoverPath(a.uc.Conf.ConfigDir, channelID)
 
 	// 获取文件的修改时间
 	fileInfo, err := os.Stat(path)
@@ -328,7 +331,7 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 			slog.Error("get snapshot", "err", err)
 			// return nil, reason.ErrBadRequest.Msg(err.Error())
 		} else {
-			writeCover(channelID, img)
+			writeCover(a.uc.Conf.ConfigDir, channelID, img)
 		}
 	}
 
@@ -337,7 +340,7 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 
 func (a GB28181API) getSnapshot(c *gin.Context) {
 	channelID := c.Param("id")
-	body, err := readCover(channelID)
+	body, err := readCover(a.uc.Conf.ConfigDir, channelID)
 	if err != nil {
 		reason.ErrNotFound.SetMsg(err.Error())
 		return

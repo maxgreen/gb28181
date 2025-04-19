@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"regexp"
@@ -43,6 +44,7 @@ func main() {
 	if err := os.Chdir(filepath.Dir(bin)); err != nil {
 		slog.Error("change dir error")
 	}
+	go setupZLM(*configDir)
 	// 初始化配置
 	var bc conf.Bootstrap
 	// 获取配置目录绝对路径
@@ -60,7 +62,10 @@ func main() {
 	bc.ConfigPath = filePath
 
 	// 初始化日志
-	logDir := filepath.Join(system.Getwd(), bc.Log.Dir)
+	logDir := filepath.Join(system.Getwd(), *configDir, bc.Log.Dir)
+	if filepath.IsAbs(bc.Log.Dir) {
+		logDir = bc.Log.Dir
+	}
 	log, clean := logger.SetupSlog(logger.Config{
 		Dir:          logDir,                            // 日志地址
 		Debug:        bc.Debug,                          // 服务级别Debug/Release
@@ -79,13 +84,7 @@ func main() {
 		}))
 	}
 
-	secret, err := getSecret(*configDir)
-	if err == nil {
-		slog.Info("发现 zlm 配置，已赋值，未回写配置文件", "secret", secret)
-		bc.Media.Secret = secret
-	} else {
-		slog.Info("未发现 zlm 配置，请检查 config.ini 文件", "err", err)
-	}
+	go setupSecret(&bc)
 
 	// 如果需要执行表迁移，递增此版本号和表更新说明
 	versionapi.DBVersion = "0.0.10"
@@ -142,14 +141,63 @@ func configIsNotExistWrite(path string) {
 
 // 读取 config.ini 文件，通过正则表达式，获取 secret 的值
 func getSecret(configDir string) (string, error) {
-	content, err := os.ReadFile(filepath.Join(system.Getwd(), configDir, "config.ini"))
-	if err != nil {
-		return "", err
+	for _, file := range []string{"zlm.ini", "config.ini"} {
+		content, err := os.ReadFile(filepath.Join(system.Getwd(), configDir, file))
+		if err != nil {
+			continue
+		}
+		re := regexp.MustCompile(`secret=(\w+)`)
+		matches := re.FindStringSubmatch(string(content))
+		if len(matches) < 2 {
+			continue
+		}
+		return matches[1], nil
 	}
-	re := regexp.MustCompile(`secret=(\w+)`)
-	matches := re.FindStringSubmatch(string(content))
-	if len(matches) < 2 {
-		return "", fmt.Errorf("secret not found")
+	return "", fmt.Errorf("unknow")
+}
+
+func setupZLM(dir string) {
+	// 检查是否在 Docker 环境中
+	_, err := os.Stat("/.dockerenv")
+	if !(err == nil || os.Getenv("NVR_STREAM") == "ZLM") {
+		slog.Info("未在 Docker 环境中运行，跳过启动 zlm")
+		return
 	}
-	return matches[1], nil
+
+	// 检查 MediaServer 文件是否存在
+	mediaServerPath := filepath.Join(system.Getwd(), "MediaServer")
+	if _, err := os.Stat(mediaServerPath); os.IsNotExist(err) {
+		slog.Info("MediaServer 文件不存在", "path", mediaServerPath)
+		return
+	}
+
+	// 启动 MediaServer
+	cmd := exec.Command("./MediaServer", "-s", "default.pem", "-c", filepath.Join(dir, "zlm.ini")) // nolint
+	cmd.Dir = system.Getwd()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	for {
+		slog.Info("MediaServer 启动中...")
+		// 启动命令
+		if err := cmd.Run(); err != nil {
+			slog.Error("zlm 运行失败", "err", err)
+			continue
+		}
+		time.Sleep(5 * time.Second)
+	}
+}
+
+func setupSecret(bc *conf.Bootstrap) {
+	for range 3 {
+		secret, err := getSecret(*configDir)
+		if err == nil {
+			slog.Info("发现 zlm 配置，已赋值，未回写配置文件", "secret", secret)
+			bc.Media.Secret = secret
+			return
+		}
+		time.Sleep(2 * time.Second)
+		continue
+	}
+	slog.Info("未发现 zlm 配置，请检查 config.ini 文件")
 }

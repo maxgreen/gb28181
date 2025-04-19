@@ -32,7 +32,7 @@ type Engine struct {
 func NewEngine() Engine {
 	return Engine{
 		cli: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 5 * time.Second,
 			Transport: &http.Transport{
 				MaxIdleConns:        30,
 				MaxIdleConnsPerHost: 30,

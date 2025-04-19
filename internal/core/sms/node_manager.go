@@ -43,7 +43,7 @@ func (n *NodeManager) Close() {
 
 // tickCheck 定时检查服务是否离线
 func (n *NodeManager) tickCheck() {
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
@@ -53,16 +53,16 @@ func (n *NodeManager) tickCheck() {
 			// TODO: 前期先固定 10 秒保活，后期优化
 			const KeepaliveInterval = 2 * 10 * time.Second
 			n.cacheServers.Range(func(serverID string, ms *WarpMediaServer) bool {
-				IsOffline := time.Since(ms.LastUpdatedAt) >= KeepaliveInterval
-				if ms.IsOnline == IsOffline {
-					ms.IsOnline = !IsOffline
-					var svr MediaServer
-					if err := n.storer.MediaServer().Edit(context.Background(), &svr, func(b *MediaServer) {
-						b.Status = ms.IsOnline
-					}, orm.Where("id=?", serverID)); err != nil {
-						slog.Error("Edit MediaServer err", "err", err)
-					}
-				}
+				isOffline := time.Since(ms.LastUpdatedAt) >= KeepaliveInterval
+				// if ms.IsOnline != isOffline {
+				// 	var svr MediaServer
+				// 	if err := n.storer.MediaServer().Edit(context.Background(), &svr, func(b *MediaServer) {
+				// 		b.Status = isOffline
+				// 	}, orm.Where("id=?", serverID)); err != nil {
+				// 		slog.Error("Edit MediaServer err", "err", err)
+				// 	}
+				// }
+				ms.IsOnline = !isOffline
 				return true
 			})
 
@@ -112,7 +112,7 @@ func (n *NodeManager) Run(cfg *conf.Media, serverPort int) error {
 	return nil
 }
 
-func (n *NodeManager) connection(server *MediaServer, serverPort int) {
+func (n *NodeManager) connection(server *MediaServer, serverPort int) error {
 	n.cacheServers.Store(server.ID, &WarpMediaServer{
 		LastUpdatedAt: time.Now(),
 	})
@@ -127,84 +127,80 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) {
 
 	log.Info("ZLM 服务节点连接中")
 
-	for i := range 5 {
-		resp, err := engine.GetServerConfig()
-		if err != nil {
-			log.Error("ZLM 服务节点连接失败", "err", err, "retry", i)
-			time.Sleep(10 * time.Second)
-			continue
-		}
-		log.Info("ZLM 服务节点连接成功")
-
-		zlmConfig := resp.Data[0]
-		var ms MediaServer
-		if err := n.storer.MediaServer().Edit(context.Background(), &ms, func(b *MediaServer) {
-			// b.Ports.FLV = zlmConfig.HTTPPort
-			// TODO: 映射的端口，会导致获取配置文件的端口不一定能访问
-			http := server.Ports.HTTP
-			b.Ports.FLV = http
-			b.Ports.WsFLV = http //   zlmConfig.HTTPSslport
-			b.Ports.HTTPS = zlmConfig.HTTPSslport
-			b.Ports.RTMP = zlmConfig.RtmpPort
-			b.Ports.RTMPs = zlmConfig.RtmpSslport
-			b.Ports.RTSP = zlmConfig.RtspPort
-			b.Ports.RTSPs = zlmConfig.RtspSslport
-			b.Ports.RTPPorxy = zlmConfig.RtpProxyPort
-			b.Ports.FLVs = zlmConfig.HTTPSslport
-			b.Ports.WsFLVs = zlmConfig.HTTPSslport
-			b.HookAliveInterval = 10
-			b.Status = true
-		}, orm.Where("id=?", server.ID)); err != nil {
-			panic(fmt.Errorf("保存 MediaServer 失败 %w", err))
-		}
-
-		log.Info("ZLM 服务节点配置设置")
-
-		hookPrefix := fmt.Sprintf("http://%s:%d/webhook", server.HookIP, serverPort)
-		req := zlm.SetServerConfigRequest{
-			RtcExternIP:          zlm.NewString(server.IP),
-			GeneralMediaServerID: zlm.NewString(server.ID),
-			HookEnable:           zlm.NewString("1"),
-			HookOnFlowReport:     zlm.NewString(""),
-			HookOnPlay:           zlm.NewString(fmt.Sprintf("%s/on_play", hookPrefix)),
-			// HookOnHTTPAccess:     zlm.NewString(""),
-			HookOnPublish:          zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
-			HookOnStreamNoneReader: zlm.NewString(fmt.Sprintf("%s/on_stream_none_reader", hookPrefix)),
-			HookOnRecordTs:         zlm.NewString(""),
-			HookOnRtspAuth:         zlm.NewString(""),
-			HookOnRtspRealm:        zlm.NewString(""),
-			// HookOnServerStarted: ,
-			HookOnShellLogin:    zlm.NewString(""),
-			HookOnStreamChanged: zlm.NewString(fmt.Sprintf("%s/on_stream_changed", hookPrefix)),
-			// HookOnStreamNotFound: ,
-			HookOnServerKeepalive: zlm.NewString(fmt.Sprintf("%s/on_server_keepalive", hookPrefix)),
-			// HookOnSendRtpStopped: ,
-			// HookOnRtpServerTimeout: ,
-			// HookOnRecordMp4: ,
-			HookTimeoutSec: zlm.NewString("20"),
-			// TODO: 回调时间间隔有问题
-			HookAliveInterval: zlm.NewString(fmt.Sprint(server.HookAliveInterval)),
-			// 推流断开后可以在超时时间内重新连接上继续推流，这样播放器会接着播放。
-			// 置0关闭此特性(推流断开会导致立即断开播放器)
-			// 此参数不应大于播放器超时时间
-			// 优化此消息以更快的收到流注销事件
-			ProtocolContinuePushMs: zlm.NewString("3000"),
-			RtpProxyPortRange:      &server.RTPPortRange,
-		}
-
-		{
-			resp, err := engine.SetServerConfig(&req)
-			if err != nil {
-				log.Error("ZLM 服务节点配置设置失败", "err", err)
-				time.Sleep(10 * time.Second)
-				continue
-			}
-
-			log.Info("ZLM 服务节点配置设置成功", "changed", resp.Changed)
-		}
-
-		return
+	resp, err := engine.GetServerConfig()
+	if err != nil {
+		log.Error("ZLM 服务节点连接失败", "err", err)
+		return err
 	}
+	log.Info("ZLM 服务节点连接成功")
+
+	zlmConfig := resp.Data[0]
+	var ms MediaServer
+	if err := n.storer.MediaServer().Edit(context.Background(), &ms, func(b *MediaServer) {
+		// b.Ports.FLV = zlmConfig.HTTPPort
+		// TODO: 映射的端口，会导致获取配置文件的端口不一定能访问
+		http := server.Ports.HTTP
+		b.Ports.FLV = http
+		b.Ports.WsFLV = http //   zlmConfig.HTTPSslport
+		b.Ports.HTTPS = zlmConfig.HTTPSslport
+		b.Ports.RTMP = zlmConfig.RtmpPort
+		b.Ports.RTMPs = zlmConfig.RtmpSslport
+		b.Ports.RTSP = zlmConfig.RtspPort
+		b.Ports.RTSPs = zlmConfig.RtspSslport
+		b.Ports.RTPPorxy = zlmConfig.RtpProxyPort
+		b.Ports.FLVs = zlmConfig.HTTPSslport
+		b.Ports.WsFLVs = zlmConfig.HTTPSslport
+		b.HookAliveInterval = 10
+		b.Status = true
+	}, orm.Where("id=?", server.ID)); err != nil {
+		panic(fmt.Errorf("保存 MediaServer 失败 %w", err))
+	}
+
+	log.Info("ZLM 服务节点配置设置")
+
+	hookPrefix := fmt.Sprintf("http://%s:%d/webhook", server.HookIP, serverPort)
+	req := zlm.SetServerConfigRequest{
+		RtcExternIP:          zlm.NewString(server.IP),
+		GeneralMediaServerID: zlm.NewString(server.ID),
+		HookEnable:           zlm.NewString("1"),
+		HookOnFlowReport:     zlm.NewString(""),
+		HookOnPlay:           zlm.NewString(fmt.Sprintf("%s/on_play", hookPrefix)),
+		// HookOnHTTPAccess:     zlm.NewString(""),
+		HookOnPublish:          zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
+		HookOnStreamNoneReader: zlm.NewString(fmt.Sprintf("%s/on_stream_none_reader", hookPrefix)),
+		HookOnRecordTs:         zlm.NewString(""),
+		HookOnRtspAuth:         zlm.NewString(""),
+		HookOnRtspRealm:        zlm.NewString(""),
+		// HookOnServerStarted: ,
+		HookOnShellLogin:    zlm.NewString(""),
+		HookOnStreamChanged: zlm.NewString(fmt.Sprintf("%s/on_stream_changed", hookPrefix)),
+		// HookOnStreamNotFound: ,
+		HookOnServerKeepalive: zlm.NewString(fmt.Sprintf("%s/on_server_keepalive", hookPrefix)),
+		// HookOnSendRtpStopped: ,
+		// HookOnRtpServerTimeout: ,
+		// HookOnRecordMp4: ,
+		HookTimeoutSec: zlm.NewString("20"),
+		// TODO: 回调时间间隔有问题
+		HookAliveInterval: zlm.NewString(fmt.Sprint(server.HookAliveInterval)),
+		// 推流断开后可以在超时时间内重新连接上继续推流，这样播放器会接着播放。
+		// 置0关闭此特性(推流断开会导致立即断开播放器)
+		// 此参数不应大于播放器超时时间
+		// 优化此消息以更快的收到流注销事件
+		ProtocolContinuePushMs: zlm.NewString("3000"),
+		RtpProxyPortRange:      &server.RTPPortRange,
+	}
+
+	{
+		resp, err := engine.SetServerConfig(&req)
+		if err != nil {
+			log.Error("ZLM 服务节点配置设置失败", "err", err)
+			return err
+		}
+
+		log.Info("ZLM 服务节点配置设置成功", "changed", resp.Changed)
+	}
+
+	return nil
 }
 
 func (n *NodeManager) Keepalive(serverID string) {

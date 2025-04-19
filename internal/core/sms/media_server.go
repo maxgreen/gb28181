@@ -26,6 +26,13 @@ func (c *Core) FindMediaServer(ctx context.Context, in *FindMediaServerInput) ([
 	if err != nil {
 		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
 	}
+
+	for _, item := range items {
+		value, ok := c.cacheServers.Load(item.ID)
+		if ok {
+			item.Status = value.IsOnline
+		}
+	}
 	return items, total, nil
 }
 

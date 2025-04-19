@@ -1,39 +1,27 @@
 services:
   gowvp:
-    image: registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest
+    # 如果拉不到 docker hub 镜像，也可以尝试
+    # registry.cn-shanghai.aliyuncs.com/ixugo/homenvr:latest
+    image: gospace/gowvp:latest
+    # linux 解开下行注释，并将 ports 全部注释
+    # network_mode: host
     ports:
+      # gb28181
       - 15123:15123 # 管理平台 http 端口
       - 15060:15060 # gb28181 sip tcp 端口
       - 15060:15060/udp # gb28181 sip udp 端口
-    volumes:
-      # - ./logs:/app/logs # 如果需要持久化日志，请取消注释
-      - ./configs:/app/configs
-    networks:
-      - gowvp-network
-    depends_on:
-      - zlm
-  zlm:
-    image: zlmediakit/zlmediakit:master
-    restart: always
-    # 推荐 linux 主机使用 host 模式
-    # network_mode: host
-    networks:
-      - gowvp-network
-    ports:
+      # zlm
       - 1935:1935 # rtmp
       - 554:554 # rtsp
-      - 8080:80 # api
-      - 8443:443
+      - 8080:80 # http
+      - 8443:443 # https
       - 10000:10000
-      - 10000:10000/udp
       - 8000:8000/udp
       - 9000:9000/udp
-      - 20050-20100:20050-20100
-      - 20050-20100:20050-20100/udp
+      - 20000-20100:20000-20100 # gb28181 收流端口
+      - 20000-20100:20000-20100/udp # gb28181 收流端口udp
+    logging:
+      options:
+        max-size: "100M"
     volumes:
-      - ./configs:/opt/media/conf
-
-# 如果不使用 host 模式，可以使用下面的配置
-networks:
-  gowvp-network:
-    driver: bridge
+      - ./data:/opt/media/bin/configs

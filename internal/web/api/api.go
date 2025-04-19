@@ -2,8 +2,11 @@ package api
 
 import (
 	"expvar"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
@@ -73,6 +76,8 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerProxy(r, uc.ProxyAPI)
 	registerConfig(r, uc.ConfigAPI)
 	registerSms(r, uc.SMSAPI)
+
+	r.Any("/proxy/sms/*path", uc.proxySMS)
 }
 
 type playOutput struct {
@@ -167,4 +172,40 @@ func sortExpvarMap(data *expvar.Map, top int) []KV {
 		idx = len(kvs)
 	}
 	return kvs[:idx]
+}
+
+func (uc *Usecase) proxySMS(c *gin.Context) {
+	rc := http.NewResponseController(c.Writer)
+	exp := time.Now().AddDate(99, 0, 0)
+	_ = rc.SetReadDeadline(exp)
+	_ = rc.SetWriteDeadline(exp)
+
+	path := c.Param("path")
+	addr, err := url.JoinPath(fmt.Sprintf("http://%s:%d", uc.Conf.Media.IP, uc.Conf.Media.HTTPPort), path)
+	if err != nil {
+		web.Fail(c, err)
+		return
+	}
+	fullAddr, _ := url.Parse(addr)
+	c.Request.URL.Path = ""
+	proxy := httputil.NewSingleHostReverseProxy(fullAddr)
+	proxy.Director = func(req *http.Request) {
+		// 设置请求的URL
+		req.URL.Scheme = "http"
+		req.URL.Host = fmt.Sprintf("%s:%d", uc.Conf.Media.IP, uc.Conf.Media.HTTPPort)
+		req.URL.Path = path
+	}
+	proxy.ModifyResponse = func(r *http.Response) error {
+		r.Header.Del("access-control-allow-credentials")
+		r.Header.Del("access-control-allow-origin")
+		if r.StatusCode >= 300 && r.StatusCode < 400 {
+			if l := r.Header.Get("location"); l != "" {
+				if !strings.HasPrefix(l, "http") {
+					r.Header.Set("location", "/proxy/sms/"+strings.TrimPrefix(l, "/"))
+				}
+			}
+		}
+		return nil
+	}
+	proxy.ServeHTTP(c.Writer, c.Request)
 }

@@ -20,6 +20,7 @@ import (
 )
 
 type MemoryStorer interface {
+	LoadOrStore(deviceID string, value *Device)
 	LoadDeviceToMemory(conn sip.Connection)               // 加载设备到内存
 	RangeDevices(fn func(key string, value *Device) bool) // 遍历设备
 

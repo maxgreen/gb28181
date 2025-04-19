@@ -41,9 +41,9 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 		}),
 		streams: &conc.Map[string, *Streams]{},
 	}
-	go g.catalog.Start(func(s string, c []*Channels) {
+	go g.catalog.Start(func(s string, channel []*Channels) {
 		// 零值不做变更，没有通道又何必注册上来
-		if len(c) == 0 {
+		if len(channel) == 0 {
 			return
 		}
 
@@ -51,17 +51,24 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 		// if ok {
 		// 	ipc.channels.Clear()
 		// 	for _, ch := range c {
-		// 		ch := Channel{
-		// 			ChannelID: ch.ChannelID,
-		// 			device:    ipc,
-		// 		}
-		// 		ch.init(g.cfg.Domain)
-		// 		ipc.channels.Store(ch.ChannelID, &ch)
+
 		// 	}
 		// }
 
-		out := make([]*gb28181.Channel, len(c))
-		for i, ch := range c {
+		ipc, ok := g.svr.memoryStorer.Load(s)
+		if ok {
+			for _, ch := range channel {
+				ch := Channel{
+					ChannelID: ch.ChannelID,
+					device:    ipc,
+				}
+				ch.init(g.cfg.Domain)
+				ipc.Channels.Store(ch.ChannelID, &ch)
+			}
+		}
+
+		out := make([]*gb28181.Channel, len(channel))
+		for i, ch := range channel {
 			out[i] = &gb28181.Channel{
 				DeviceID:  s,
 				ChannelID: ch.ChannelID,
@@ -90,6 +97,11 @@ func (g *GB28181API) handlerRegister(ctx *sip.Context) {
 		ctx.String(http.StatusInternalServerError, "server db error")
 		return
 	}
+	g.svr.memoryStorer.LoadOrStore(ctx.DeviceID, &Device{
+		conn:   ctx.Request.GetConnection(),
+		source: ctx.Source,
+		to:     ctx.To,
+	})
 
 	password := dev.Password
 	if password == "" {

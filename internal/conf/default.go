@@ -37,11 +37,11 @@ func DefaultConfig() Bootstrap {
 		},
 		Media: Media{
 			IP:           "127.0.0.1",
-			HTTPPort:     8080,
+			HTTPPort:     80,
 			Secret:       "",
 			WebHookIP:    "127.0.0.1",
 			SDPIP:        "127.0.0.1",
-			RTPPortRange: "20000-20300",
+			RTPPortRange: "20000-20100",
 		},
 		Log: Log{
 			Dir:          "./logs",

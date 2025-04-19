@@ -183,8 +183,12 @@ docker/save:
 docker/push:
 	@docker push $(IMAGE_NAME)
 
-docker/build/full:
+docker/build/test: build/clean build/linux
+	@docker build --force-rm=true -t $(IMAGE_NAME) -f Dockerfile_full .
+
+docker/build/full: build/clean build/linux
 	@docker build --force-rm=true --push --platform linux/amd64,linux/arm64 -t $(IMAGE_NAME) -f Dockerfile_full .
+	# @docker build --force-rm=true --push --platform linux/amd64,linux/arm64 -t registry.cn-shanghai.aliyuncs.com/ixugo/homenvr:latest -f Dockerfile_full .
 
 docker/build/gowvp: build/clean build/linux
 	@docker build --force-rm=true --push --platform linux/amd64,linux/arm64 -t registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest -f Dockerfile .

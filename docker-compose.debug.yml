@@ -1,16 +1,15 @@
 services:
   gowvp:
-    image: gb28181
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    image: registry.cn-shanghai.aliyuncs.com/ixugo/gowvp:latest
     ports:
       - 15123:15123 # 管理平台 http 端口
       - 15060:15060 # gb28181 sip tcp 端口
       - 15060:15060/udp # gb28181 sip udp 端口
     volumes:
-      - ./logs:/app/logs
+      # - ./logs:/app/logs # 如果需要持久化日志，请取消注释
       - ./configs:/app/configs
+    networks:
+      - gowvp-network
     depends_on:
       - zlm
   zlm:
@@ -18,6 +17,8 @@ services:
     restart: always
     # 推荐 linux 主机使用 host 模式
     # network_mode: host
+    networks:
+      - gowvp-network
     ports:
       - 1935:1935 # rtmp
       - 554:554 # rtsp
@@ -27,7 +28,12 @@ services:
       - 10000:10000/udp
       - 8000:8000/udp
       - 9000:9000/udp
-      - 20050-20100:20050-20100
-      - 20050-20100:20050-20100/udp
+      - 20000-20100:20000-20100
+      - 20000-20100:20000-20100/udp
     volumes:
-      - ./conf:/opt/media/conf
+      - ./configs:/opt/media/conf
+
+# 如果不使用 host 模式，可以使用下面的配置
+networks:
+  gowvp-network:
+    driver: bridge

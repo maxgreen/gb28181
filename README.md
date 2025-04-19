@@ -101,8 +101,38 @@ ZLM使用文档 [github.com/ZLMediaKit/ZLMediaKit](https://github.com/ZLMediaKit
 
 [docker hub](https://hub.docker.com/r/gospace/gowvp)
 
-** gowvp & zlmediakit 分开镜像(推荐)**
 
+
+** gowvp & zlmediakit 融合镜像(推荐)**
+docker-compose.yml
+```yml
+services:
+  gowvp:
+    # 如果拉不到 docker hub 镜像，也可以尝试
+    # registry.cn-shanghai.aliyuncs.com/ixugo/homenvr:latest
+    image: gospace/gowvp:latest
+    # linux 解开下行注释，并将 ports 全部注释
+    # network_mode: host
+    ports:
+      # gb28181
+      - 15123:15123 # 管理平台 http 端口
+      - 15060:15060 # gb28181 sip tcp 端口
+      - 15060:15060/udp # gb28181 sip udp 端口
+      # zlm
+      - 1935:1935 # rtmp
+      - 554:554 # rtsp
+      - 8080:80 # http
+      - 8443:443 # https
+      - 10000:10000
+      - 8000:8000/udp
+      - 9000:9000/udp
+      - 20000-20100:20000-20100 # gb28181 收流端口
+      - 20000-20100:20000-20100/udp # gb28181 收流端口udp
+    volumes:
+      - ./data:/opt/media/bin/configs
+```
+
+** gowvp & zlmediakit 分开镜像**
 ```yml
 services:
   gowvp:
@@ -130,42 +160,11 @@ services:
       - 10000:10000/udp
       - 8000:8000/udp
       - 9000:9000/udp
-      - 20000-20300:20000-20300
-      - 20000-20300:20000-20300/udp
+      - 20000-20100:20000-20100
+      - 20000-20100:20000-20100/udp
     volumes:
       - ./configs:/opt/media/conf
-
 ```
-
-** gowvp & zlmediakit 融合镜像(不推荐)**
-docker-compose.yml
-```yml
-services:
-  gowvp:
-    image: gospace/gowvp:latest
-    # linux 解开下行注释，并将 ports 全部注释
-    # network_mode: host
-    ports:
-      # gb28181
-      - 15123:15123 # 管理平台 http 端口
-      - 15060:15060 # gb28181 sip tcp 端口
-      - 15060:15060/udp # gb28181 sip udp 端口
-      # zlm
-      - 1935:1935 # rtmp
-      - 554:554 # rtsp
-      - 8080:80 # http
-      - 8443:443 # https
-      - 10000:10000
-      - 8000:8000/udp
-      - 9000:9000/udp
-      - 20050-20100:20050-20100 # gb28181 收流端口
-      - 20050-20100:20050-20100/udp # gb28181 收流端口udp
-    volumes:
-      - ./configs:/opt/media/bin/configs
-      - ./logs:/opt/media/bin/logs
-      - ./zlm.conf:/opt/media/conf
-```
-
 
 
 
