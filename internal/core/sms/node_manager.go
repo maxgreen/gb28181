@@ -168,6 +168,7 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) error {
 		// HookOnHTTPAccess:     zlm.NewString(""),
 		HookOnPublish:          zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
 		HookOnStreamNoneReader: zlm.NewString(fmt.Sprintf("%s/on_stream_none_reader", hookPrefix)),
+		HookOnStreamNotFound:   zlm.NewString(fmt.Sprintf("%s/on_stream_not_found", hookPrefix)),
 		HookOnRecordTs:         zlm.NewString(""),
 		HookOnRtspAuth:         zlm.NewString(""),
 		HookOnRtspRealm:        zlm.NewString(""),

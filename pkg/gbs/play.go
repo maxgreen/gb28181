@@ -24,23 +24,18 @@ type StopPlayInput struct {
 	Channel *gb28181.Channel
 }
 
-func (g *GB28181API) StopPlay(in *StopPlayInput) error {
-	ch, ok := g.svr.memoryStorer.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
-	if !ok {
-		return ErrDeviceNotExist
-	}
-
-	ch.device.playMutex.Lock()
-	defer ch.device.playMutex.Unlock()
-
+// stopPlay 不加锁的
+func (g *GB28181API) stopPlay(ch *Channel, in *StopPlayInput) error {
 	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
 	stream, ok := g.streams.LoadAndDelete(key)
 	if !ok {
 		return nil
 	}
+
 	if stream.Resp == nil {
 		return nil
 	}
+
 	req := sip.NewRequestFromResponse(sip.MethodBYE, stream.Resp)
 	req.SetDestination(ch.Source())
 	req.SetConnection(ch.Conn())
@@ -51,6 +46,18 @@ func (g *GB28181API) StopPlay(in *StopPlayInput) error {
 	}
 	_, err = sipResponse(tx)
 	return err
+}
+
+// StopPlay 加锁的停止播放
+func (g *GB28181API) StopPlay(in *StopPlayInput) error {
+	ch, ok := g.svr.memoryStorer.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
+	if !ok {
+		return ErrDeviceNotExist
+	}
+
+	ch.device.playMutex.Lock()
+	defer ch.device.playMutex.Unlock()
+	return g.stopPlay(ch, in)
 }
 
 func (g *GB28181API) Play(in *PlayInput) error {
@@ -68,7 +75,7 @@ func (g *GB28181API) Play(in *PlayInput) error {
 	if ok {
 		// TODO: 临时解决方案，每次播放，先停止再播放
 		// https://github.com/gowvp/gb28181/issues/16
-		if err := g.StopPlay(&StopPlayInput{
+		if err := g.stopPlay(ch, &StopPlayInput{
 			Channel: in.Channel,
 		}); err != nil {
 			slog.Error("stop play failed", "err", err)

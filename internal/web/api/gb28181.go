@@ -15,12 +15,10 @@ import (
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/internal/core/media"
 	"github.com/gowvp/gb28181/internal/core/sms"
-	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goddd/domain/uniqueid"
 	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/ixugo/goddd/pkg/reason"
-	"github.com/ixugo/goddd/pkg/system"
 	"github.com/ixugo/goddd/pkg/web"
 )
 
@@ -32,13 +30,13 @@ const (
 
 // TODO: 快照不会删除，只会覆盖，设备删除时也不会删除快照，待实现
 func writeCover(dataDir, channelID string, body []byte) error {
-	coverPath := filepath.Join(system.Getwd(), dataDir, coverDir)
+	coverPath := filepath.Join(dataDir, coverDir)
 	os.MkdirAll(coverPath, 0o755)
 	return os.WriteFile(filepath.Join(coverPath, channelID+".jpg"), body, 0o644)
 }
 
 func readCoverPath(dataDir, channelID string) string {
-	coverPath := filepath.Join(system.Getwd(), dataDir, coverDir)
+	coverPath := filepath.Join(dataDir, coverDir)
 	return filepath.Join(coverPath, channelID+".jpg")
 }
 
@@ -179,18 +177,6 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			return nil, err
 		}
 
-		dev, err := a.gb28181Core.GetDeviceByDeviceID(c.Request.Context(), ch.DeviceID)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := a.uc.SipServer.Play(&gbs.PlayInput{
-			Channel:    ch,
-			StreamMode: dev.StreamMode,
-			SMS:        svr,
-		}); err != nil {
-			return nil, ErrDevice.SetMsg(err.Error())
-		}
 	} else if strings.HasPrefix(channelID, bz.IDPrefixRTMP) {
 		push, err := a.uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
 		if err != nil {
@@ -335,7 +321,7 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 		}
 	}
 
-	return gin.H{"link": fmt.Sprintf("/api/channels/%s/snapshot", channelID)}, nil
+	return gin.H{"link": fmt.Sprintf("/channels/%s/snapshot", channelID)}, nil
 }
 
 func (a GB28181API) getSnapshot(c *gin.Context) {

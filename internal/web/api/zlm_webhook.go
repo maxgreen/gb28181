@@ -20,6 +20,7 @@ type WebHookAPI struct {
 	conf        *conf.Bootstrap
 	log         *slog.Logger
 	gbs         *gbs.Server
+	uc          *Usecase
 }
 
 func NewWebHookAPI(core sms.Core, mediaCore media.Core, conf *conf.Bootstrap, gbs *gbs.Server, gb28181 gb28181.Core) WebHookAPI {
@@ -42,6 +43,7 @@ func registerZLMWebhookAPI(r gin.IRouter, api WebHookAPI, handler ...gin.Handler
 		group.POST("/on_play", web.WarpH(api.onPlay))
 		group.POST("/on_stream_none_reader", web.WarpH(api.onStreamNoneReader))
 		group.POST("/on_rtp_server_timeout", web.WarpH(api.onRTPServerTimeout))
+		group.POST("/on_stream_not_found", web.WarpH(api.onStreamNotFound))
 	}
 }
 
@@ -157,5 +159,40 @@ func (w WebHookAPI) onStreamNoneReader(c *gin.Context, in *onStreamNoneReaderInp
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_17%E3%80%81on-rtp-server-timeout
 func (w WebHookAPI) onRTPServerTimeout(c *gin.Context, in *onRTPServerTimeoutInput) (DefaultOutput, error) {
 	w.log.Info("rtp 收流超时", "local_port", in.LocalPort, "ssrc", in.SSRC, "stream_id", in.StreamID, "mediaServerID", in.MediaServerID)
+	return newDefaultOutputOK(), nil
+}
+
+func (w WebHookAPI) onStreamNotFound(c *gin.Context, in *onStreamNotFoundInput) (DefaultOutput, error) {
+	w.log.Info("流不存在", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID)
+
+	// 国标流处理
+	if in.App == "rtp" {
+		ch, err := w.gb28181Core.GetChannel(c.Request.Context(), in.Stream)
+		if err != nil {
+			// slog.Error("获取通道失败", "err", err)
+			return newDefaultOutputOK(), nil
+		}
+
+		dev, err := w.gb28181Core.GetDeviceByDeviceID(c.Request.Context(), ch.DeviceID)
+		if err != nil {
+			// slog.Error("获取设备失败", "err", err)
+			return newDefaultOutputOK(), nil
+		}
+
+		svr, err := w.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), sms.DefaultMediaServerID)
+		if err != nil {
+			// slog.Error("GetMediaServer", "err", err)
+			return newDefaultOutputOK(), nil
+		}
+
+		if err := w.gbs.Play(&gbs.PlayInput{
+			Channel:    ch,
+			StreamMode: dev.StreamMode,
+			SMS:        svr,
+		}); err != nil {
+			slog.Error("play", "err", err, "channel", ch.ID)
+			return newDefaultOutputOK(), nil
+		}
+	}
 	return newDefaultOutputOK(), nil
 }

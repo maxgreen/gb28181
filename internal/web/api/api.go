@@ -28,6 +28,8 @@ var startRuntime = time.Now()
 func setupRouter(r *gin.Engine, uc *Usecase) {
 	uc.GB28181API.uc = uc
 	uc.SMSAPI.uc = uc
+	uc.WebHookAPI.uc = uc
+
 	go stat.LoadTop(system.Getwd(), func(m map[string]any) {
 		_ = m
 	})
@@ -175,6 +177,8 @@ func sortExpvarMap(data *expvar.Map, top int) []KV {
 }
 
 func (uc *Usecase) proxySMS(c *gin.Context) {
+	defer recover()
+
 	rc := http.NewResponseController(c.Writer)
 	exp := time.Now().AddDate(99, 0, 0)
 	_ = rc.SetReadDeadline(exp)
