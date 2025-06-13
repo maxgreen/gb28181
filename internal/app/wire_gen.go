@@ -4,7 +4,7 @@
 //go:build !wireinject
 // +build !wireinject
 
-package main
+package app
 
 import (
 	"github.com/gowvp/gb28181/internal/conf"

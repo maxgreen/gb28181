@@ -1,8 +1,6 @@
-package main
+package app
 
 import (
-	"expvar"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -21,75 +19,25 @@ import (
 	"github.com/ixugo/goddd/pkg/system"
 )
 
-var (
-	buildVersion = "0.0.1" // 构建版本号
-	gitBranch    = "dev"   // git 分支
-	gitHash      = "debug" // git 提交点哈希值
-	release      string    // 发布模式 true/false
-	buildTime    string    // 构建时间戳
-)
-
-// 自定义配置目录
-var configDir = flag.String("conf", "./configs", "config directory, eg: -conf /configs/")
-
-func getBuildRelease() bool {
-	v, _ := strconv.ParseBool(release)
-	return v
-}
-
-func main() {
-	flag.Parse()
+func Run(bc *conf.Bootstrap) {
 	// 以可执行文件所在目录为工作目录，防止以服务方式运行时，工作目录切换到其它位置
 	bin, _ := os.Executable()
 	if err := os.Chdir(filepath.Dir(bin)); err != nil {
-		slog.Error("change dir error")
-	}
-	go setupZLM(*configDir)
-	// 初始化配置
-	var bc conf.Bootstrap
-	// 获取配置目录绝对路径
-	fileDir, _ := abs(*configDir)
-	os.MkdirAll(fileDir, 0o755)
-	filePath := filepath.Join(fileDir, "config.toml")
-	configIsNotExistWrite(filePath)
-	if err := conf.SetupConfig(&bc, filePath); err != nil {
-		panic(err)
+		slog.Error("change work dir fail", "err", err)
 	}
 
-	bc.Debug = !getBuildRelease()
-	bc.BuildVersion = buildVersion
-	bc.ConfigDir = fileDir
-	bc.ConfigPath = filePath
+	log, clean := SetupLog(bc)
+	defer clean()
 
-	// 初始化日志
-	logDir := filepath.Join(system.Getwd(), *configDir, bc.Log.Dir)
-	if filepath.IsAbs(bc.Log.Dir) {
-		logDir = bc.Log.Dir
-	}
-	log, clean := logger.SetupSlog(logger.Config{
-		Dir:          logDir,                            // 日志地址
-		Debug:        bc.Debug,                          // 服务级别Debug/Release
-		MaxAge:       bc.Log.MaxAge.Duration(),          // 日志存储时间
-		RotationTime: bc.Log.RotationTime.Duration(),    // 循环时间
-		RotationSize: bc.Log.RotationSize * 1024 * 1024, // 循环大小
-		Level:        bc.Log.Level,                      // 日志级别
-	})
-	{
-		expvar.NewString("version").Set(buildVersion)
-		expvar.NewString("git_branch").Set(gitBranch)
-		expvar.NewString("git_hash").Set(gitHash)
-		expvar.NewString("build_time").Set(buildTime)
-		expvar.Publish("timestamp", expvar.Func(func() any {
-			return time.Now().Format(time.DateTime)
-		}))
-	}
+	go setupZLM(bc.ConfigDir)
 
-	go setupSecret(&bc)
-
+	// TODO: 异步发现 zlm 配置，有概率程序启动了，才找到 zlm 的秘钥，建议提前配置好秘钥
+	go setupSecret(bc)
 	// 如果需要执行表迁移，递增此版本号和表更新说明
 	versionapi.DBVersion = "0.0.10"
 	versionapi.DBRemark = "add stream proxy"
-	handler, cleanUp, err := wireApp(&bc, log)
+
+	handler, cleanUp, err := wireApp(bc, log)
 	if err != nil {
 		slog.Error("程序构建失败", "err", err)
 		panic(err)
@@ -116,8 +64,19 @@ func main() {
 	if err := svc.Shutdown(); err != nil {
 		slog.Error(`server.Shutdown()`, "err", err)
 	}
+}
 
-	defer clean()
+// SetupLog 初始化日志
+func SetupLog(bc *conf.Bootstrap) (*slog.Logger, func()) {
+	logDir := filepath.Join(system.Getwd(), bc.Log.Dir)
+	return logger.SetupSlog(logger.Config{
+		Dir:          logDir,                            // 日志地址
+		Debug:        bc.Debug,                          // 服务级别Debug/Release
+		MaxAge:       bc.Log.MaxAge.Duration(),          // 日志存储时间
+		RotationTime: bc.Log.RotationTime.Duration(),    // 循环时间
+		RotationSize: bc.Log.RotationSize * 1024 * 1024, // 循环大小
+		Level:        bc.Log.Level,                      // 日志级别
+	})
 }
 
 func abs(path string) (string, error) {
@@ -129,14 +88,6 @@ func abs(path string) (string, error) {
 		return "", err
 	}
 	return filepath.Join(filepath.Dir(bin), path), nil
-}
-
-func configIsNotExistWrite(path string) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		if err := conf.WriteConfig(conf.DefaultConfig(), path); err != nil {
-			system.ErrPrintf("WriteConfig", "err", err)
-		}
-	}
 }
 
 // 读取 config.ini 文件，通过正则表达式，获取 secret 的值
@@ -190,7 +141,7 @@ func setupZLM(dir string) {
 
 func setupSecret(bc *conf.Bootstrap) {
 	for range 3 {
-		secret, err := getSecret(*configDir)
+		secret, err := getSecret(bc.ConfigDir)
 		if err == nil {
 			slog.Info("发现 zlm 配置，已赋值，未回写配置文件", "secret", secret)
 			bc.Media.Secret = secret

@@ -80,6 +80,7 @@ func (a ConfigAPI) editSIP(_ *gin.Context, in *conf.SIP) (gin.H, error) {
 	if err := copier.Copy(&sip, in); err != nil {
 		return nil, reason.ErrServer.SetMsg(err.Error())
 	}
+
 	if err := conf.WriteConfig(a.conf, a.conf.ConfigPath); err != nil {
 		return nil, reason.ErrServer.SetMsg(err.Error())
 	}

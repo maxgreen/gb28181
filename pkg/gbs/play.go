@@ -66,7 +66,13 @@ func (g *GB28181API) Play(in *PlayInput) error {
 	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
 	stream, ok := g.streams.LoadOrStore(key, &Streams{})
 	if ok {
-		return nil
+		// TODO: 临时解决方案，每次播放，先停止再播放
+		// https://github.com/gowvp/gb28181/issues/16
+		if err := g.StopPlay(&StopPlayInput{
+			Channel: in.Channel,
+		}); err != nil {
+			slog.Error("stop play failed", "err", err)
+		}
 	}
 
 	// 开启RTP服务器等待接收视频流
