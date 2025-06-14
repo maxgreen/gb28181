@@ -72,6 +72,9 @@ func (c *Context) parserRequest() error {
 
 	c.Source = req.Source()
 	c.To = NewAddressFromFromHeader(header)
+	if c.To == nil {
+		slog.Error(">>>>>>>> to is nil", "header", header)
+	}
 
 	c.Log = slog.Default().With("deviceID", c.DeviceID, "host", c.Host)
 	return nil

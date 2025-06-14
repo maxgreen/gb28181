@@ -56,6 +56,11 @@ func (c *Cache) LoadDeviceToMemory(conn sip.Connection) {
 	for _, d := range devices {
 		if strings.ToLower(d.Trasnport) == "tcp" {
 			// 通知相关设备/通道离线
+			c.Change(d.DeviceID, func(d *gb28181.Device) {
+				d.IsOnline = false
+			}, func(d *gbs.Device) {
+				d.IsOnline = false
+			})
 			continue
 		}
 

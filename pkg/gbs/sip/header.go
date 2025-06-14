@@ -131,6 +131,10 @@ func (hb *HeadersBuilder) SetFrom(address *Address) *HeadersBuilder {
 
 // SetTo ToHeader
 func (hb *HeadersBuilder) SetTo(address *Address) *HeadersBuilder {
+	// TODO: 防止崩溃，但应该在上层，防止传递空指针
+	if address == nil {
+		return hb
+	}
 	address = address.Clone()
 	if address.URI.Host() == "" {
 		address.URI.SetHost(hb.host)

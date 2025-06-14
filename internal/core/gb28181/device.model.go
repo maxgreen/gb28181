@@ -27,6 +27,8 @@ type Device struct {
 	Password     string    `gorm:"column:password;notNull;default:'';comment:注册密码" json:"password"`
 	Address      string    `gorm:"column:address;notNull;default:'';comment:设备网络地址" json:"address"`
 	Ext          DeviceExt `gorm:"column:ext;notNull;default:'{}';type:jsonb;comment:设备属性" json:"ext"` // 设备属性
+
+	Children []*Channel `gorm:"-" json:"children,omitzero"`
 }
 
 // TableName database table name

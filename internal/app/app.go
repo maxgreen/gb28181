@@ -34,7 +34,7 @@ func Run(bc *conf.Bootstrap) {
 	// TODO: 异步发现 zlm 配置，有概率程序启动了，才找到 zlm 的秘钥，建议提前配置好秘钥
 	go setupSecret(bc)
 	// 如果需要执行表迁移，递增此版本号和表更新说明
-	versionapi.DBVersion = "0.0.10"
+	versionapi.DBVersion = "0.0.11"
 	versionapi.DBRemark = "add stream proxy"
 
 	handler, cleanUp, err := wireApp(bc, log)

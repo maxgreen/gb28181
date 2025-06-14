@@ -8,6 +8,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/ixugo/goddd/pkg/reason"
+	"github.com/ixugo/goddd/pkg/web"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
@@ -21,6 +22,35 @@ type DeviceStorer interface {
 	Del(context.Context, *Device, ...orm.QueryOption) error
 
 	Session(ctx context.Context, changeFns ...func(*gorm.DB) error) error
+}
+
+func (c Core) FindChannelsForDevice(ctx context.Context, in *FindDeviceInput) ([]*Device, int64, error) {
+	items := make([]*Device, 0, in.Limit())
+
+	query := orm.NewQuery(3)
+	query.OrderBy("created_at DESC")
+
+	total, err := c.store.Device().Find(ctx, &items, in, query.Encode()...)
+	if err != nil {
+		return nil, 0, reason.ErrDB.Withf(`Find err[%s]`, err.Error())
+	}
+
+	for _, item := range items {
+		const size = 3
+		item.Children = make([]*Channel, 0, size)
+		query := orm.NewQuery(2).OrderBy("created_at DESC").Where("did=?", item.ID)
+		_, err := c.store.Channel().Find(ctx, &item.Children, web.PagerFilter{Size: size}, query.Encode()...)
+		if err != nil {
+			continue
+		}
+
+		for _, ch := range item.Children {
+			if !item.IsOnline {
+				ch.IsOnline = false
+			}
+		}
+	}
+	return items, total, nil
 }
 
 // FindDevice Paginated search

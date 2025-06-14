@@ -75,6 +75,8 @@ func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) 
 		group.DELETE("/:id", web.WarpH(api.delDevice))
 
 		group.POST("/:id/catalog", web.WarpH(api.queryCatalog)) // 刷新通道
+
+		group.GET("/channels", web.WarpH(api.FindChannelsForDevice))
 	}
 
 	{
@@ -123,6 +125,11 @@ func (a GB28181API) queryCatalog(c *gin.Context, _ *struct{}) (any, error) {
 		return nil, ErrDevice.SetMsg(err.Error())
 	}
 	return gin.H{"msg": "ok"}, nil
+}
+
+func (a GB28181API) FindChannelsForDevice(c *gin.Context, in *gb28181.FindDeviceInput) (any, error) {
+	items, total, err := a.gb28181Core.FindChannelsForDevice(c.Request.Context(), in)
+	return gin.H{"items": items, "total": total}, err
 }
 
 // >>> channel >>>>>>>>>>>>>>>>>>>>

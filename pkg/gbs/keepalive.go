@@ -23,12 +23,23 @@ func (g *GB28181API) sipMessageKeepalive(ctx *sip.Context) {
 		return
 	}
 
+	// 程序重启时会丢内存，收到 keepalive 时，补上
+	// 并未补充到
+	g.svr.memoryStorer.LoadOrStore(ctx.DeviceID, &Device{
+		conn:   ctx.Request.GetConnection(),
+		source: ctx.Source,
+		to:     ctx.To,
+	})
+
 	if err := g.svr.memoryStorer.Change(ctx.DeviceID, func(d *gb28181.Device) {
 		d.KeepaliveAt = orm.Now()
 		d.IsOnline = msg.Status == "OK" || msg.Status == "ON"
 		d.Address = ctx.Source.String()
 		d.Trasnport = ctx.Source.Network()
 	}, func(d *Device) {
+		d.conn = ctx.Request.GetConnection()
+		d.source = ctx.Source
+		d.to = ctx.To
 	}); err != nil {
 		ctx.Log.Error("keepalive", "err", err)
 	}

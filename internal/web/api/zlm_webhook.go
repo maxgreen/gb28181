@@ -114,9 +114,6 @@ func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (D
 // https://docs.zlmediakit.com/guide/media_server/web_hook_api.html#_6-on-play
 func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, error) {
 	return newDefaultOutputOK(), nil
-	if in.App == "rtp" {
-		return newDefaultOutputOK(), nil
-	}
 
 	switch in.Schema {
 	case "rtmp":
@@ -150,6 +147,15 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 func (w WebHookAPI) onStreamNoneReader(c *gin.Context, in *onStreamNoneReaderInput) (onStreamNoneReaderOutput, error) {
 	// rtmp 无人观看时，也允许推流
 	w.log.Info("无人观看", "app", in.App, "stream", in.Stream, "mediaServerID", in.MediaServerID)
+
+	if in.App == "rtp" {
+		ch, err := w.gb28181Core.GetChannel(c.Request.Context(), in.Stream)
+		if err != nil {
+			w.log.Warn("获取通道失败", "err", err)
+			return onStreamNoneReaderOutput{Close: true}, nil
+		}
+		_ = w.gbs.StopPlay(&gbs.StopPlayInput{Channel: ch})
+	}
 	// 存在录像计划时，不关闭流
 	return onStreamNoneReaderOutput{Close: true}, nil
 }
@@ -173,7 +179,7 @@ func (w WebHookAPI) onStreamNotFound(c *gin.Context, in *onStreamNotFoundInput) 
 			return newDefaultOutputOK(), nil
 		}
 
-		dev, err := w.gb28181Core.GetDeviceByDeviceID(c.Request.Context(), ch.DeviceID)
+		dev, err := w.gb28181Core.GetDevice(c.Request.Context(), ch.DID)
 		if err != nil {
 			// slog.Error("获取设备失败", "err", err)
 			return newDefaultOutputOK(), nil

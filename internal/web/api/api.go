@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/plugin/stat"
@@ -47,6 +48,24 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		}),
 	)
 	go web.CountGoroutines(10*time.Minute, 20)
+
+	r.Use(cors.New(cors.Config{
+		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
+		AllowHeaders: []string{
+			"Accept", "Content-Length", "Content-Type", "Range", "Accept-Language",
+			"Origin", "Authorization",
+			"Accept-Encoding",
+			"Cache-Control", "Pragma", "X-Requested-With",
+			"Sec-Fetch-Mode", "Sec-Fetch-Site", "Sec-Fetch-Dest",
+			"Dnt", "X-Forwarded-For", "X-Forwarded-Proto", "X-Forwarded-Host",
+			"X-Real-IP", "X-Request-ID", "X-Request-Start", "X-Request-Time",
+		},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+		AllowOriginFunc: func(origin string) bool {
+			return true
+		},
+	}))
 
 	const staticPrefix = "/web"
 	const staticDir = "www"
@@ -177,7 +196,9 @@ func sortExpvarMap(data *expvar.Map, top int) []KV {
 }
 
 func (uc *Usecase) proxySMS(c *gin.Context) {
-	defer recover()
+	defer func() {
+		_ = recover()
+	}()
 
 	rc := http.NewResponseController(c.Writer)
 	exp := time.Now().AddDate(99, 0, 0)
