@@ -231,8 +231,9 @@ services:
 
 感谢赞助，排名不分先后。
 
-@joestarzxh
-@oldweipro
+[@joestarzxh](https://github.com/joestarzxh)
+[@oldweipro](https://github.com/oldweipro)
+[@beixiaocai](https://github.com/beixiaocai)
 
 
 ## 许可证
