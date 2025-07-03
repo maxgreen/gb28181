@@ -28,13 +28,13 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	smsCore := api.NewSMSCore(db, bc)
 	smsAPI := api.NewSmsAPI(smsCore)
 	uniqueidCore := api.NewUniqueID(db)
-	mediaCore := api.NewMediaCore(db, uniqueidCore)
+	pushCore := api.NewPushCore(db, uniqueidCore)
 	storer := api.NewGB28181Store(db)
 	gb28181 := api.NewGB28181(storer, uniqueidCore)
 	server, cleanup := gbs.NewServer(bc, gb28181, smsCore)
 	gb28181Core := api.NewGB28181Core(storer, uniqueidCore)
-	webHookAPI := api.NewWebHookAPI(smsCore, mediaCore, bc, server, gb28181Core)
-	mediaAPI := api.NewMediaAPI(mediaCore, smsCore, bc)
+	webHookAPI := api.NewWebHookAPI(smsCore, pushCore, bc, server, gb28181Core)
+	pushAPI := api.NewPushAPI(pushCore, smsCore, bc)
 	gb28181API := api.NewGB28181API(gb28181Core)
 	proxyAPI := api.NewProxyAPI(db, uniqueidCore)
 	configAPI := api.NewConfigAPI(db, bc)
@@ -45,7 +45,7 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 		SMSAPI:     smsAPI,
 		WebHookAPI: webHookAPI,
 		UniqueID:   uniqueidCore,
-		MediaAPI:   mediaAPI,
+		MediaAPI:   pushAPI,
 		GB28181API: gb28181API,
 		ProxyAPI:   proxyAPI,
 		ConfigAPI:  configAPI,

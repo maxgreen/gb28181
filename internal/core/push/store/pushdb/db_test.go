@@ -1,4 +1,4 @@
-package mediadb
+package pushdb
 
 import (
 	"github.com/DATA-DOG/go-sqlmock"

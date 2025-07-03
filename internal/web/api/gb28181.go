@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/core/bz"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
-	"github.com/gowvp/gb28181/internal/core/media"
+	"github.com/gowvp/gb28181/internal/core/push"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goddd/domain/uniqueid"
@@ -185,23 +185,23 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		}
 
 	} else if strings.HasPrefix(channelID, bz.IDPrefixRTMP) {
-		push, err := a.uc.MediaAPI.mediaCore.GetStreamPush(c.Request.Context(), channelID)
+		pu, err := a.uc.MediaAPI.pushCore.GetStreamPush(c.Request.Context(), channelID)
 		if err != nil {
 			return nil, err
 		}
-		if push.Status != media.StatusPushing {
+		if pu.Status != push.StatusPushing {
 			return nil, reason.ErrNotFound.SetMsg("未推流")
 		}
-		app = push.App
-		appStream = push.Stream
+		app = pu.App
+		appStream = pu.Stream
 
-		svr, err = a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), push.MediaServerID)
+		svr, err = a.uc.SMSAPI.smsCore.GetMediaServer(c.Request.Context(), pu.MediaServerID)
 		if err != nil {
 			return nil, err
 		}
 
-		if !push.IsAuthDisabled && push.Session != "" {
-			session = "session=" + push.Session
+		if !pu.IsAuthDisabled && pu.Session != "" {
+			session = "session=" + pu.Session
 		}
 	} else if strings.HasPrefix(channelID, bz.IDPrefixRTSP) {
 		proxy, err := a.uc.ProxyAPI.proxyCore.GetStreamProxy(c.Request.Context(), channelID)

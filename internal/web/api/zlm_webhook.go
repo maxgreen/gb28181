@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
-	"github.com/gowvp/gb28181/internal/core/media"
+	"github.com/gowvp/gb28181/internal/core/push"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/ixugo/goddd/pkg/web"
@@ -15,7 +15,7 @@ import (
 
 type WebHookAPI struct {
 	smsCore     sms.Core
-	mediaCore   media.Core
+	mediaCore   push.Core
 	gb28181Core gb28181.Core
 	conf        *conf.Bootstrap
 	log         *slog.Logger
@@ -23,7 +23,7 @@ type WebHookAPI struct {
 	uc          *Usecase
 }
 
-func NewWebHookAPI(core sms.Core, mediaCore media.Core, conf *conf.Bootstrap, gbs *gbs.Server, gb28181 gb28181.Core) WebHookAPI {
+func NewWebHookAPI(core sms.Core, mediaCore push.Core, conf *conf.Bootstrap, gbs *gbs.Server, gb28181 gb28181.Core) WebHookAPI {
 	return WebHookAPI{
 		smsCore:     core,
 		mediaCore:   mediaCore,
@@ -64,7 +64,7 @@ func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOut
 			return &onPublishOutput{DefaultOutput: DefaultOutput{Code: 1, Msg: err.Error()}}, nil
 		}
 		sign := params.Get("sign")
-		if err := w.mediaCore.Publish(c.Request.Context(), media.PublishInput{
+		if err := w.mediaCore.Publish(c.Request.Context(), push.PublishInput{
 			App:           in.App,
 			Stream:        in.Stream,
 			MediaServerID: in.MediaServerID,
@@ -123,7 +123,7 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
 		}
 		session := params.Get("session")
-		if err := w.mediaCore.OnPlay(c.Request.Context(), media.OnPlayInput{
+		if err := w.mediaCore.OnPlay(c.Request.Context(), push.OnPlayInput{
 			App:     in.App,
 			Stream:  in.Stream,
 			Session: session,

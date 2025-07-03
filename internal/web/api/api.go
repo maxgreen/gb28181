@@ -92,7 +92,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	statapi.Register(r)
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权
-	registerMediaAPI(r, uc.MediaAPI)
+	registerPushAPI(r, uc.MediaAPI)
 	registerGB28181(r, uc.GB28181API)
 	registerProxy(r, uc.ProxyAPI)
 	registerConfig(r, uc.ConfigAPI)

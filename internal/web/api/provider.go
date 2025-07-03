@@ -9,8 +9,8 @@ import (
 	"github.com/gowvp/gb28181/internal/core/gb28181"
 	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181cache"
 	"github.com/gowvp/gb28181/internal/core/gb28181/store/gb28181db"
-	"github.com/gowvp/gb28181/internal/core/media"
-	"github.com/gowvp/gb28181/internal/core/media/store/mediadb"
+	"github.com/gowvp/gb28181/internal/core/push"
+	"github.com/gowvp/gb28181/internal/core/push/store/pushdb"
 	"github.com/gowvp/gb28181/pkg/gbs"
 	"github.com/ixugo/goddd/domain/uniqueid"
 	"github.com/ixugo/goddd/domain/uniqueid/store/uniqueiddb"
@@ -29,7 +29,7 @@ var (
 		NewSMSCore, NewSmsAPI,
 		NewWebHookAPI,
 		NewUniqueID,
-		NewMediaCore, NewMediaAPI,
+		NewPushCore, NewPushAPI,
 		gbs.NewServer,
 		NewGB28181Store,
 		NewGB28181API,
@@ -47,7 +47,7 @@ type Usecase struct {
 	SMSAPI     SmsAPI
 	WebHookAPI WebHookAPI
 	UniqueID   uniqueid.Core
-	MediaAPI   MediaAPI
+	MediaAPI   PushAPI
 	GB28181API GB28181API
 	ProxyAPI   ProxyAPI
 	ConfigAPI  ConfigAPI
@@ -86,8 +86,8 @@ func NewUniqueID(db *gorm.DB) uniqueid.Core {
 	return uniqueid.NewCore(uniqueiddb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), 5)
 }
 
-func NewMediaCore(db *gorm.DB, uni uniqueid.Core) media.Core {
-	return media.NewCore(mediadb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
+func NewPushCore(db *gorm.DB, uni uniqueid.Core) push.Core {
+	return push.NewCore(pushdb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
 }
 
 func NewGB28181Store(db *gorm.DB) gb28181.Storer {

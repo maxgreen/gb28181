@@ -1,10 +1,10 @@
-package mediadb
+package pushdb
 
 import (
 	"context"
 	"testing"
 
-	"github.com/gowvp/gb28181/internal/core/media"
+	"github.com/gowvp/gb28181/internal/core/push"
 	"github.com/ixugo/goddd/pkg/orm"
 )
 
@@ -16,7 +16,7 @@ func TestStreamPushGet(t *testing.T) {
 	userDB := NewStreamPush(db)
 
 	mock.ExpectQuery(`SELECT \* FROM "stream_pushs" WHERE id=\$1 (.+) LIMIT \$2`).WithArgs("jack", 1)
-	var out media.StreamPush
+	var out push.StreamPush
 	if err := userDB.Get(context.Background(), &out, orm.Where("id=?", "jack")); err != nil {
 		t.Fatal(err)
 	}

@@ -7,24 +7,24 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gowvp/gb28181/internal/conf"
-	"github.com/gowvp/gb28181/internal/core/media"
+	"github.com/gowvp/gb28181/internal/core/push"
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/ixugo/goddd/pkg/hook"
 	"github.com/ixugo/goddd/pkg/web"
 )
 
-type MediaAPI struct {
-	mediaCore media.Core
-	smsCore   sms.Core
-	conf      *conf.Bootstrap
+type PushAPI struct {
+	pushCore push.Core
+	smsCore  sms.Core
+	conf     *conf.Bootstrap
 }
 
-// NewMediaAPI 媒体相关接口
-func NewMediaAPI(mc media.Core, sc sms.Core, conf *conf.Bootstrap) MediaAPI {
-	return MediaAPI{mediaCore: mc, smsCore: sc, conf: conf}
+// NewPushAPI 媒体相关接口
+func NewPushAPI(mc push.Core, sc sms.Core, conf *conf.Bootstrap) PushAPI {
+	return PushAPI{pushCore: mc, smsCore: sc, conf: conf}
 }
 
-func registerMediaAPI(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
+func registerPushAPI(g gin.IRouter, api PushAPI, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/stream_pushs", handler...)
 		group.GET("", web.WarpH(api.findStreamPush))
@@ -37,8 +37,8 @@ func registerMediaAPI(g gin.IRouter, api MediaAPI, handler ...gin.HandlerFunc) {
 
 // >>> streamPush >>>>>>>>>>>>>>>>>>>>
 
-func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) (*web.PageOutput, error) {
-	items, total, err := a.mediaCore.FindStreamPush(c.Request.Context(), in)
+func (a PushAPI) findStreamPush(c *gin.Context, in *push.FindStreamPushInput) (*web.PageOutput, error) {
+	items, total, err := a.pushCore.FindStreamPush(c.Request.Context(), in)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) 
 		return v, err
 	})
 
-	out := make([]*media.FindStreamPushOutputItem, len(items))
+	out := make([]*push.FindStreamPushOutputItem, len(items))
 	for i, item := range items {
 		rtmpAddrs := []string{"unknow"}
 		mediaID := item.MediaServerID
@@ -66,7 +66,7 @@ func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) 
 			rtmpAddrs[0] = addr
 		}
 
-		out[i] = &media.FindStreamPushOutputItem{
+		out[i] = &push.FindStreamPushOutputItem{
 			StreamPush: *item,
 			PushAddrs:  rtmpAddrs,
 		}
@@ -74,21 +74,21 @@ func (a MediaAPI) findStreamPush(c *gin.Context, in *media.FindStreamPushInput) 
 	return &web.PageOutput{Items: out, Total: total}, err
 }
 
-func (a MediaAPI) getStreamPush(c *gin.Context, _ *struct{}) (*media.StreamPush, error) {
+func (a PushAPI) getStreamPush(c *gin.Context, _ *struct{}) (*push.StreamPush, error) {
 	streamPushID := c.Param("id")
-	return a.mediaCore.GetStreamPush(c.Request.Context(), streamPushID)
+	return a.pushCore.GetStreamPush(c.Request.Context(), streamPushID)
 }
 
-func (a MediaAPI) editStreamPush(c *gin.Context, in *media.EditStreamPushInput) (*media.StreamPush, error) {
+func (a PushAPI) editStreamPush(c *gin.Context, in *push.EditStreamPushInput) (*push.StreamPush, error) {
 	streamPushID := c.Param("id")
-	return a.mediaCore.EditStreamPush(c.Request.Context(), in, streamPushID)
+	return a.pushCore.EditStreamPush(c.Request.Context(), in, streamPushID)
 }
 
-func (a MediaAPI) addStreamPush(c *gin.Context, in *media.AddStreamPushInput) (*media.StreamPush, error) {
-	return a.mediaCore.AddStreamPush(c.Request.Context(), in)
+func (a PushAPI) addStreamPush(c *gin.Context, in *push.AddStreamPushInput) (*push.StreamPush, error) {
+	return a.pushCore.AddStreamPush(c.Request.Context(), in)
 }
 
-func (a MediaAPI) delStreamPush(c *gin.Context, _ *struct{}) (*media.StreamPush, error) {
+func (a PushAPI) delStreamPush(c *gin.Context, _ *struct{}) (*push.StreamPush, error) {
 	streamPushID := c.Param("id")
-	return a.mediaCore.DelStreamPush(c.Request.Context(), streamPushID)
+	return a.pushCore.DelStreamPush(c.Request.Context(), streamPushID)
 }
