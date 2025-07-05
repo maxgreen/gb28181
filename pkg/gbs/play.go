@@ -69,6 +69,10 @@ func (g *GB28181API) Play(in *PlayInput) error {
 	ch.device.playMutex.Lock()
 	defer ch.device.playMutex.Unlock()
 
+	if !ch.device.IsOnline {
+		return ErrDeviceOffline
+	}
+
 	// 播放中
 	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
 	stream, ok := g.streams.LoadOrStore(key, &Streams{})
