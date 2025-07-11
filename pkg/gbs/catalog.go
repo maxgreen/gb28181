@@ -71,7 +71,7 @@ func (g GB28181API) sipMessageCatalog(ctx *sip.Context) {
 func (g *GB28181API) QueryCatalog(deviceID string) error {
 	slog.Debug("QueryCatalog", "deviceID", deviceID)
 	ipc, ok := g.svr.memoryStorer.Load(deviceID)
-	if !ok {
+	if !ok || !ipc.IsOnline {
 		return ErrDeviceOffline
 	}
 
@@ -100,10 +100,10 @@ func (s *Server) wrapRequest(t Targeter, method string, contentType *sip.Content
 
 	hb := sip.NewHeaderBuilder().
 		SetTo(to).
-		SetFrom(s.fromAddress).
+		SetFrom(&s.fromAddress).
 		SetContentType(contentType).
 		SetMethod(method).
-		SetContact(s.fromAddress).
+		SetContact(&s.fromAddress).
 		AddVia(&sip.ViaHop{
 			Params: sip.NewParams().Add("branch", sip.String{Str: sip.GenerateBranch()}),
 		})

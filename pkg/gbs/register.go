@@ -183,9 +183,7 @@ func (g GB28181API) login(ctx *sip.Context, expire string) {
 func (g GB28181API) logout(deviceID string, changeFn func(*gb28181.Device)) error {
 	slog.Info("status change 设备离线", "device_id", deviceID)
 	return g.svr.memoryStorer.Change(deviceID, changeFn, func(d *Device) {
-		d.conn = nil
-		d.source = nil
-		d.to = nil
 		d.Expires = 0
+		d.IsOnline = false
 	})
 }

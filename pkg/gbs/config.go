@@ -96,7 +96,7 @@ func NewBasicParamRequest(sn int32, deviceID string) []byte {
 func (g *GB28181API) QueryConfigDownloadBasic(deviceID string) error {
 	slog.Debug("QueryConfigDownloadBasic", "deviceID", deviceID)
 	ipc, ok := g.svr.memoryStorer.Load(deviceID)
-	if !ok {
+	if !ok || !ipc.IsOnline {
 		return ErrDeviceOffline
 	}
 

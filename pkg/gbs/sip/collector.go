@@ -47,8 +47,8 @@ type NoRepeatFn[T any] func(*T, *T) bool
 func NewCollector[T any](noRepeatFn NoRepeatFn[T]) *Collector[T] {
 	return &Collector[T]{
 		data:       make(map[string]*Content[T]),
-		msg:        make(chan *CollectorMsg[T], 10),
-		createCh:   make(chan string, 10),
+		msg:        make(chan *CollectorMsg[T], 512),
+		createCh:   make(chan string, 100),
 		noRepeatFn: noRepeatFn,
 		observer:   NewObserver(),
 	}

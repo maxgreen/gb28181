@@ -38,7 +38,7 @@ type Server struct {
 	gb           *GB28181API
 	mediaService sms.Core
 
-	fromAddress  *sip.Address
+	fromAddress  sip.Address
 	memoryStorer MemoryStorer
 }
 
@@ -67,7 +67,7 @@ func NewServer(cfg *conf.Bootstrap, store gb28181.GB28181, sc sms.Core) (*Server
 	c := Server{
 		Server:       svr,
 		mediaService: sc,
-		fromAddress:  &from,
+		fromAddress:  from,
 		gb:           api,
 		memoryStorer: store.Store().(MemoryStorer),
 	}
