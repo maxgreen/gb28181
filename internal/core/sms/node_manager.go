@@ -50,22 +50,13 @@ func (n *NodeManager) tickCheck() {
 		case <-n.quit:
 			return
 		case <-ticker.C:
-			// TODO: 前期先固定 10 秒保活，后期优化
-			const KeepaliveInterval = 2 * 10 * time.Second
-			n.cacheServers.Range(func(serverID string, ms *WarpMediaServer) bool {
+			// TODO: 前期先固定保活，后期优化
+			const KeepaliveInterval = 2 * 15 * time.Second
+			n.cacheServers.Range(func(_ string, ms *WarpMediaServer) bool {
 				isOffline := time.Since(ms.LastUpdatedAt) >= KeepaliveInterval
-				// if ms.IsOnline != isOffline {
-				// 	var svr MediaServer
-				// 	if err := n.storer.MediaServer().Edit(context.Background(), &svr, func(b *MediaServer) {
-				// 		b.Status = isOffline
-				// 	}, orm.Where("id=?", serverID)); err != nil {
-				// 		slog.Error("Edit MediaServer err", "err", err)
-				// 	}
-				// }
 				ms.IsOnline = !isOffline
 				return true
 			})
-
 		}
 	}
 }
@@ -168,7 +159,7 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) error {
 		// HookOnHTTPAccess:     zlm.NewString(""),
 		HookOnPublish:                  zlm.NewString(fmt.Sprintf("%s/on_publish", hookPrefix)),
 		HookOnStreamNoneReader:         zlm.NewString(fmt.Sprintf("%s/on_stream_none_reader", hookPrefix)),
-		GeneralStreamNoneReaderDelayMS: zlm.NewString("60000"),
+		GeneralStreamNoneReaderDelayMS: zlm.NewString("30000"),
 		HookOnStreamNotFound:           zlm.NewString(fmt.Sprintf("%s/on_stream_not_found", hookPrefix)),
 		HookOnRecordTs:                 zlm.NewString(""),
 		HookOnRtspAuth:                 zlm.NewString(""),

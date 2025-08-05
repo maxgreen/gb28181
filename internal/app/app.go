@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -20,6 +21,9 @@ import (
 )
 
 func Run(bc *conf.Bootstrap) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// 以可执行文件所在目录为工作目录，防止以服务方式运行时，工作目录切换到其它位置
 	bin, _ := os.Executable()
 	if err := os.Chdir(filepath.Dir(bin)); err != nil {
@@ -29,7 +33,7 @@ func Run(bc *conf.Bootstrap) {
 	log, clean := SetupLog(bc)
 	defer clean()
 
-	go setupZLM(bc.ConfigDir)
+	go setupZLM(ctx, bc.ConfigDir)
 
 	// TODO: 异步发现 zlm 配置，有概率程序启动了，才找到 zlm 的秘钥，建议提前配置好秘钥
 	go setupSecret(bc)
@@ -61,6 +65,7 @@ func Run(bc *conf.Bootstrap) {
 		system.ErrPrintf("err: %s\n", err.Error())
 		slog.Error(`<-server.Notify()`, "err", err)
 	}
+	cancel()
 	if err := svc.Shutdown(); err != nil {
 		slog.Error(`server.Shutdown()`, "err", err)
 	}
@@ -68,7 +73,8 @@ func Run(bc *conf.Bootstrap) {
 
 // SetupLog 初始化日志
 func SetupLog(bc *conf.Bootstrap) (*slog.Logger, func()) {
-	logDir := filepath.Join(system.Getwd(), bc.Log.Dir)
+	logDir := filepath.Join(bc.ConfigDir, bc.Log.Dir)
+	_ = os.MkdirAll(logDir, 0o755)
 	return logger.SetupSlog(logger.Config{
 		Dir:          logDir,                            // 日志地址
 		Debug:        bc.Debug,                          // 服务级别Debug/Release
@@ -79,21 +85,10 @@ func SetupLog(bc *conf.Bootstrap) (*slog.Logger, func()) {
 	})
 }
 
-func abs(path string) (string, error) {
-	if filepath.IsAbs(path) {
-		return filepath.Clean(path), nil
-	}
-	bin, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(filepath.Dir(bin), path), nil
-}
-
 // 读取 config.ini 文件，通过正则表达式，获取 secret 的值
 func getSecret(configDir string) (string, error) {
 	for _, file := range []string{"zlm.ini", "config.ini"} {
-		content, err := os.ReadFile(filepath.Join(system.Getwd(), configDir, file))
+		content, err := os.ReadFile(filepath.Join(configDir, file))
 		if err != nil {
 			continue
 		}
@@ -107,7 +102,7 @@ func getSecret(configDir string) (string, error) {
 	return "", fmt.Errorf("unknow")
 }
 
-func setupZLM(dir string) {
+func setupZLM(ctx context.Context, dir string) {
 	// 检查是否在 Docker 环境中
 	_, err := os.Stat("/.dockerenv")
 	if !(err == nil || os.Getenv("NVR_STREAM") == "ZLM") {
@@ -123,7 +118,7 @@ func setupZLM(dir string) {
 	}
 
 	// 启动 MediaServer
-	cmd := exec.Command("./MediaServer", "-s", "default.pem", "-c", filepath.Join(dir, "zlm.ini")) // nolint
+	cmd := exec.CommandContext(ctx, "./MediaServer", "-s", "default.pem", "-c", filepath.Join(dir, "zlm.ini")) // nolint
 	cmd.Dir = system.Getwd()
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -150,5 +145,5 @@ func setupSecret(bc *conf.Bootstrap) {
 		time.Sleep(2 * time.Second)
 		continue
 	}
-	slog.Info("未发现 zlm 配置，请检查 config.ini 文件")
+	slog.Warn("未发现 zlm 配置，请手动配置 zlm secret")
 }

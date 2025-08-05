@@ -40,11 +40,8 @@ func (g *GB28181API) stopPlay(ch *Channel, in *StopPlayInput) error {
 	req.SetDestination(ch.Source())
 	req.SetConnection(ch.Conn())
 
-	tx, err := g.svr.Request(req)
-	if err != nil {
-		return err
-	}
-	_, err = sipResponse(tx)
+	// 忽略响应，此处必须尽快返回
+	_, err := g.svr.Request(req)
 	return err
 }
 
@@ -61,6 +58,7 @@ func (g *GB28181API) StopPlay(in *StopPlayInput) error {
 }
 
 func (g *GB28181API) Play(in *PlayInput) error {
+	log := slog.With("deviceID", in.Channel.DeviceID, "channelID", in.Channel.ChannelID)
 	ch, ok := g.svr.memoryStorer.GetChannel(in.Channel.DeviceID, in.Channel.ChannelID)
 	if !ok {
 		return ErrChannelNotExist
@@ -77,6 +75,7 @@ func (g *GB28181API) Play(in *PlayInput) error {
 	key := "play:" + in.Channel.DeviceID + ":" + in.Channel.ChannelID
 	stream, ok := g.streams.LoadOrStore(key, &Streams{})
 	if ok {
+		log.Debug("PLAY 已存在流")
 		// TODO: 临时解决方案，每次播放，先停止再播放
 		// https://github.com/gowvp/gb28181/issues/16
 		if err := g.stopPlay(ch, &StopPlayInput{
@@ -86,16 +85,20 @@ func (g *GB28181API) Play(in *PlayInput) error {
 		}
 	}
 
+	log.Debug("1. 开启RTP服务器等待接收视频流")
 	// 开启RTP服务器等待接收视频流
 	resp, err := g.sms.OpenRTPServer(in.SMS, zlm.OpenRTPServerRequest{
 		TCPMode:  in.StreamMode,
 		StreamID: in.Channel.ID,
 	})
 	if err != nil {
+		log.Debug("1.1. 开启RTP服务器失败", "err", err)
 		return err
 	}
 
+	log.Debug("2. 发送SDP请求", "port", resp.Port)
 	if err := g.sipPlayPush2(ch, in, resp.Port, stream); err != nil {
+		log.Debug("2.1. 发送SDP请求失败", "err", err)
 		return err
 	}
 

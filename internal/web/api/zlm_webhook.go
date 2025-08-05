@@ -83,9 +83,10 @@ func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOut
 // onStreamChanged rtsp/rtmp 流注册或注销时触发此事件；此事件对回复不敏感。
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_12%E3%80%81on-stream-changed
 func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (DefaultOutput, error) {
-	w.log.Info("流状态变化", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID)
+	w.log.Info("流状态变化", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID, "regist", in.Regist)
 	if in.App == "rtp" {
-		if !in.Regist {
+		// 防止多次触发
+		if in.Schema == "rtmp" && !in.Regist {
 			ch, err := w.gb28181Core.GetChannel(c.Request.Context(), in.Stream)
 			if err != nil {
 				w.log.Warn("获取通道失败", "err", err)
@@ -173,6 +174,10 @@ func (w WebHookAPI) onStreamNotFound(c *gin.Context, in *onStreamNotFoundInput) 
 
 	// 国标流处理
 	if in.App == "rtp" {
+		// 防止重复触发
+		if in.Schema != "rtmp" {
+			return newDefaultOutputOK(), nil
+		}
 		ch, err := w.gb28181Core.GetChannel(c.Request.Context(), in.Stream)
 		if err != nil {
 			// slog.Error("获取通道失败", "err", err)
