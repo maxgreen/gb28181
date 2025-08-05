@@ -164,6 +164,11 @@ func (n *NodeManager) connection(server *MediaServer, serverPort int) error {
 	}
 	log.Info("ZLM 服务节点连接成功")
 
+	if len(resp.Data) == 0 {
+		log.Error("ZLM 服务节点配置为空")
+		return fmt.Errorf("配置失败, code[%d] msg[%s]", resp.Code, resp.Msg)
+	}
+
 	zlmConfig := resp.Data[0]
 	var ms MediaServer
 	if err := n.storer.MediaServer().Edit(context.Background(), &ms, func(b *MediaServer) {
