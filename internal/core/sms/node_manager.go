@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/gowvp/gb28181/internal/conf"
@@ -61,8 +64,44 @@ func (n *NodeManager) tickCheck() {
 	}
 }
 
-func (n *NodeManager) Run(cfg *conf.Media, serverPort int) error {
+// 读取 config.ini 文件，通过正则表达式，获取 secret 的值
+func getSecret(configDir string) (string, error) {
+	for _, file := range []string{"zlm.ini", "config.ini"} {
+		content, err := os.ReadFile(filepath.Join(configDir, file))
+		if err != nil {
+			continue
+		}
+		re := regexp.MustCompile(`secret=(\w+)`)
+		matches := re.FindStringSubmatch(string(content))
+		if len(matches) < 2 {
+			continue
+		}
+		return matches[1], nil
+	}
+	return "", fmt.Errorf("unknow")
+}
+
+// TODO: 发现配置会导致程序延迟 1~2s 才能启动
+func setupSecret(bc *conf.Bootstrap) {
+	// 六六大顺
+	for range 6 {
+		secret, err := getSecret(bc.ConfigDir)
+		if err == nil {
+			slog.Info("发现 zlm 配置，已赋值，未回写配置文件", "secret", secret)
+			bc.Media.Secret = secret
+			return
+		}
+		time.Sleep(200 * time.Millisecond)
+		continue
+	}
+	slog.Warn("未发现 zlm 配置，请手动配置 zlm secret")
+}
+
+func (n *NodeManager) Run(bc *conf.Bootstrap, serverPort int) error {
 	ctx := context.Background()
+
+	setupSecret(bc)
+	cfg := bc.Media
 
 	setValueFn := func(ms *MediaServer) {
 		ms.ID = DefaultMediaServerID
