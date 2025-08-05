@@ -35,8 +35,8 @@ func Run(bc *conf.Bootstrap) {
 
 	go setupZLM(ctx, bc.ConfigDir)
 
-	// TODO: 异步发现 zlm 配置，有概率程序启动了，才找到 zlm 的秘钥，建议提前配置好秘钥
-	go setupSecret(bc)
+	// TODO: 发现 zlm 配置，有概率程序启动了，才找到 zlm 的秘钥，建议提前配置好秘钥
+	setupSecret(bc)
 	// 如果需要执行表迁移，递增此版本号和表更新说明
 	versionapi.DBVersion = "0.0.11"
 	versionapi.DBRemark = "add stream proxy"
@@ -135,14 +135,16 @@ func setupZLM(ctx context.Context, dir string) {
 }
 
 func setupSecret(bc *conf.Bootstrap) {
-	for range 3 {
+	// TODO: 发现配置会导致程序延迟 2 秒才能启动
+	// 待优化
+	for range 10 {
 		secret, err := getSecret(bc.ConfigDir)
 		if err == nil {
 			slog.Info("发现 zlm 配置，已赋值，未回写配置文件", "secret", secret)
 			bc.Media.Secret = secret
 			return
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(200 * time.Millisecond)
 		continue
 	}
 	slog.Warn("未发现 zlm 配置，请手动配置 zlm secret")
