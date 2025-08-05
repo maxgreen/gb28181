@@ -14,7 +14,7 @@ go wvp 是 Go 语言实现的开源 GB28181 解决方案，基于 GB28181-2022 �
 
 ## 在线演示平台
 
-+ [在线演示平台 :)](http://gowvp.golang.space:15123/)
++ [在线演示平台 :)](http://wvp.golang.space:15123/)
 
 ![](./docs/demo/play.gif)
 
