@@ -30,6 +30,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	uc.GB28181API.uc = uc
 	uc.SMSAPI.uc = uc
 	uc.WebHookAPI.uc = uc
+	const staticPrefix = "/web"
 
 	go stat.LoadTop(system.Getwd(), func(m map[string]any) {
 		_ = m
@@ -42,10 +43,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}),
 		web.Metrics(),
-		web.Logger(slog.Default(), func(_ *gin.Context) bool {
-			// true:记录请求响应报文
-			return uc.Conf.Server.Debug
-		}),
+		web.Logger(web.IgnorePrefix(staticPrefix)),
 	)
 	go web.CountGoroutines(10*time.Minute, 20)
 
@@ -67,7 +65,6 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		},
 	}))
 
-	const staticPrefix = "/web"
 	const staticDir = "www"
 	admin := r.Group(staticPrefix, gzip.Gzip(gzip.DefaultCompression))
 	admin.Static("/", filepath.Join(system.Getwd(), staticDir))
