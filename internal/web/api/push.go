@@ -46,7 +46,7 @@ func (a PushAPI) findStreamPush(c *gin.Context, in *push.FindStreamPushInput) (*
 	cacheFn := hook.UseCache(func(s string) (*sms.MediaServer, error) {
 		v, err := a.smsCore.GetMediaServer(c.Request.Context(), s)
 		if err != nil {
-			slog.Error("GetMediaServer", "err", err)
+			slog.ErrorContext(c.Request.Context(), "GetMediaServer", "err", err)
 		}
 		return v, err
 	})

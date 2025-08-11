@@ -97,7 +97,7 @@ func (c Core) GetDeviceByDeviceID(ctx context.Context, deviceID string) (*Device
 func (c Core) AddDevice(ctx context.Context, in *AddDeviceInput) (*Device, error) {
 	var out Device
 	if err := copier.Copy(&out, in); err != nil {
-		slog.Error("Copy", "err", err)
+		slog.ErrorContext(ctx, "Copy", "err", err)
 	}
 	out.ID = c.uniqueID.UniqueID(bz.IDPrefixGB)
 
@@ -119,7 +119,7 @@ func (c Core) EditDevice(ctx context.Context, in *EditDeviceInput, id string) (*
 	var out Device
 	if err := c.store.Device().Edit(ctx, &out, func(b *Device) {
 		if err := copier.Copy(b, in); err != nil {
-			slog.Error("Copy", "err", err)
+			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
 		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())

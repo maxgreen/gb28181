@@ -52,7 +52,7 @@ func (c *Core) GetMediaServer(ctx context.Context, id string) (*MediaServer, err
 func (c *Core) AddMediaServer(ctx context.Context, in *AddMediaServerInput) (*MediaServer, error) {
 	var out MediaServer
 	if err := copier.Copy(&out, in); err != nil {
-		slog.Error("Copy", "err", err)
+		slog.ErrorContext(ctx, "Copy", "err", err)
 	}
 	if err := c.storer.MediaServer().Add(ctx, &out); err != nil {
 		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
@@ -65,7 +65,7 @@ func (c *Core) EditMediaServer(ctx context.Context, in *EditMediaServerInput, id
 	var out MediaServer
 	if err := c.storer.MediaServer().Edit(ctx, &out, func(b *MediaServer) {
 		if err := copier.Copy(b, in); err != nil {
-			slog.Error("Copy", "err", err)
+			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
 		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())

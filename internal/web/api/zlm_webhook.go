@@ -83,7 +83,7 @@ func (w WebHookAPI) onPublish(c *gin.Context, in *onPublishInput) (*onPublishOut
 // onStreamChanged rtsp/rtmp 流注册或注销时触发此事件；此事件对回复不敏感。
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_12%E3%80%81on-stream-changed
 func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (DefaultOutput, error) {
-	w.log.Info("流状态变化", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID, "regist", in.Regist)
+	w.log.InfoContext(c.Request.Context(), "流状态变化", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID, "regist", in.Regist)
 	if in.App == "rtp" {
 		// 防止多次触发
 		if in.Schema == "rtmp" && !in.Regist {
@@ -101,7 +101,7 @@ func (w WebHookAPI) onStreamChanged(c *gin.Context, in *onStreamChangedInput) (D
 	case "rtmp":
 		if !in.Regist {
 			if err := w.mediaCore.UnPublish(c.Request.Context(), in.App, in.Stream); err != nil {
-				slog.Error("UnPublish", "err", err)
+				w.log.ErrorContext(c.Request.Context(), "UnPublish", "err", err)
 			}
 		}
 	case "rtsp":
@@ -120,7 +120,7 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 	case "rtmp":
 		params, err := url.ParseQuery(in.Params)
 		if err != nil {
-			slog.Info("onPlay 鉴权失败", "err", err)
+			w.log.InfoContext(c.Request.Context(), "onPlay 鉴权失败", "err", err)
 			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
 		}
 		session := params.Get("session")
@@ -129,7 +129,7 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 			Stream:  in.Stream,
 			Session: session,
 		}); err != nil {
-			slog.Info("onPlay 鉴权失败", "err", err)
+			w.log.InfoContext(c.Request.Context(), "onPlay 鉴权失败", "err", err)
 			return DefaultOutput{Code: 1, Msg: err.Error()}, nil
 		}
 	case "rtsp":
@@ -147,12 +147,12 @@ func (w WebHookAPI) onPlay(c *gin.Context, in *onPublishInput) (DefaultOutput, e
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_12%E3%80%81on-stream-changed
 func (w WebHookAPI) onStreamNoneReader(c *gin.Context, in *onStreamNoneReaderInput) (onStreamNoneReaderOutput, error) {
 	// rtmp 无人观看时，也允许推流
-	w.log.Info("无人观看", "app", in.App, "stream", in.Stream, "mediaServerID", in.MediaServerID)
+	w.log.InfoContext(c.Request.Context(), "无人观看", "app", in.App, "stream", in.Stream, "mediaServerID", in.MediaServerID)
 
 	if in.App == "rtp" {
 		ch, err := w.gb28181Core.GetChannel(c.Request.Context(), in.Stream)
 		if err != nil {
-			w.log.Warn("获取通道失败", "err", err)
+			w.log.WarnContext(c.Request.Context(), "获取通道失败", "err", err)
 			return onStreamNoneReaderOutput{Close: true}, nil
 		}
 		_ = w.gbs.StopPlay(&gbs.StopPlayInput{Channel: ch})
@@ -165,12 +165,12 @@ func (w WebHookAPI) onStreamNoneReader(c *gin.Context, in *onStreamNoneReaderInp
 // 调用 openRtpServer 接口，rtp server 长时间未收到数据,执行此 web hook,对回复不敏感
 // https://docs.zlmediakit.com/zh/guide/media_server/web_hook_api.html#_17%E3%80%81on-rtp-server-timeout
 func (w WebHookAPI) onRTPServerTimeout(c *gin.Context, in *onRTPServerTimeoutInput) (DefaultOutput, error) {
-	w.log.Info("rtp 收流超时", "local_port", in.LocalPort, "ssrc", in.SSRC, "stream_id", in.StreamID, "mediaServerID", in.MediaServerID)
+	w.log.InfoContext(c.Request.Context(), "rtp 收流超时", "local_port", in.LocalPort, "ssrc", in.SSRC, "stream_id", in.StreamID, "mediaServerID", in.MediaServerID)
 	return newDefaultOutputOK(), nil
 }
 
 func (w WebHookAPI) onStreamNotFound(c *gin.Context, in *onStreamNotFoundInput) (DefaultOutput, error) {
-	w.log.Info("流不存在", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID)
+	w.log.InfoContext(c.Request.Context(), "流不存在", "app", in.App, "stream", in.Stream, "schema", in.Schema, "mediaServerID", in.MediaServerID)
 
 	// 国标流处理
 	if in.App == "rtp" {
@@ -201,7 +201,7 @@ func (w WebHookAPI) onStreamNotFound(c *gin.Context, in *onStreamNotFoundInput) 
 			StreamMode: dev.StreamMode,
 			SMS:        svr,
 		}); err != nil {
-			slog.Error("play", "err", err, "channel", ch.ID)
+			w.log.ErrorContext(c.Request.Context(), "play", "err", err, "channel", ch.ID)
 			return newDefaultOutputOK(), nil
 		}
 	}

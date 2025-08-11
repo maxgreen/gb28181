@@ -47,7 +47,7 @@ func (c *Core) GetConfig(ctx context.Context, id int) (*Config, error) {
 func (c *Core) AddConfig(ctx context.Context, in *AddConfigInput) (*Config, error) {
 	var out Config
 	if err := copier.Copy(&out, in); err != nil {
-		slog.Error("Copy", "err", err)
+		slog.ErrorContext(ctx, "Copy", "err", err)
 	}
 	if err := c.store.Config().Add(ctx, &out); err != nil {
 		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
@@ -60,7 +60,7 @@ func (c *Core) EditConfig(ctx context.Context, in *EditConfigInput, id int) (*Co
 	var out Config
 	if err := c.store.Config().Edit(ctx, &out, func(b *Config) {
 		if err := copier.Copy(b, in); err != nil {
-			slog.Error("Copy", "err", err)
+			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
 		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())

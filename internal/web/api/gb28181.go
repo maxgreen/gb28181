@@ -281,7 +281,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 			ExpireSec:  10,
 		})
 		if err != nil {
-			slog.Error("get snapshot", "err", err)
+			slog.ErrorContext(c.Request.Context(), "get snapshot", "err", err)
 		} else {
 			writeCover(a.uc.Conf.ConfigDir, channelID, body)
 		}
@@ -321,7 +321,7 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 			ExpireSec:  10,
 		})
 		if err != nil {
-			slog.Error("get snapshot", "err", err)
+			slog.ErrorContext(c.Request.Context(), "get snapshot", "err", err)
 			// return nil, reason.ErrBadRequest.Msg(err.Error())
 		} else {
 			writeCover(a.uc.Conf.ConfigDir, channelID, img)

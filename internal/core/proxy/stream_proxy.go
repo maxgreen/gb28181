@@ -49,7 +49,7 @@ func (c *Core) GetStreamProxy(ctx context.Context, id string) (*StreamProxy, err
 func (c *Core) AddStreamProxy(ctx context.Context, in *AddStreamProxyInput) (*StreamProxy, error) {
 	var out StreamProxy
 	if err := copier.Copy(&out, in); err != nil {
-		slog.Error("Copy", "err", err)
+		slog.ErrorContext(ctx, "Copy", "err", err)
 	}
 	if in.App == "rtp" {
 		return nil, reason.ErrBadRequest.With("请更换 app 参数")
@@ -69,7 +69,7 @@ func (c *Core) EditStreamProxy(ctx context.Context, in *EditStreamProxyInput, id
 	var out StreamProxy
 	if err := c.store.StreamProxy().Edit(ctx, &out, func(b *StreamProxy) {
 		if err := copier.Copy(b, in); err != nil {
-			slog.Error("Copy", "err", err)
+			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
 		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())

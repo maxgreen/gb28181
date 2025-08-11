@@ -58,7 +58,7 @@ func (d *Device) Edit(ctx context.Context, dev *gb28181.Device, changeFn func(*g
 	}
 	// 密码修改，设备需要重新注册
 	if dev2.Password != dev.Password && dev.Password != "" {
-		slog.Info("修改密码，设备离线")
+		slog.InfoContext(ctx, " 修改密码，设备离线")
 		d.Change(dev.DeviceID, func(d *gb28181.Device) {
 			d.Password = dev.Password
 			d.IsOnline = false

@@ -39,7 +39,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		// 格式化输出到控制台，然后记录到日志
 		// 此处不做 recover，底层 http.server 也会 recover，但不会输出方便查看的格式
 		gin.CustomRecovery(func(c *gin.Context, err any) {
-			slog.Error("panic", "err", err, "stack", string(debug.Stack()))
+			slog.ErrorContext(c.Request.Context(), "panic", "err", err, "stack", string(debug.Stack()))
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}),
 		web.Metrics(),

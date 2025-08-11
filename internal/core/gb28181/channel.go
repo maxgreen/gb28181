@@ -72,7 +72,7 @@ func (c *Core) GetChannel(ctx context.Context, id string) (*Channel, error) {
 func (c *Core) AddChannel(ctx context.Context, in *AddChannelInput) (*Channel, error) {
 	var out Channel
 	if err := copier.Copy(&out, in); err != nil {
-		slog.Error("Copy", "err", err)
+		slog.ErrorContext(ctx, "Copy", "err", err)
 	}
 	if err := c.store.Channel().Add(ctx, &out); err != nil {
 		return nil, reason.ErrDB.Withf(`Add err[%s]`, err.Error())
@@ -85,7 +85,7 @@ func (c *Core) EditChannel(ctx context.Context, in *EditChannelInput, id string)
 	var out Channel
 	if err := c.store.Channel().Edit(ctx, &out, func(b *Channel) {
 		if err := copier.Copy(b, in); err != nil {
-			slog.Error("Copy", "err", err)
+			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
 		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())

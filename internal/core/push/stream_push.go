@@ -69,7 +69,7 @@ func (c Core) GetStreamPushByAppStream(ctx context.Context, app, stream string) 
 func (c Core) AddStreamPush(ctx context.Context, in *AddStreamPushInput) (*StreamPush, error) {
 	var out StreamPush
 	if err := copier.Copy(&out, in); err != nil {
-		slog.Error("Copy", "err", err)
+		slog.ErrorContext(ctx, "Copy", "err", err)
 	}
 
 	if in.App == "rtp" {
@@ -90,7 +90,7 @@ func (c Core) EditStreamPush(ctx context.Context, in *EditStreamPushInput, id st
 	var out StreamPush
 	if err := c.store.StreamPush().Edit(ctx, &out, func(b *StreamPush) {
 		if err := copier.Copy(b, in); err != nil {
-			slog.Error("Copy", "err", err)
+			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
 		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
