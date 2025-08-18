@@ -76,8 +76,7 @@ func (a ConfigAPI) getConfigInfo(c *gin.Context, _ *struct{}) (*getConfigInfoOut
 }
 
 func (a ConfigAPI) editSIP(_ *gin.Context, in *conf.SIP) (gin.H, error) {
-	sip := a.conf.Sip
-	if err := copier.Copy(&sip, in); err != nil {
+	if err := copier.Copy(&a.conf.Sip, in); err != nil {
 		return nil, reason.ErrServer.SetMsg(err.Error())
 	}
 
