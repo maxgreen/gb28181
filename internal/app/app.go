@@ -108,7 +108,6 @@ func setupZLM(ctx context.Context, dir string) {
 		// 启动命令
 		if err := cmd.Run(); err != nil {
 			slog.Error("zlm 运行失败", "err", err)
-			continue
 		}
 		time.Sleep(5 * time.Second)
 	}

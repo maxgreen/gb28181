@@ -288,7 +288,7 @@ func (s *Server) handlerRequest(msg *Request) {
 	}
 	handlers, ok := s.route.Load(strings.ToUpper(key))
 	if !ok {
-		slog.Error("not found handler func,string:", "method", msg.Method(), "msg", msg.String())
+		slog.Debug("not found handler func", "method", msg.Method(), "msg", msg.String())
 		go handlerMethodNotAllowed(msg, tx)
 		return
 	}

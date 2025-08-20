@@ -111,6 +111,7 @@ services:
     # 如果拉不到 docker hub 镜像，也可以尝试
     # registry.cn-shanghai.aliyuncs.com/ixugo/homenvr:latest
     image: gospace/gowvp:latest
+    restart: unless-stopped
     # linux 解开下行注释，并将 ports 全部注释
     # network_mode: host
     ports:
@@ -129,6 +130,7 @@ services:
       - 20000-20100:20000-20100 # gb28181 收流端口
       - 20000-20100:20000-20100/udp # gb28181 收流端口udp
     volumes:
+      # 日志目录是 configs/logs
       - ./data:/opt/media/bin/configs
 ```
 

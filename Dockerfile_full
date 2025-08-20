@@ -11,6 +11,8 @@ ADD ./www ./www
 # 创建配置目录
 RUN mkdir -p configs
 
+RUN chown -R $USER:$USER /opt/media/bin
+
 # 添加元数据标签
 LABEL Name=gowvp \
       Version=0.0.1 \

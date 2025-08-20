@@ -64,7 +64,7 @@ func main() {
 func configIsNotExistWrite(path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		if err := conf.WriteConfig(conf.DefaultConfig(), path); err != nil {
-			system.ErrPrintf("WriteConfig", "err", err)
+			system.ErrPrintf("WriteConfig err[%s]", err)
 		}
 	}
 }
