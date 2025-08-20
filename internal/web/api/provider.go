@@ -37,6 +37,7 @@ var (
 		NewGB28181,
 		NewProxyAPI,
 		NewConfigAPI,
+		NewUserAPI,
 	)
 )
 
@@ -53,6 +54,7 @@ type Usecase struct {
 	ConfigAPI  ConfigAPI
 
 	SipServer *gbs.Server
+	UserAPI   UserAPI
 }
 
 // NewHTTPHandler 生成Gin框架路由内容

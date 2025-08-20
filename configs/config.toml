@@ -3,6 +3,9 @@
   # rtmp 推流秘钥
   RTMPSecret = '123'
 
+  Username = 'admin'
+  Password = 'admin'
+
   # 对外提供的服务，建议由 nginx 代理
   [Server.HTTP]
     # http 端口

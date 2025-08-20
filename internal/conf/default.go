@@ -9,6 +9,8 @@ import (
 func DefaultConfig() Bootstrap {
 	return Bootstrap{
 		Server: Server{
+			Username:   "admin",
+			Password:   "admin",
 			RTMPSecret: "123",
 			HTTP: ServerHTTP{
 				Port:      15123,

@@ -43,7 +43,13 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}),
 		web.Metrics(),
-		web.Logger(web.IgnorePrefix(staticPrefix)),
+		web.Logger(web.IgnorePrefix(staticPrefix),
+			web.IgnoreMethod(http.MethodOptions),
+		),
+		web.LoggerWithBody(web.DefaultBodyLimit,
+			web.IgnoreBool(uc.Conf.Debug),
+			web.IgnoreMethod(http.MethodOptions),
+		),
 	)
 	go web.CountGoroutines(10*time.Minute, 20)
 
@@ -60,7 +66,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 		},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
-		AllowOriginFunc: func(origin string) bool {
+		AllowOriginFunc: func(_ string) bool {
 			return true
 		},
 	}))
@@ -89,11 +95,13 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	statapi.Register(r)
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
 	// TODO: 待增加鉴权
+
 	registerPushAPI(r, uc.MediaAPI)
 	registerGB28181(r, uc.GB28181API)
 	registerProxy(r, uc.ProxyAPI)
 	registerConfig(r, uc.ConfigAPI)
 	registerSms(r, uc.SMSAPI)
+	RegisterUser(r, uc.UserAPI)
 
 	r.Any("/proxy/sms/*path", uc.proxySMS)
 }

@@ -38,6 +38,7 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 	gb28181API := api.NewGB28181API(gb28181Core)
 	proxyAPI := api.NewProxyAPI(db, uniqueidCore)
 	configAPI := api.NewConfigAPI(db, bc)
+	userAPI := api.NewUserAPI(bc)
 	usecase := &api.Usecase{
 		Conf:       bc,
 		DB:         db,
@@ -50,6 +51,7 @@ func wireApp(bc *conf.Bootstrap, log *slog.Logger) (http.Handler, func(), error)
 		ProxyAPI:   proxyAPI,
 		ConfigAPI:  configAPI,
 		SipServer:  server,
+		UserAPI:    userAPI,
 	}
 	handler := api.NewHTTPHandler(usecase)
 	return handler, func() {
