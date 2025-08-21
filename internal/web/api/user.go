@@ -44,11 +44,9 @@ func (api UserAPI) login(_ *gin.Context, in *loginInput) (*loginOutput, error) {
 		return nil, reason.ErrNameOrPasswd
 	}
 
-	token, err := web.NewToken(web.TokenInput{
-		Secret:   api.conf.Server.HTTP.JwtSecret,
-		Expires:  3 * 24 * time.Hour,
-		Username: in.Username,
-	})
+	data := web.NewClaimsData().SetUsername(in.Username)
+
+	token, err := web.NewToken(data, api.conf.Server.HTTP.JwtSecret, web.WithExpiresAt(time.Now().Add(3*24*time.Hour)))
 	if err != nil {
 		return nil, reason.ErrServer.SetMsg("生成token失败: " + err.Error())
 	}
