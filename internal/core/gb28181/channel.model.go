@@ -12,6 +12,7 @@ type Channel struct {
 	Name      string    `gorm:"column:name;notNull;default:'';comment:通道名称" json:"name"`                   // 通道名称
 	PTZType   int       `gorm:"column:ptztype;notNull;default:0;comment:云台类型" json:"ptztype"`              // 云台类型
 	IsOnline  bool      `gorm:"column:is_online;notNull;default:FALSE;comment:是否在线" json:"is_online"`      // 是否在线
+	IsPlaying bool      `gorm:"column:is_playing;notNull;default:FALSE;comment:是否播放中" json:"is_playing"`   // 是否播放中
 	Ext       DeviceExt `gorm:"column:ext;notNull;default:'{}';type:jsonb" json:"ext"`
 	CreatedAt orm.Time  `gorm:"column:created_at;notNull;default:CURRENT_TIMESTAMP;comment:创建时间" json:"created_at"` // 创建时间
 	UpdatedAt orm.Time  `gorm:"column:updated_at;notNull;default:CURRENT_TIMESTAMP;comment:更新时间" json:"updated_at"` // 更新时间

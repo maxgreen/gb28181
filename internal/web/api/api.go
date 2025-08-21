@@ -94,14 +94,13 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	versionapi.Register(r, uc.Version, auth)
 	statapi.Register(r)
 	registerZLMWebhookAPI(r, uc.WebHookAPI)
-	// TODO: 待增加鉴权
 
-	registerPushAPI(r, uc.MediaAPI)
-	registerGB28181(r, uc.GB28181API)
-	registerProxy(r, uc.ProxyAPI)
-	registerConfig(r, uc.ConfigAPI)
-	registerSms(r, uc.SMSAPI)
-	RegisterUser(r, uc.UserAPI)
+	registerPushAPI(r, uc.MediaAPI, auth)
+	registerGB28181(r, uc.GB28181API, auth)
+	registerProxy(r, uc.ProxyAPI, auth)
+	registerConfig(r, uc.ConfigAPI, auth)
+	registerSms(r, uc.SMSAPI, auth)
+	RegisterUser(r, uc.UserAPI, auth)
 
 	r.Any("/proxy/sms/*path", uc.proxySMS)
 }

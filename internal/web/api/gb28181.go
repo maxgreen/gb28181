@@ -301,11 +301,13 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 
 	path := readCoverPath(a.uc.Conf.ConfigDir, channelID)
 
+	token := c.GetString("token")
+
 	// 获取文件的修改时间
 	fileInfo, err := os.Stat(path)
 	if err == nil {
 		if fileInfo.ModTime().Unix() > time.Now().Unix()-in.WithinSeconds {
-			return gin.H{"link": fmt.Sprintf("/api/channels/%s/snapshot", channelID)}, nil
+			return gin.H{"link": fmt.Sprintf("%s/channels/%s/snapshot?token=%s", web.GetBaseURL(c.Request), channelID, token)}, nil
 		}
 	}
 
@@ -328,7 +330,7 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 		}
 	}
 
-	return gin.H{"link": fmt.Sprintf("/channels/%s/snapshot", channelID)}, nil
+	return gin.H{"link": fmt.Sprintf("%s/channels/%s/snapshot?token=%s", web.GetBaseURL(c.Request), channelID, token)}, nil
 }
 
 func (a GB28181API) getSnapshot(c *gin.Context) {

@@ -64,6 +64,16 @@ func (g GB28181) Edit(deviceID string, changeFn func(*Device)) error {
 	return nil
 }
 
+func (g GB28181) EditPlaying(deviceID, channelID string, playing bool) error {
+	var ch Channel
+	if err := g.store.Channel().Edit(context.TODO(), &ch, func(c *Channel) {
+		c.IsPlaying = playing
+	}, orm.Where("device_id = ? AND channel_id = ?", deviceID, channelID)); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (g GB28181) SaveChannels(channels []*Channel) error {
 	if len(channels) <= 0 {
 		return nil
@@ -74,6 +84,7 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 		d.Channels = len(channels)
 	}, orm.Where("device_id=?", channels[0].DeviceID))
 
+	// chIDs := make([]string, 0, 8)
 	for _, channel := range channels {
 		var ch Channel
 		if err := g.store.Channel().Edit(context.TODO(), &ch, func(c *Channel) {
@@ -84,7 +95,13 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 			channel.DID = dev.ID
 			g.store.Channel().Add(context.TODO(), channel)
 		}
+		// chIDs = append(chIDs, channel.ID)
 	}
+
+	// TODO: 清理相关资源
+	// if len(chIDs) > 0 {
+	// }
+
 	return nil
 }
 

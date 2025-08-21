@@ -47,6 +47,7 @@ func (c Core) FindChannelsForDevice(ctx context.Context, in *FindDeviceInput) ([
 		for _, ch := range item.Children {
 			if !item.IsOnline {
 				ch.IsOnline = false
+				ch.IsPlaying = false
 			}
 		}
 	}
@@ -122,7 +123,7 @@ func (c Core) EditDevice(ctx context.Context, in *EditDeviceInput, id string) (*
 			slog.ErrorContext(ctx, "Copy", "err", err)
 		}
 	}, orm.Where("id=?", id)); err != nil {
-		return nil, reason.ErrDB.Withf(`Edit err[%s]`, err.Error())
+		return nil, reason.ErrDB.Withf(`Edit err[%s] id[%s]`, err.Error(), id)
 	}
 	return &out, nil
 }

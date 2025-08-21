@@ -54,6 +54,10 @@ func (g *GB28181API) StopPlay(in *StopPlayInput) error {
 
 	ch.device.playMutex.Lock()
 	defer ch.device.playMutex.Unlock()
+
+	defer func() {
+		g.svr.gb.core.EditPlaying(in.Channel.DeviceID, in.Channel.ChannelID, false)
+	}()
 	return g.stopPlay(ch, in)
 }
 
@@ -101,6 +105,8 @@ func (g *GB28181API) Play(in *PlayInput) error {
 		log.Debug("2.1. 发送SDP请求失败", "err", err)
 		return err
 	}
+
+	g.svr.gb.core.EditPlaying(in.Channel.DeviceID, in.Channel.ChannelID, true)
 
 	return nil
 }
