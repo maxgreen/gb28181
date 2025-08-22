@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"unicode"
 
 	"github.com/gowvp/gb28181/internal/conf"
 	"github.com/gowvp/gb28181/internal/core/gb28181"
@@ -85,9 +86,27 @@ func NewGB28181API(cfg *conf.Bootstrap, store gb28181.GB28181, sms *sms.NodeMana
 	return &g
 }
 
+// filterUnknowDevices 国标 ID 校验，正常是长度为 20 的纯数字字符串
+func filterUnknowDevices(deviceID string) error {
+	if len(deviceID) < 18 {
+		return fmt.Errorf("device id too short")
+	}
+	if len(deviceID) > 20 {
+		return fmt.Errorf("device id too long")
+	}
+	// 验证必须全是数字
+	for _, ch := range deviceID {
+		if !unicode.IsNumber(ch) {
+			return fmt.Errorf("device id must be all numbers")
+		}
+	}
+	return nil
+}
+
 func (g *GB28181API) handlerRegister(ctx *sip.Context) {
-	if len(ctx.DeviceID) < 18 {
-		ctx.String(http.StatusBadRequest, "device id too short")
+	if err := filterUnknowDevices(ctx.DeviceID); err != nil {
+		slog.Error("过滤设备，拒绝注册", "device_id", ctx.DeviceID, "err", err)
+		ctx.String(http.StatusBadRequest, err.Error())
 		return
 	}
 
