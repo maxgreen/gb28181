@@ -97,18 +97,31 @@ func setupZLM(ctx context.Context, dir string) {
 		return
 	}
 
-	// 启动 MediaServer
-	cmd := exec.CommandContext(ctx, "./MediaServer", "-s", "default.pem", "-c", filepath.Join(dir, "zlm.ini")) // nolint
-	cmd.Dir = system.Getwd()
+	workDir := system.Getwd()
+	configPath := filepath.Join(dir, "zlm.ini")
+
+	// 预创建命令实例，在循环中重用
+	cmd := exec.CommandContext(ctx, "./MediaServer", "-s", "default.pem", "-c", configPath)
+	cmd.Dir = workDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	for {
-		slog.Info("MediaServer 启动中...")
-		// 启动命令
-		if err := cmd.Run(); err != nil {
-			slog.Error("zlm 运行失败", "err", err)
+		select {
+		case <-ctx.Done():
+			slog.Info("收到退出信号，停止重启 zlm")
+			return
+		default:
+			slog.Info("MediaServer 启动中...")
+			// 启动命令 - 正常情况下会阻塞在这里
+			if err := cmd.Run(); err != nil {
+				slog.Error("zlm 运行失败", "err", err)
+			} else {
+				slog.Info("MediaServer 退出，将重新启动")
+			}
+
+			// 等待后重启（不管是正常退出还是异常退出）
+			time.Sleep(5 * time.Second)
 		}
-		time.Sleep(5 * time.Second)
 	}
 }

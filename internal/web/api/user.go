@@ -40,12 +40,12 @@ type loginOutput struct {
 // 登录接口
 func (api UserAPI) login(_ *gin.Context, in *loginInput) (*loginOutput, error) {
 	// 验证用户名和密码
-	if api.conf.Server.Username != "" && api.conf.Server.Password != "" {
+	if api.conf.Server.Username == "" && api.conf.Server.Password == "" {
 		api.conf.Server.Username = "admin"
 		api.conf.Server.Password = "admin"
-		if in.Username != api.conf.Server.Username || in.Password != api.conf.Server.Password {
-			return nil, reason.ErrNameOrPasswd
-		}
+	}
+	if in.Username != api.conf.Server.Username || in.Password != api.conf.Server.Password {
+		return nil, reason.ErrNameOrPasswd
 	}
 
 	data := web.NewClaimsData().SetUsername(in.Username)

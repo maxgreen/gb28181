@@ -1,26 +1,28 @@
-FROM zlmediakit/zlmediakit:master
+FROM debian:bullseye-slim
 
 ENV TZ=Asia/Shanghai
-
 WORKDIR /opt/media/bin/
 
-# 添加应用程序文件
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    tzdata \
+    libstdc++6 \
+    libgcc-s1 \
+    libssl1.1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=zlmediakit/zlmediakit:master /opt/media/bin /opt/media/bin
+
 ADD ./build/linux_amd64/bin ./gowvp
 ADD ./www ./www
 
-# 创建配置目录
 RUN mkdir -p configs
 
-RUN chown -R $USER:$USER /opt/media/bin
-
-# 添加元数据标签
 LABEL Name=gowvp \
       Version=0.0.1 \
       Maintainer="xx@golang.space" \
       Description="gowvp & zlmediakit"
 
-# 暴露必要端口
-EXPOSE 15123 1935 8080 554 10000-10500/udp
+EXPOSE 15123 1935 8080 554 20000-20100/udp 20000-20100
 
-# 启动服务
 CMD ["./gowvp"]
