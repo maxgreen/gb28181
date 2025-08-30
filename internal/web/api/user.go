@@ -21,8 +21,8 @@ func NewUserAPI(conf *conf.Bootstrap) UserAPI {
 
 func RegisterUser(r gin.IRouter, api UserAPI, mid ...gin.HandlerFunc) {
 	group := r.Group("/user")
-	group.POST("/login", web.WarpH(api.login))
-	group.PUT("/user", web.WarpHs(api.updateCredentials, mid...)...)
+	group.POST("/login", web.WrapH(api.login))
+	group.PUT("/user", web.WrapHs(api.updateCredentials, mid...)...)
 }
 
 // 登录请求结构体
@@ -68,7 +68,7 @@ type updateCredentialsInput struct {
 }
 
 // 修改凭据接口
-func (api UserAPI) updateCredentials(c *gin.Context, in *updateCredentialsInput) (gin.H, error) {
+func (api UserAPI) updateCredentials(_ *gin.Context, in *updateCredentialsInput) (gin.H, error) {
 	// 更新配置中的用户名和密码
 	api.conf.Server.Username = in.Username
 	api.conf.Server.Password = in.Password

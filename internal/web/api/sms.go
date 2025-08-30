@@ -32,12 +32,12 @@ func NewSmsAPI(core sms.Core) SmsAPI {
 func registerSms(g gin.IRouter, api SmsAPI, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/media_servers", handler...)
-		group.GET("", web.WarpH(api.findMediaServer))
-		group.PUT("/:id", web.WarpH(api.editMediaServer))
+		group.GET("", web.WrapH(api.findMediaServer))
+		group.PUT("/:id", web.WrapH(api.editMediaServer))
 
-		// group.GET("/:id", web.WarpH(api.getMediaServer))
-		// group.POST("", web.WarpH(api.addMediaServer))
-		// group.DELETE("/:id", web.WarpH(api.delMediaServer))
+		// group.GET("/:id", web.WrapH(api.getMediaServer))
+		// group.POST("", web.WrapH(api.addMediaServer))
+		// group.DELETE("/:id", web.WrapH(api.delMediaServer))
 	}
 }
 

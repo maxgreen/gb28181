@@ -23,11 +23,11 @@ func NewProxyAPI(db *gorm.DB, uni uniqueid.Core) ProxyAPI {
 func registerProxy(g gin.IRouter, api ProxyAPI, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/stream_proxys", handler...)
-		group.GET("", web.WarpH(api.findStreamProxy))
-		group.GET("/:id", web.WarpH(api.getStreamProxy))
-		group.PUT("/:id", web.WarpH(api.editStreamProxy))
-		group.POST("", web.WarpH(api.addStreamProxy))
-		group.DELETE("/:id", web.WarpH(api.delStreamProxy))
+		group.GET("", web.WrapH(api.findStreamProxy))
+		group.GET("/:id", web.WrapH(api.getStreamProxy))
+		group.PUT("/:id", web.WrapH(api.editStreamProxy))
+		group.POST("", web.WrapH(api.addStreamProxy))
+		group.DELETE("/:id", web.WrapH(api.delStreamProxy))
 	}
 }
 

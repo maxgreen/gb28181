@@ -85,15 +85,15 @@ func NewHTTPHandler(uc *Usecase) http.Handler {
 
 // NewUniqueID 唯一 id 生成器
 func NewUniqueID(db *gorm.DB) uniqueid.Core {
-	return uniqueid.NewCore(uniqueiddb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), 5)
+	return uniqueid.NewCore(uniqueiddb.NewDB(db).AutoMigrate(orm.GetEnabledAutoMigrate()), 5)
 }
 
 func NewPushCore(db *gorm.DB, uni uniqueid.Core) push.Core {
-	return push.NewCore(pushdb.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate), uni)
+	return push.NewCore(pushdb.NewDB(db).AutoMigrate(orm.GetEnabledAutoMigrate()), uni)
 }
 
 func NewGB28181Store(db *gorm.DB) gb28181.Storer {
-	return gb28181cache.NewCache(gb28181db.NewDB(db).AutoMigrate(orm.EnabledAutoMigrate))
+	return gb28181cache.NewCache(gb28181db.NewDB(db).AutoMigrate(orm.GetEnabledAutoMigrate()))
 }
 
 func NewGB28181(store gb28181.Storer, uni uniqueid.Core) gb28181.GB28181 {

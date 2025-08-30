@@ -11,7 +11,7 @@ import (
 
 func Register(g gin.IRouter, hf ...gin.HandlerFunc) {
 	stat := g.Group("/stats", hf...)
-	stat.GET("", web.WarpH(findStat))
+	stat.GET("", web.WrapH(findStat))
 }
 
 func findStat(_ *gin.Context, _ *struct{}) (gin.H, error) {

@@ -88,8 +88,8 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	})
 
 	auth := web.AuthMiddleware(uc.Conf.Server.HTTP.JwtSecret)
-	r.GET("/health", web.WarpH(uc.getHealth))
-	r.GET("/app/metrics/api", web.WarpH(uc.getMetricsAPI))
+	r.GET("/health", web.WrapH(uc.getHealth))
+	r.GET("/app/metrics/api", web.WrapH(uc.getMetricsAPI))
 
 	versionapi.Register(r, uc.Version, auth)
 	statapi.Register(r)
@@ -102,6 +102,7 @@ func setupRouter(r *gin.Engine, uc *Usecase) {
 	registerSms(r, uc.SMSAPI, auth)
 	RegisterUser(r, uc.UserAPI, auth)
 
+	// 反向代理流媒体数据
 	r.Any("/proxy/sms/*path", uc.proxySMS)
 }
 
@@ -225,12 +226,12 @@ func (uc *Usecase) proxySMS(c *gin.Context) {
 		req.URL.Path = path
 	}
 	proxy.ModifyResponse = func(r *http.Response) error {
-		r.Header.Del("access-control-allow-credentials")
-		r.Header.Del("access-control-allow-origin")
+		r.Header.Del("Access-Control-Allow-Credentials")
+		r.Header.Del("Access-Control-Allow-Origin")
 		if r.StatusCode >= 300 && r.StatusCode < 400 {
-			if l := r.Header.Get("location"); l != "" {
+			if l := r.Header.Get("Location"); l != "" {
 				if !strings.HasPrefix(l, "http") {
-					r.Header.Set("location", "/proxy/sms/"+strings.TrimPrefix(l, "/"))
+					r.Header.Set("Location", "/proxy/sms/"+strings.TrimPrefix(l, "/"))
 				}
 			}
 		}

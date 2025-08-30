@@ -27,17 +27,17 @@ func NewPushAPI(mc push.Core, sc sms.Core, conf *conf.Bootstrap) PushAPI {
 func registerPushAPI(g gin.IRouter, api PushAPI, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/stream_pushs", handler...)
-		group.GET("", web.WarpH(api.findStreamPush))
-		group.GET("/:id", web.WarpH(api.getStreamPush))
-		group.PUT("/:id", web.WarpH(api.editStreamPush))
-		group.POST("", web.WarpH(api.addStreamPush))
-		group.DELETE("/:id", web.WarpH(api.delStreamPush))
+		group.GET("", web.WrapH(api.findStreamPush))
+		group.GET("/:id", web.WrapH(api.getStreamPush))
+		group.PUT("/:id", web.WrapH(api.editStreamPush))
+		group.POST("", web.WrapH(api.addStreamPush))
+		group.DELETE("/:id", web.WrapH(api.delStreamPush))
 	}
 }
 
 // >>> streamPush >>>>>>>>>>>>>>>>>>>>
 
-func (a PushAPI) findStreamPush(c *gin.Context, in *push.FindStreamPushInput) (*web.PageOutput, error) {
+func (a PushAPI) findStreamPush(c *gin.Context, in *push.FindStreamPushInput) (*web.PageOutput[*push.FindStreamPushOutputItem], error) {
 	items, total, err := a.pushCore.FindStreamPush(c.Request.Context(), in)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (a PushAPI) findStreamPush(c *gin.Context, in *push.FindStreamPushInput) (*
 			PushAddrs:  rtmpAddrs,
 		}
 	}
-	return &web.PageOutput{Items: out, Total: total}, err
+	return &web.PageOutput[*push.FindStreamPushOutputItem]{Items: out, Total: total}, err
 }
 
 func (a PushAPI) getStreamPush(c *gin.Context, _ *struct{}) (*push.StreamPush, error) {

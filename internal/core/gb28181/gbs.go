@@ -80,7 +80,7 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 	}
 
 	var dev Device
-	g.store.Device().Edit(context.TODO(), &dev, func(d *Device) {
+	_ = g.store.Device().Edit(context.TODO(), &dev, func(d *Device) {
 		d.Channels = len(channels)
 	}, orm.Where("device_id=?", channels[0].DeviceID))
 
@@ -93,7 +93,7 @@ func (g GB28181) SaveChannels(channels []*Channel) error {
 		}, orm.Where("device_id = ? AND channel_id = ?", channel.DeviceID, channel.ChannelID)); err != nil {
 			channel.ID = g.uni.UniqueID(bz.IDPrefixGBChannel)
 			channel.DID = dev.ID
-			g.store.Channel().Add(context.TODO(), channel)
+			_ = g.store.Channel().Add(context.TODO(), channel)
 		}
 		// chIDs = append(chIDs, channel.ID)
 	}

@@ -8,9 +8,8 @@ require (
 	github.com/gin-contrib/gzip v1.2.3
 	github.com/gin-gonic/gin v1.10.1
 	github.com/glebarez/sqlite v1.11.0
-	github.com/google/wire v0.6.0
-	github.com/gorilla/websocket v1.5.3
-	github.com/ixugo/goddd v1.3.9
+	github.com/google/wire v0.7.0
+	github.com/ixugo/goddd v1.3.15
 	github.com/jinzhu/copier v0.4.0
 	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/shirou/gopsutil/v4 v4.25.7

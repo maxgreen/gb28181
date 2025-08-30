@@ -68,28 +68,28 @@ func registerGB28181(g gin.IRouter, api GB28181API, handler ...gin.HandlerFunc) 
 	})
 	{
 		group := g.Group("/devices", handler...)
-		group.GET("", web.WarpH(api.findDevice))
-		group.GET("/:id", web.WarpH(api.getDevice))
-		group.PUT("/:id", web.WarpH(api.editDevice))
-		group.POST("", web.WarpH(api.addDevice))
-		group.DELETE("/:id", web.WarpH(api.delDevice))
+		group.GET("", web.WrapH(api.findDevice))
+		group.GET("/:id", web.WrapH(api.getDevice))
+		group.PUT("/:id", web.WrapH(api.editDevice))
+		group.POST("", web.WrapH(api.addDevice))
+		group.DELETE("/:id", web.WrapH(api.delDevice))
 
-		group.POST("/:id/catalog", web.WarpH(api.queryCatalog)) // 刷新通道
+		group.POST("/:id/catalog", web.WrapH(api.queryCatalog)) // 刷新通道
 
-		group.GET("/channels", web.WarpH(api.FindChannelsForDevice))
+		group.GET("/channels", web.WrapH(api.FindChannelsForDevice))
 	}
 
 	{
 		group := g.Group("/channels", handler...)
-		group.GET("", web.WarpH(api.findChannel))
-		group.PUT("/:id", web.WarpH(api.editChannel))
-		group.POST("/:id/play", web.WarpH(api.play))
+		group.GET("", web.WrapH(api.findChannel))
+		group.PUT("/:id", web.WrapH(api.editChannel))
+		group.POST("/:id/play", web.WrapH(api.play))
 
-		group.POST("/:id/snapshot", web.WarpH(api.refreshSnapshot)) // 图像抓拍
+		group.POST("/:id/snapshot", web.WrapH(api.refreshSnapshot)) // 图像抓拍
 		group.GET("/:id/snapshot", api.getSnapshot)                 // 获取图像
-		// group.GET("/:id", web.WarpH(api.getChannel))
-		// group.POST("", web.WarpH(api.addChannel))
-		// group.DELETE("/:id", web.WarpH(api.delChannel))
+		// group.GET("/:id", web.WrapH(api.getChannel))
+		// group.POST("", web.WrapH(api.addChannel))
+		// group.DELETE("/:id", web.WrapH(api.delChannel))
 	}
 }
 

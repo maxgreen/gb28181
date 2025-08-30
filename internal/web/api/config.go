@@ -28,14 +28,14 @@ func NewConfigAPI(db *gorm.DB, conf *conf.Bootstrap) ConfigAPI {
 func registerConfig(g gin.IRouter, api ConfigAPI, handler ...gin.HandlerFunc) {
 	{
 		group := g.Group("/configs", handler...)
-		// group.GET("", web.WarpH(api.findConfig))
-		// group.GET("/:id", web.WarpH(api.getConfig))
-		// group.PUT("/:id", web.WarpH(api.editConfig))
-		// group.POST("", web.WarpH(api.addConfig))
-		// group.DELETE("/:id", web.WarpH(api.delConfig))
+		// group.GET("", web.WrapH(api.findConfig))
+		// group.GET("/:id", web.WrapH(api.getConfig))
+		// group.PUT("/:id", web.WrapH(api.editConfig))
+		// group.POST("", web.WrapH(api.addConfig))
+		// group.DELETE("/:id", web.WrapH(api.delConfig))
 
-		group.GET("/info", web.WarpH(api.getConfigInfo))
-		group.PUT("/info/sip", web.WarpH(api.editSIP))
+		group.GET("/info", web.WrapH(api.getConfigInfo))
+		group.PUT("/info/sip", web.WrapH(api.editSIP))
 	}
 }
 

@@ -37,13 +37,13 @@ func NewWebHookAPI(core sms.Core, mediaCore push.Core, conf *conf.Bootstrap, gbs
 func registerZLMWebhookAPI(r gin.IRouter, api WebHookAPI, handler ...gin.HandlerFunc) {
 	{
 		group := r.Group("/webhook", handler...)
-		group.POST("/on_server_keepalive", web.WarpH(api.onServerKeepalive))
-		group.POST("/on_stream_changed", web.WarpH(api.onStreamChanged))
-		group.POST("/on_publish", web.WarpH(api.onPublish))
-		group.POST("/on_play", web.WarpH(api.onPlay))
-		group.POST("/on_stream_none_reader", web.WarpH(api.onStreamNoneReader))
-		group.POST("/on_rtp_server_timeout", web.WarpH(api.onRTPServerTimeout))
-		group.POST("/on_stream_not_found", web.WarpH(api.onStreamNotFound))
+		group.POST("/on_server_keepalive", web.WrapH(api.onServerKeepalive))
+		group.POST("/on_stream_changed", web.WrapH(api.onStreamChanged))
+		group.POST("/on_publish", web.WrapH(api.onPublish))
+		group.POST("/on_play", web.WrapH(api.onPlay))
+		group.POST("/on_stream_none_reader", web.WrapH(api.onStreamNoneReader))
+		group.POST("/on_rtp_server_timeout", web.WrapH(api.onRTPServerTimeout))
+		group.POST("/on_stream_not_found", web.WrapH(api.onStreamNotFound))
 	}
 }
 
