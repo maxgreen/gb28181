@@ -78,7 +78,19 @@ func NewRequestFromResponse(method string, inviteResponse *Response) *Request {
 	CopyHeaders("Call-ID", inviteResponse, ackRequest)
 	cseq, _ := inviteResponse.CSeq()
 	cseq.MethodName = method
-	cseq.SeqNo++
+
+	// https://www.rfc-editor.org/rfc/rfc3261.html#section-12.2.1.1
+	// The Call-ID of the request MUST be set to the Call-ID of the dialog.
+	// Requests within a dialog MUST contain strictly monotonically
+	// increasing and contiguous CSeq sequence numbers (increasing-by-one)
+	// in each direction (excepting ACK and CANCEL of course, whose numbers
+	// equal the requests being acknowledged or cancelled).  Therefore, if
+	// the local sequence number is not empty, the value of the local
+	// sequence number MUST be incremented by one, and this value MUST be
+	// placed into the CSeq header field.
+	if !(method == MethodACK || method == MethodCancel) {
+		cseq.SeqNo++
+	}
 	ackRequest.AppendHeader(cseq)
 	ackRequest.SetSource(inviteResponse.Destination())
 	ackRequest.SetDestination(inviteResponse.Source())
