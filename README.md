@@ -134,7 +134,7 @@ services:
       - ./data:/opt/media/bin/configs
 ```
 
-** gowvp & zlmediakit 分开镜像**
+** gowvp & zlmediakit 分离镜像(部署更复杂)**
 ```yml
 services:
   gowvp:

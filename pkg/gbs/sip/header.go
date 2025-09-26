@@ -1533,7 +1533,7 @@ func (route *RecordRouteHeader) Clone() Header {
 	}
 
 	newRoute = &RecordRouteHeader{
-		Addresses: []*URI{},
+		Addresses: make([]*URI, 0, len(route.Addresses)),
 	}
 
 	for i, uri := range route.Addresses {
