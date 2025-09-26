@@ -33,8 +33,8 @@ func DefaultConfig() Bootstrap {
 		},
 		Sip: SIP{
 			Port:     15060,
-			ID:       "3402000000200000001",
-			Domain:   "3402000000",
+			ID:       "34010000002000000001",
+			Domain:   "3401000000",
 			Password: "",
 		},
 		Media: Media{
