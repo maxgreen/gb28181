@@ -17,6 +17,7 @@ import (
 	"github.com/gowvp/gb28181/internal/core/sms"
 	"github.com/gowvp/gb28181/pkg/zlm"
 	"github.com/ixugo/goddd/domain/uniqueid"
+	"github.com/ixugo/goddd/pkg/hook"
 	"github.com/ixugo/goddd/pkg/orm"
 	"github.com/ixugo/goddd/pkg/reason"
 	"github.com/ixugo/goddd/pkg/web"
@@ -278,7 +279,7 @@ func (a GB28181API) play(c *gin.Context, _ *struct{}) (*playOutput, error) {
 		body, err := a.uc.SMSAPI.smsCore.GetSnapshot(svr, zlm.GetSnapRequest{
 			URL:        out.Items[0].RTSP,
 			TimeoutSec: 10,
-			ExpireSec:  10,
+			ExpireSec:  15,
 		})
 		if err != nil {
 			slog.ErrorContext(c.Request.Context(), "get snapshot", "err", err)
@@ -320,13 +321,15 @@ func (a GB28181API) refreshSnapshot(c *gin.Context, in *refreshSnapshotInput) (a
 		img, err := a.uc.SMSAPI.smsCore.GetSnapshot(svr, zlm.GetSnapRequest{
 			URL:        in.URL,
 			TimeoutSec: 10,
-			ExpireSec:  10,
+			ExpireSec:  28800,
 		})
 		if err != nil {
 			slog.ErrorContext(c.Request.Context(), "get snapshot", "err", err)
 			// return nil, reason.ErrBadRequest.Msg(err.Error())
 		} else {
-			writeCover(a.uc.Conf.ConfigDir, channelID, img)
+			if hook.MD5FromBytes(img) != "" {
+				writeCover(a.uc.Conf.ConfigDir, channelID, img)
+			}
 		}
 	}
 
