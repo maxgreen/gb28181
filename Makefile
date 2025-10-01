@@ -47,7 +47,7 @@ expva/http:
 expva/db:
 	expvarmon --ports=":9999" -i 5s -vars="databse.MaxOpenConnections,databse.OpenConnections,database.InUse,databse.Idle"
 
-# 发起 100 次请求，每次并发 50
+# HTTP负载测试工具 发起 100 次请求，每次并发 50
 # hey -n 100 -c 50 http://localhost:9999/healthcheck
 
 
